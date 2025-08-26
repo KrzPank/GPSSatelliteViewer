@@ -58,9 +58,10 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation("com.google.accompanist:accompanist-permissions:0.36.0")
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
-    // Opcjonalnie coroutines (jeśli jeszcze nie masz w toml)
+
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 }
