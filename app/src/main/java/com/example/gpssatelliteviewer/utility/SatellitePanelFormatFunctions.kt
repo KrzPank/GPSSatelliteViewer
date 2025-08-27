@@ -14,34 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 
-fun formatNmeaTime(nmeaTime: String): String {
-    return try {
-        if (nmeaTime.length >= 6) {
-            val hh = nmeaTime.substring(0, 2)
-            val mm = nmeaTime.substring(2, 4)
-            val ss = nmeaTime.substring(4, 6)
-            "$hh:$mm:$ss"
-        } else nmeaTime
-    } catch (e: Exception) {
-        nmeaTime
-    }
-}
-
-fun mapFixQuality(fixQuality: Int): String {
-    return when(fixQuality) {
-        0 -> "Brak fixu"
-        1 -> "GPS fix"
-        2 -> "DGPS fix"
-        3 -> "PPS fix"
-        4 -> "RTK"
-        5 -> "Float RTK"
-        6 -> "Estymowany"
-        7 -> "Manualny"
-        8 -> "Simulowany"
-        else -> "Nieznany"
-    }
-}
-
 @Composable
 fun LoadingLocationText(baseText: String = "Oczekiwanie na lokalizację") {
     val dotCount = remember { Animatable(0f) }
@@ -58,7 +30,6 @@ fun LoadingLocationText(baseText: String = "Oczekiwanie na lokalizację") {
     val dots = ".".repeat(dotCount.value.toInt())
     Text("$baseText$dots", style = MaterialTheme.typography.bodyMedium)
 }
-
 
 @Composable
 fun InfoRow(label: String, value: String) {
