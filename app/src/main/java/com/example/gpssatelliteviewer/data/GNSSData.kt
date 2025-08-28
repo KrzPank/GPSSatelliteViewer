@@ -29,3 +29,21 @@ data class NMEAData(
     val altitude: Double,
     val heightOfGeoid: Double
 )
+
+data class GPSData(
+    var time: String? = null,
+    var date: String? = null,
+    var latitude: String? = null,
+    var latHemisphere: String? = null,
+    var longitude: String? = null,
+    var lonHemisphere: String? = null,
+    var fixQuality: String? = null,
+    var numSatellites: Int? = null,
+    var hdop: Float? = null,
+    var altitude: Double? = null,
+    var geoidHeight: Double? = null,
+    var speedKnots: Double? = null,
+    var course: Double? = null,
+    var magneticVariation: Double? = null,
+    var gbsErrors: List<Double>? = null
+)

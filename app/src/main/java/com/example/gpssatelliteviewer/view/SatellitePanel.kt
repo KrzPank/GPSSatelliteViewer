@@ -1,6 +1,8 @@
 package com.example.gpssatelliteviewer.view
 
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,6 +35,7 @@ import com.example.gpssatelliteviewer.viewModel.SatelliteViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+@RequiresApi(Build.VERSION_CODES.R)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SatellitePanel(
@@ -70,16 +73,12 @@ fun SatellitePanel(
                     elevation = CardDefaults.cardElevation(4.dp)
                 ) {
                     Column(Modifier.padding(12.dp)) {
-                        if (locationNMEA == null && locationAndroidApi == null){
-                            LoadingLocationText()
-                        } else if (locationNMEA != null) {
+                        if (locationNMEA != null){
                             val nmea = locationNMEA!!
                             Text("$message", style = MaterialTheme.typography.titleMedium)
                             Spacer(Modifier.height(8.dp))
 
-                            InfoRow(label = "Ostatnia aktualizacja (CET)", value = nmea.time)
-                            //InfoRow(label = "Szerokość geograficzna", value = "%.6f° ${nmea.latHemisphere}".format(nmea.latitude))
-                            //InfoRow(label = "Długość geograficzna", value = "%.6f° ${nmea.longHemisphere}".format(nmea.longitude))
+                            InfoRow(label = "Ostatnia aktualizacja (UCT)", value = nmea.time)
                             InfoRow(label = "Szerokość geograficzna", value = nmea.latitude.toString())
                             InfoRow(label = "Długość geograficzna", value = nmea.longitude.toString())
                             InfoRow(label = "Wysokość m.n.p.m.", value = "%.1f m".format(nmea.altitude))
@@ -87,7 +86,7 @@ fun SatellitePanel(
                             InfoRow(label = "Dokładność", value = "%.1f m".format(nmea.horizontalDilution))
                             InfoRow(label = "Liczba używanych satelitów", value = nmea.numSatellites.toString())
                             InfoRow(label = "Jakość fix", value = nmea.fixQuality)
-                        } else {
+                        } else if (locationAndroidApi != null) {
                             val data = locationAndroidApi!!
                             Text("Lokalizacja $message", style = MaterialTheme.typography.titleMedium)
                             Spacer(Modifier.height(8.dp))
@@ -96,6 +95,8 @@ fun SatellitePanel(
                             InfoRow(label = "Szerokość geograficzna", value = "%.6f° ${data.latHemisphere}".format(data.latitude))
                             InfoRow(label = "Długość geograficzna", value = "%.6f° ${data.longHemisphere}".format(data.longitude))
                             InfoRow(label = "Wysokość m.n.p.m.", value = "%.1f m".format(data.altitude))
+                        } else {
+                            LoadingLocationText()
                         }
                     }
                 }

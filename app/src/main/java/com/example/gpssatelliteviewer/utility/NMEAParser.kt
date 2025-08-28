@@ -1,5 +1,6 @@
 package com.example.gpssatelliteviewer.utility
 
+import android.annotation.SuppressLint
 import com.example.gpssatelliteviewer.data.NMEAData
 
 fun parseGGA(message: String): NMEAData? {
@@ -22,11 +23,8 @@ fun parseGGA(message: String): NMEAData? {
         val altitude = parts[9].toDoubleOrNull() ?: 0.0
         val heightOfGeoid = parts[11].toDoubleOrNull() ?: 0.0
 
-        val latitudeDecimal = convertToDecimalDegrees(lat, latHem)
-        val longitudeDecimal = convertToDecimalDegrees(lon, longHem)
-
-        val latitude = toDMS(latitudeDecimal, latHem)
-        val longitude = toDMS(longitudeDecimal, longHem)
+        val latitude = convertToDMS(lat, latHem)
+        val longitude = convertToDMS(lon, longHem)
 
         return NMEAData(
             time,
@@ -46,22 +44,19 @@ fun parseGGA(message: String): NMEAData? {
     }
 }
 
-private fun toDMS(value: Double, hemisphere: String): String {
-    val degrees = value.toInt()
-    val minutesDecimal = (Math.abs(value - degrees)) * 60
-    val minutes = minutesDecimal.toInt()
-    val seconds = ((minutesDecimal - minutes) * 60).toInt()
-    return String.format("%d°%d'%d\" %s", degrees, minutes, seconds, hemisphere)
+
+@SuppressLint("DefaultLocale")
+fun convertToDMS(value: Double, hemisphere: String): String {
+    if (value == 0.0) return "0°0'0\""
+
+    val degrees = (value / 100).toInt()          // extract degrees
+    val minutesFull = value - (degrees * 100)    // extract minutes (with decimals)
+    val minutes = minutesFull.toInt()
+    val seconds = ((minutesFull - minutes) * 60)
+
+    return String.format("%d°%d'%.3f\" %s", degrees, minutes, seconds, hemisphere)
 }
 
-
-private fun convertToDecimalDegrees(value: Double, hemisphere: String): Double {
-    val degrees = (value / 100).toInt()
-    val minutes = value - (degrees * 100)
-    var decimal = degrees + minutes / 60
-    if (hemisphere == "S" || hemisphere == "W") decimal *= -1
-    return decimal
-}
 
 private fun formatNmeaTime(nmeaTime: String): String {
     return try {
@@ -71,7 +66,7 @@ private fun formatNmeaTime(nmeaTime: String): String {
             val ss = nmeaTime.substring(4, 6)
             "$hh:$mm:$ss"
         } else nmeaTime
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         nmeaTime
     }
 }

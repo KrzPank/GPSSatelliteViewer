@@ -7,7 +7,6 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.location.OnNmeaMessageListener
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import java.util.Locale
@@ -18,13 +17,17 @@ import com.example.gpssatelliteviewer.utility.parseGGA
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import android.icu.util.TimeZone
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import androidx.annotation.RequiresApi
 import com.example.gpssatelliteviewer.data.ListenerData
 import java.util.Date
+import java.util.concurrent.Executors
 import kotlin.Int
 
 
+@RequiresApi(Build.VERSION_CODES.R)
 class SatelliteViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _satelliteList = MutableStateFlow<List<GNSSData>>(listOf())
@@ -143,9 +146,23 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
 
     init {
         try {
-            locationManager.registerGnssStatusCallback(gnssCallback)
+            //  UNDO IF THREADING IS SOMEHOW NOT DOABLE         ***LAG IN UI***
+            //locationManager.registerGnssStatusCallback(gnssCallback)
+            //locationManager.addNmeaListener(nmeaListener)
 
-            locationManager.addNmeaListener(nmeaListener)
+            val executor = Executors.newSingleThreadExecutor()
+
+            Log.d("NMEA", "maybe executor?executor")
+            locationManager.registerGnssStatusCallback(
+                executor,
+                gnssCallback
+            )
+            Log.d("NMEA", "after executor ")
+
+            locationManager.addNmeaListener(
+                executor,
+                nmeaListener
+            )
 
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
@@ -156,7 +173,7 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
 
             handler.postDelayed(fallbackRunnable, nmeaTimeout)
 
-        } catch (e: SecurityException) {
+        } catch (_: SecurityException) {
             _satelliteList.value = listOf(
                 GNSSData(
                     constellation = "Error",
@@ -167,65 +184,6 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
             )
         }
     }
-// TO DO THREADING
-    /*
-    init {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    // Android 11+ → use Executor-based APIs
-                    val executor = Executors.newSingleThreadExecutor()
-
-                    Log.d("NMEA", "maybe executor?executor")
-                    locationManager.registerGnssStatusCallback(
-                        executor,
-                        gnssCallback
-                    )
-                    Log.d("NMEA", "after executor ")
-
-                    locationManager.addNmeaListener(
-                        executor,
-                        nmeaListener
-                    )
-
-                } else {
-                    // Android 7–10 → use Handler-based APIs
-                    val handler = Handler(Looper.getMainLooper())
-
-                    locationManager.registerGnssStatusCallback(
-                        gnssCallback,
-                        handler
-                    )
-
-                    locationManager.addNmeaListener(
-                        nmeaListener,
-                        handler
-                    )
-                }
-
-            } catch (e: SecurityException) {
-                _satelliteList.value = listOf(
-                    GNSSData(
-                        constellation = "Error",
-                        id = 0,
-                        snr = 0.0f,
-                        usedInFix = false
-                    )
-                )
-            }
-        } else {
-            _satelliteList.value = listOf(
-                GNSSData(
-                    constellation = "Error",
-                    id = 0,
-                    snr = 0.0f,
-                    usedInFix = false
-                )
-            )
-        }
-    }
-
-*/
 
     override fun onCleared() {
         super.onCleared()
