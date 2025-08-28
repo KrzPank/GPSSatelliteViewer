@@ -62,12 +62,12 @@ fun InfoRow(label: String, value: String) {
 }
 
 @Composable
-fun NMEALocationPanel(nmea: NMEAData, message: String, localTime: String){
+fun NMEALocationPanel(nmea: NMEAData, message: String) {//, localTime: String){
     val speedkmh = nmea.speedKnots?.times(1.852)
     Text(message, style = MaterialTheme.typography.titleMedium)
     Spacer(Modifier.height(8.dp))
 
-    InfoRow(label = "Aktualny czas", value = localTime)
+    //InfoRow(label = "Aktualny czas", value = localTime)
     nmea.time?.let { InfoRow(label = "Ostatnia aktualizacja (UTC)", value = it) }
     nmea.date?.let { InfoRow(label = "Data", value = it) }
 

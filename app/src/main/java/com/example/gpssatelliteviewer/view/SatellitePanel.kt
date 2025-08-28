@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.gpssatelliteviewer.utility.AndroidLocationApiPanel
 import com.example.gpssatelliteviewer.utility.NMEALocationPanel
+import com.example.gpssatelliteviewer.utility.approximateLocationAccuracy
 import com.example.gpssatelliteviewer.utility.parseGBS
 import com.example.gpssatelliteviewer.utility.parseGGA
 import com.example.gpssatelliteviewer.utility.parseRMC
@@ -65,9 +66,9 @@ fun SatellitePanel(
 
     val expandedMap = remember { mutableStateMapOf<String, Boolean>() }
 
-    val currentTime by remember { mutableStateOf(LocalTime.now()) }
-    val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
-    val localTimeString = currentTime.format(formatter)
+    //val currentTime by remember { mutableStateOf(LocalTime.now()) }
+    //val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+    //val localTimeString = currentTime.format(formatter)
 
     Scaffold(
         topBar = {
@@ -92,7 +93,28 @@ fun SatellitePanel(
                     Column(Modifier.padding(12.dp)) {
                         if (locationNMEA != null){
                             val nmea = locationNMEA!!
-                            NMEALocationPanel(nmea, message.toString(), localTimeString)
+                            val speedkmh = nmea.speedKnots?.times(1.852)
+                            //NMEALocationPanel(nmea, message.toString())//, localTimeString)
+                            nmea.time?.let { InfoRow(label = "Ostatnia aktualizacja (UTC)", value = it) }
+                            nmea.date?.let { InfoRow(label = "Data", value = it) }
+
+                            InfoRow(label = "Szerokość geograficzna", value = nmea.latitude ?: "Brak danych")
+                            InfoRow(label = "Długość geograficzna", value = nmea.longitude ?: "Brak danych")
+                            InfoRow(label = "Wysokość m.n.p.m.", value = nmea.altitude?.let { "%.1f m".format(it) } ?: "Brak danych")
+                            InfoRow(label = "Wysokość geoidy nad elipsoidą", value = nmea.geoidHeight?.let { "%.1f m".format(it) } ?: "Brak danych")
+                            InfoRow(label = "Dokładność", value = approximateLocationAccuracy(nmea))
+                            InfoRow(label = "Liczba używanych satelitów", value = nmea.numSatellites?.toString() ?: "Brak danych")
+                            InfoRow(label = "Jakość fix", value = nmea.fixQuality ?: "Brak danych")
+                            InfoRow(
+                                label = "Prędkość",
+                                value = listOf(
+                                    nmea.speedKnots?.let { "%.1f kn".format(it) } ?: "Brak danych",
+                                    speedkmh?.let { "%.1f km/h".format(it) } ?: "Brak danych"
+                                ).joinToString(" / ")
+                            )
+                            InfoRow(label = "Kurs", value = nmea.course?.let { "%.1f°".format(it) } ?: "Brak danych")
+                            InfoRow(label = "Odchylenie magnetyczne", value = nmea.magneticVariation?.let { "%.1f°".format(it) } ?: "Brak danych")
+                            InfoRow(label = "Błędy GBS (lat, lon, alt)", value = nmea.gbsErrors?.joinToString(", ") { "%.2f m".format(it) } ?: "Brak danych")
                         } else if (locationAndroidApi != null) {
                             val data = locationAndroidApi!!
                             AndroidLocationApiPanel(data, message.toString())
