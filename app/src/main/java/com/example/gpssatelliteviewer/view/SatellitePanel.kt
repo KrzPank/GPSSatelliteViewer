@@ -1,6 +1,5 @@
 package com.example.gpssatelliteviewer.view
 
-import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
@@ -20,20 +19,34 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.gpssatelliteviewer.data.GNSSData
 import com.example.gpssatelliteviewer.data.NMEAData
 import com.example.gpssatelliteviewer.data.ListenerData
 import com.example.gpssatelliteviewer.utility.InfoRow
 import com.example.gpssatelliteviewer.utility.LoadingLocationText
 import com.example.gpssatelliteviewer.viewModel.SatelliteViewModel
+
+
+import android.annotation.SuppressLint
+import androidx.lifecycle.viewModelScope
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
+import com.example.gpssatelliteviewer.utility.AndroidLocationApiPanel
+import com.example.gpssatelliteviewer.utility.NMEALocationPanel
+import com.example.gpssatelliteviewer.utility.parseGBS
+import com.example.gpssatelliteviewer.utility.parseGGA
+import com.example.gpssatelliteviewer.utility.parseRMC
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+
 
 @RequiresApi(Build.VERSION_CODES.R)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,6 +64,10 @@ fun SatellitePanel(
     val message by viewModel.messagePack.collectAsState()
 
     val expandedMap = remember { mutableStateMapOf<String, Boolean>() }
+
+    val currentTime by remember { mutableStateOf(LocalTime.now()) }
+    val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+    val localTimeString = currentTime.format(formatter)
 
     Scaffold(
         topBar = {
@@ -75,26 +92,10 @@ fun SatellitePanel(
                     Column(Modifier.padding(12.dp)) {
                         if (locationNMEA != null){
                             val nmea = locationNMEA!!
-                            Text("$message", style = MaterialTheme.typography.titleMedium)
-                            Spacer(Modifier.height(8.dp))
-
-                            InfoRow(label = "Ostatnia aktualizacja (UCT)", value = nmea.time)
-                            InfoRow(label = "Szerokość geograficzna", value = nmea.latitude.toString())
-                            InfoRow(label = "Długość geograficzna", value = nmea.longitude.toString())
-                            InfoRow(label = "Wysokość m.n.p.m.", value = "%.1f m".format(nmea.altitude))
-                            InfoRow(label = "Wysokość geoidy nad elipsoidą", value = "%.1f m".format(nmea.heightOfGeoid))
-                            InfoRow(label = "Dokładność", value = "%.1f m".format(nmea.horizontalDilution))
-                            InfoRow(label = "Liczba używanych satelitów", value = nmea.numSatellites.toString())
-                            InfoRow(label = "Jakość fix", value = nmea.fixQuality)
+                            NMEALocationPanel(nmea, message.toString(), localTimeString)
                         } else if (locationAndroidApi != null) {
                             val data = locationAndroidApi!!
-                            Text("Lokalizacja $message", style = MaterialTheme.typography.titleMedium)
-                            Spacer(Modifier.height(8.dp))
-
-                            InfoRow(label = "Ostatnia aktualizacja (CET)", value = data.time)
-                            InfoRow(label = "Szerokość geograficzna", value = "%.6f° ${data.latHemisphere}".format(data.latitude))
-                            InfoRow(label = "Długość geograficzna", value = "%.6f° ${data.longHemisphere}".format(data.longitude))
-                            InfoRow(label = "Wysokość m.n.p.m.", value = "%.1f m".format(data.altitude))
+                            AndroidLocationApiPanel(data, message.toString())
                         } else {
                             LoadingLocationText()
                         }
@@ -107,7 +108,6 @@ fun SatellitePanel(
 
                 val expanded = expandedMap.getOrPut(constellation) { false }
 
-                // Header dla konstelacji
                 item {
                     Card(
                         shape = RoundedCornerShape(12.dp),
@@ -131,7 +131,6 @@ fun SatellitePanel(
                     }
                 }
 
-                // expanded panel
                 if (expandedMap[constellation] == true) {
                     items(satellitesInGroup) { satellite ->
                         Card(
@@ -156,6 +155,7 @@ fun SatellitePanel(
 
 
 /*
+@RequiresApi(Build.VERSION_CODES.R)
 @SuppressLint("ViewModelConstructorInComposable")
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
@@ -171,20 +171,9 @@ fun SatellitePanelPreview() {
 // Fake ViewModel tylko dla preview
 class FakeSatelliteViewModel : ViewModel() {
 
-    private val _locationNMEA = MutableStateFlow<NMEAData?>(
-        NMEAData(
-            time = "123519",
-            latitude = "52.2297",      // string
-            latHemisphere = "N",
-            longitude = "21.0122",     // string
-            longHemisphere = "E",
-            fixQuality = "GPS fix",
-            numSatellites = 8,
-            horizontalDilution = 0.9f,
-            altitude = 100.0,
-            heightOfGeoid = 46.9
-        )
-    )
+    private val _locationNMEA = MutableStateFlow<NMEAData?>(null)
+    val locationNMEA: StateFlow<NMEAData?> = _locationNMEA
+
    // /*
         private val _locationAndroidApi = MutableStateFlow<ListenerData?>(
             ListenerData(
@@ -198,15 +187,31 @@ class FakeSatelliteViewModel : ViewModel() {
         )
     //*/
 
-   // private val _locationNMEA = MutableStateFlow<NMEAData?>(null)
-   // private val _locationAndroidApi = MutableStateFlow<listenerData?>(null)
-
+    val locationAndroidApi: StateFlow<ListenerData?> = _locationAndroidApi
 
     private val _messagePack = MutableStateFlow<String?>("Testing")
-
-    val locationNMEA: StateFlow<NMEAData?> = _locationNMEA
-    val locationAndroidApi: StateFlow<ListenerData?> = _locationAndroidApi
     val messagePack: StateFlow<String?> = _messagePack
+
+
+    //private val fakeGga = "\$GPGGA,172814.0,3723.46587704,N,12202.26957864,W,2,6,1.2,18.893,M,25.669,M,2.00031*4F"
+    //private val fakeRmc = "\$GNRMC,060512.00,A,3150.788156,N,11711.922383,E,0.0,,311019,,,A,V*1B"
+    private val fakeGbs = "\$GPGBS,015509.00,-0.031,-0.186,0.219,19,0.000,-0.354,6.972*4D"
+
+    /*
+    private val fakeGga = "\$GPGGA,123519,3746.483,N,12225.150,W,2,09,0.9,15.3,M,-31.2,M,,*5A"
+    private val fakeRmc = "\$GPRMC,123519,A,3746.483,N,12225.150,W,5.7,187.3,280825,3.1,W*6A"
+    private val fakeGbs = "\$GPGBS,123519,1.2,0.8,2.5,04,,,*5C"
+    */
+
+    init {
+        simulateNmeaStream()
+    }
+
+    private fun simulateNmeaStream() {
+            //_locationNMEA.value = parseGGA(fakeGga, _locationNMEA.value)
+            //_locationNMEA.value = parseRMC(fakeRmc, _locationNMEA.value)
+            _locationNMEA.value = parseGBS(fakeGbs, _locationNMEA.value)
+    }
 
     private val _satelliteList = MutableStateFlow(
         listOf(

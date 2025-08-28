@@ -22,6 +22,8 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
 import com.example.gpssatelliteviewer.data.ListenerData
+import com.example.gpssatelliteviewer.utility.parseGBS
+import com.example.gpssatelliteviewer.utility.parseRMC
 import java.util.Date
 import java.util.concurrent.Executors
 import kotlin.Int
@@ -45,8 +47,7 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
 
     private var lastGnssUpdateTime = 0L
-    private var lastNmeaUpdateTime = 0L
-    private val updateInterval = 2000L // in milis
+    private val updateInterval = 5000L // in milis
 
     private var hasNmeaData = false
     private val nmeaTimeout: Long = 30 * 1000 // 30 sec in ms
@@ -96,22 +97,23 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private val nmeaListener = OnNmeaMessageListener { message, _ ->
-        if (message.startsWith("\$GPGGA") || message.startsWith("\$GNGGA")) {
-            hasNmeaData = true
-            _messagePack.value = "Lokalizacja NMEA"
+        hasNmeaData = true
 
-            handler.removeCallbacks(fallbackRunnable)
-            handler.postDelayed(fallbackRunnable, nmeaTimeout)
+        handler.removeCallbacks(fallbackRunnable)
+        handler.postDelayed(fallbackRunnable, nmeaTimeout)
 
-            val currentTime = System.currentTimeMillis()
-            if (currentTime - lastNmeaUpdateTime < updateInterval) return@OnNmeaMessageListener
-            lastNmeaUpdateTime = currentTime
-
-            val data = parseGGA(message)
-            data?.let {
-                _locationNMEA.value = it
+        when {
+            message.startsWith("\$GPGGA") || message.startsWith("\$GNGGA") -> {
+                _locationNMEA.value = parseGGA(message, _locationNMEA.value)
+            }
+            message.startsWith("\$GPRMC") || message.startsWith("\$GNRMC") -> {
+                _locationNMEA.value = parseRMC(message, _locationNMEA.value)
+            }
+            message.startsWith("\$GPGBS") || message.startsWith("\$GNGBS") -> {
+                _locationNMEA.value = parseGBS(message, _locationNMEA.value)
             }
         }
+        if (hasNmeaData) {_messagePack.value = "Lokalizacja NMEA"}
     }
 
     private val locationListener = object : LocationListener {
@@ -152,12 +154,10 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
 
             val executor = Executors.newSingleThreadExecutor()
 
-            Log.d("NMEA", "maybe executor?executor")
             locationManager.registerGnssStatusCallback(
                 executor,
                 gnssCallback
             )
-            Log.d("NMEA", "after executor ")
 
             locationManager.addNmeaListener(
                 executor,

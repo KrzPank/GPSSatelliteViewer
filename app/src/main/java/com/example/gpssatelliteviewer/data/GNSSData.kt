@@ -17,6 +17,8 @@ data class ListenerData(
     val longHemisphere: String,
 )
 
+// ** OLD DATA TYPE **
+/*
 data class NMEAData(
     val time: String,
     val latitude: String,
@@ -29,14 +31,16 @@ data class NMEAData(
     val altitude: Double,
     val heightOfGeoid: Double
 )
+*/
 
-data class GPSData(
+
+data class NMEAData(
     var time: String? = null,
     var date: String? = null,
     var latitude: String? = null,
-    var latHemisphere: String? = null,
+    //var latHemisphere: String? = null,
     var longitude: String? = null,
-    var lonHemisphere: String? = null,
+    //var lonHemisphere: String? = null,
     var fixQuality: String? = null,
     var numSatellites: Int? = null,
     var hdop: Float? = null,
