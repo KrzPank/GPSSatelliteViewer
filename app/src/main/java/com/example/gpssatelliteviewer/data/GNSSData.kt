@@ -17,37 +17,18 @@ data class ListenerData(
     val longHemisphere: String,
 )
 
-// ** OLD DATA TYPE **
-/*
 data class NMEAData(
-    val time: String,
-    val latitude: String,
-    val latHemisphere: String,
-    val longitude: String,
-    val longHemisphere: String,
-    val fixQuality: String,
-    val numSatellites: Int,
-    val horizontalDilution: Float,
-    val altitude: Double,
-    val heightOfGeoid: Double
-)
-*/
-
-
-data class NMEAData(
-    var time: String? = null,
-    var date: String? = null,
-    var latitude: String? = null,
-    //var latHemisphere: String? = null,
-    var longitude: String? = null,
-    //var lonHemisphere: String? = null,
-    var fixQuality: String? = null,
-    var numSatellites: Int? = null,
-    var hdop: Float? = null,
-    var altitude: Double? = null,
-    var geoidHeight: Double? = null,
-    var speedKnots: Double? = null,
-    var course: Double? = null,
-    var magneticVariation: Double? = null,
-    var gbsErrors: List<Double>? = null
+    val time: String? = null,
+    val date: String? = null,
+    val latitude: String? = null,
+    val longitude: String? = null,
+    val fixQuality: String? = null,
+    val numSatellites: Int? = null,
+    val hdop: Float? = null,
+    val altitude: Double? = null,
+    val geoidHeight: Double? = null,
+    val speedKnots: Double? = null,
+    val course: Double? = null,
+    val magneticVariation: Double? = null,
+    val gbsErrors: List<Double>? = null
 )

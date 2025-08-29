@@ -1,5 +1,6 @@
-package com.example.gpssatelliteviewer.view
+package com.example.gpssatelliteviewer.ui
 
+import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
@@ -7,46 +8,52 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+
+
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.gpssatelliteviewer.data.GNSSData
-import com.example.gpssatelliteviewer.data.NMEAData
-import com.example.gpssatelliteviewer.data.ListenerData
-import com.example.gpssatelliteviewer.utility.InfoRow
-import com.example.gpssatelliteviewer.utility.LoadingLocationText
-import com.example.gpssatelliteviewer.viewModel.SatelliteViewModel
-
-
-import android.annotation.SuppressLint
-import androidx.lifecycle.viewModelScope
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
-import com.example.gpssatelliteviewer.utility.AndroidLocationApiPanel
-import com.example.gpssatelliteviewer.utility.NMEALocationPanel
+import com.example.gpssatelliteviewer.data.GNSSData
+import com.example.gpssatelliteviewer.data.ListenerData
+import com.example.gpssatelliteviewer.data.NMEAData
+import com.example.gpssatelliteviewer.ui.cards.AndroidApiLocation
+import com.example.gpssatelliteviewer.ui.cards.NMEALocationCard
+import com.example.gpssatelliteviewer.ui.cards.SatelliteCard
+import com.example.gpssatelliteviewer.ui.components.InfoRow
+import com.example.gpssatelliteviewer.ui.components.LoadingLocationText
 import com.example.gpssatelliteviewer.utility.approximateLocationAccuracy
 import com.example.gpssatelliteviewer.utility.parseGBS
 import com.example.gpssatelliteviewer.utility.parseGGA
 import com.example.gpssatelliteviewer.utility.parseRMC
-import kotlinx.coroutines.delay
+import com.example.gpssatelliteviewer.viewModel.SatelliteViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlin.text.format
 
 
 @RequiresApi(Build.VERSION_CODES.R)
@@ -66,10 +73,6 @@ fun SatellitePanel(
 
     val expandedMap = remember { mutableStateMapOf<String, Boolean>() }
 
-    //val currentTime by remember { mutableStateOf(LocalTime.now()) }
-    //val formatter = DateTimeFormatter.ofPattern("HH:mm:ss")
-    //val localTimeString = currentTime.format(formatter)
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -78,52 +81,24 @@ fun SatellitePanel(
         }
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .padding(innerPadding)
                 .padding(16.dp)
+                .fillMaxWidth()
         ) {
-
-            // Location card
             item {
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.cardElevation(4.dp)
-                ) {
-                    Column(Modifier.padding(12.dp)) {
-                        if (locationNMEA != null){
-                            val nmea = locationNMEA!!
-                            val speedkmh = nmea.speedKnots?.times(1.852)
-                            //NMEALocationPanel(nmea, message.toString())//, localTimeString)
-                            nmea.time?.let { InfoRow(label = "Ostatnia aktualizacja (UTC)", value = it) }
-                            nmea.date?.let { InfoRow(label = "Data", value = it) }
-
-                            InfoRow(label = "Szerokość geograficzna", value = nmea.latitude ?: "Brak danych")
-                            InfoRow(label = "Długość geograficzna", value = nmea.longitude ?: "Brak danych")
-                            InfoRow(label = "Wysokość m.n.p.m.", value = nmea.altitude?.let { "%.1f m".format(it) } ?: "Brak danych")
-                            InfoRow(label = "Wysokość geoidy nad elipsoidą", value = nmea.geoidHeight?.let { "%.1f m".format(it) } ?: "Brak danych")
-                            InfoRow(label = "Dokładność", value = approximateLocationAccuracy(nmea))
-                            InfoRow(label = "Liczba używanych satelitów", value = nmea.numSatellites?.toString() ?: "Brak danych")
-                            InfoRow(label = "Jakość fix", value = nmea.fixQuality ?: "Brak danych")
-                            InfoRow(
-                                label = "Prędkość",
-                                value = listOf(
-                                    nmea.speedKnots?.let { "%.1f kn".format(it) } ?: "Brak danych",
-                                    speedkmh?.let { "%.1f km/h".format(it) } ?: "Brak danych"
-                                ).joinToString(" / ")
-                            )
-                            InfoRow(label = "Kurs", value = nmea.course?.let { "%.1f°".format(it) } ?: "Brak danych")
-                            InfoRow(label = "Odchylenie magnetyczne", value = nmea.magneticVariation?.let { "%.1f°".format(it) } ?: "Brak danych")
-                            InfoRow(label = "Błędy GBS (lat, lon, alt)", value = nmea.gbsErrors?.joinToString(", ") { "%.2f m".format(it) } ?: "Brak danych")
-                        } else if (locationAndroidApi != null) {
-                            val data = locationAndroidApi!!
-                            AndroidLocationApiPanel(data, message.toString())
-                        } else {
-                            LoadingLocationText()
-                        }
-                    }
+                if (locationNMEA != null) {
+                    NMEALocationCard(locationNMEA)
+                } else if (locationAndroidApi != null) {
+                    AndroidApiLocation(locationAndroidApi)
+                } else {
+                    LoadingLocationText()
                 }
                 Spacer(Modifier.height(12.dp))
+            }
+
+            item {
+                SatelliteCard(satellites)
             }
 
             groupedSatellites.forEach { (constellation, satellitesInGroup) ->
@@ -133,14 +108,14 @@ fun SatellitePanel(
                 item {
                     Card(
                         shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
+                        modifier = Modifier.Companion
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
                             .clickable { expandedMap[constellation] = !expanded },
                         elevation = CardDefaults.cardElevation(4.dp)
                     ) {
                         Row(
-                            modifier = Modifier
+                            modifier = Modifier.Companion
                                 .fillMaxWidth()
                                 .padding(12.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
@@ -157,7 +132,7 @@ fun SatellitePanel(
                     items(satellitesInGroup) { satellite ->
                         Card(
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
+                            modifier = Modifier.Companion
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 2.dp),
                             elevation = CardDefaults.cardElevation(2.dp)
@@ -176,6 +151,7 @@ fun SatellitePanel(
 }
 
 
+
 /*
 @RequiresApi(Build.VERSION_CODES.R)
 @SuppressLint("ViewModelConstructorInComposable")
@@ -190,6 +166,7 @@ fun SatellitePanelPreview() {
 }
 */
 
+
 // Fake ViewModel tylko dla preview
 class FakeSatelliteViewModel : ViewModel() {
 
@@ -198,15 +175,15 @@ class FakeSatelliteViewModel : ViewModel() {
 
    // /*
         private val _locationAndroidApi = MutableStateFlow<ListenerData?>(
-            ListenerData(
-                time = "183654",
-                latitude = 12.2297,
-                longitude = 21.0122,
-                altitude = 10.0,
-                latHemisphere = "N",
-                longHemisphere = "E"
-            )
-        )
+       ListenerData(
+           time = "183654",
+           latitude = 12.2297,
+           longitude = 21.0122,
+           altitude = 10.0,
+           latHemisphere = "N",
+           longHemisphere = "E"
+       )
+   )
     //*/
 
     val locationAndroidApi: StateFlow<ListenerData?> = _locationAndroidApi
@@ -215,8 +192,8 @@ class FakeSatelliteViewModel : ViewModel() {
     val messagePack: StateFlow<String?> = _messagePack
 
 
-    //private val fakeGga = "\$GPGGA,172814.0,3723.46587704,N,12202.26957864,W,2,6,1.2,18.893,M,25.669,M,2.00031*4F"
-    //private val fakeRmc = "\$GNRMC,060512.00,A,3150.788156,N,11711.922383,E,0.0,,311019,,,A,V*1B"
+    private val fakeGga = "\$GPGGA,172814.0,3723.46587704,N,12202.26957864,W,2,6,1.2,18.893,M,25.669,M,2.00031*4F"
+    private val fakeRmc = "\$GNRMC,060512.00,A,3150.788156,N,11711.922383,E,0.0,,311019,,,A,V*1B"
     private val fakeGbs = "\$GPGBS,015509.00,-0.031,-0.186,0.219,19,0.000,-0.354,6.972*4D"
 
     /*
@@ -230,8 +207,8 @@ class FakeSatelliteViewModel : ViewModel() {
     }
 
     private fun simulateNmeaStream() {
-            //_locationNMEA.value = parseGGA(fakeGga, _locationNMEA.value)
-            //_locationNMEA.value = parseRMC(fakeRmc, _locationNMEA.value)
+            _locationNMEA.value = parseGGA(fakeGga, _locationNMEA.value)
+            _locationNMEA.value = parseRMC(fakeRmc, _locationNMEA.value)
             _locationNMEA.value = parseGBS(fakeGbs, _locationNMEA.value)
     }
 

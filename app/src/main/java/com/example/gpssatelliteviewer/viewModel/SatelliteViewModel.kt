@@ -38,6 +38,10 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
     private val _locationNMEA = MutableStateFlow<NMEAData?>(null)
     val locationNMEA: StateFlow<NMEAData?> = _locationNMEA
 
+    private var tmpGGA: NMEAData? = null
+    private var tmpRMC: NMEAData? = null
+    private var tmpGBS: List<Double>? = null
+
     private val _locationAndroidApi = MutableStateFlow<ListenerData?>(null)
     val locationAndroidApi: StateFlow<ListenerData?> = _locationAndroidApi
 
@@ -97,30 +101,41 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private val nmeaListener = OnNmeaMessageListener { message, _ ->
-        hasNmeaData = true
-
-        handler.removeCallbacks(fallbackRunnable)
-        handler.postDelayed(fallbackRunnable, nmeaTimeout)
-
         when {
             message.startsWith("\$GPGGA") || message.startsWith("\$GNGGA") -> {
-                _locationNMEA.value = parseGGA(message, _locationNMEA.value)
+                tmpGGA = parseGGA(message, tmpGGA)
             }
             message.startsWith("\$GPRMC") || message.startsWith("\$GNRMC") -> {
-                _locationNMEA.value = parseRMC(message, _locationNMEA.value)
+                tmpRMC = parseRMC(message, tmpRMC)
             }
             message.startsWith("\$GPGBS") || message.startsWith("\$GNGBS") -> {
-                _locationNMEA.value = parseGBS(message, _locationNMEA.value)
+                tmpGBS = parseGBS(message, _locationNMEA.value)?.gbsErrors
             }
         }
-        if (hasNmeaData) {_messagePack.value = "Lokalizacja NMEA"}
+
+        val combined = NMEAData(
+            time = tmpRMC?.time ?: tmpGGA?.time,
+            date = tmpRMC?.date ?: tmpGGA?.date,
+            latitude = tmpGGA?.latitude,
+            longitude = tmpGGA?.longitude,
+            fixQuality = tmpGGA?.fixQuality,
+            numSatellites = tmpGGA?.numSatellites,
+            hdop = tmpGGA?.hdop,
+            altitude = tmpGGA?.altitude,
+            geoidHeight = tmpGGA?.geoidHeight,
+            speedKnots = tmpRMC?.speedKnots,
+            course = tmpRMC?.course,
+            magneticVariation = tmpRMC?.magneticVariation,
+            gbsErrors = tmpGBS
+        )
+
+        _locationNMEA.value = combined
     }
 
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
             if (hasNmeaData) return
 
-            _messagePack.value = "Lokalizacja szybka"
             val list = mutableListOf<ListenerData>()
 
             val sdf = SimpleDateFormat("HHmmss", Locale.US)

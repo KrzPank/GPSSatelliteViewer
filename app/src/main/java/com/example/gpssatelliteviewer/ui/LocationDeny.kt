@@ -1,10 +1,12 @@
-package com.example.gpssatelliteviewer.view
+package com.example.gpssatelliteviewer.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
@@ -14,12 +16,12 @@ fun LocationDeny(
     navController: NavController
 ) {
     Surface(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.Companion.fillMaxSize()
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.Companion.fillMaxSize(),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.Companion.CenterHorizontally
         ) {
             Text(
                 "Ta aplikacja potrzebuje dostępu do lokalizacji.",
@@ -28,6 +30,3 @@ fun LocationDeny(
         }
     }
 }
-
-
-
