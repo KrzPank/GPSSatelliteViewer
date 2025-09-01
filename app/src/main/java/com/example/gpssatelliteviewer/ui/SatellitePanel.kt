@@ -40,10 +40,10 @@ import com.example.gpssatelliteviewer.data.GNSSData
 import com.example.gpssatelliteviewer.data.ListenerData
 import com.example.gpssatelliteviewer.data.NMEAData
 import com.example.gpssatelliteviewer.ui.cards.AndroidApiLocation
+import com.example.gpssatelliteviewer.ui.cards.LoadingLocationText
 import com.example.gpssatelliteviewer.ui.cards.NMEALocationCard
 import com.example.gpssatelliteviewer.ui.cards.SatelliteCard
 import com.example.gpssatelliteviewer.ui.components.InfoRow
-import com.example.gpssatelliteviewer.ui.components.LoadingLocationText
 import com.example.gpssatelliteviewer.utility.approximateLocationAccuracy
 import com.example.gpssatelliteviewer.utility.parseGBS
 import com.example.gpssatelliteviewer.utility.parseGGA
@@ -101,6 +101,7 @@ fun SatellitePanel(
                 SatelliteCard(satellites)
             }
 
+
             groupedSatellites.forEach { (constellation, satellitesInGroup) ->
 
                 val expanded = expandedMap.getOrPut(constellation) { false }
@@ -152,7 +153,7 @@ fun SatellitePanel(
 
 
 
-/*
+
 @RequiresApi(Build.VERSION_CODES.R)
 @SuppressLint("ViewModelConstructorInComposable")
 @Preview(showBackground = true, showSystemUi = true)
@@ -160,11 +161,9 @@ fun SatellitePanel(
 fun SatellitePanelPreview() {
     val fakeViewModel = FakeSatelliteViewModel()
     SatellitePanel(
-        navController = rememberNavController(),
-        viewModel = fakeViewModel
+        navController = rememberNavController()
     )
 }
-*/
 
 
 // Fake ViewModel tylko dla preview
@@ -192,7 +191,7 @@ class FakeSatelliteViewModel : ViewModel() {
     val messagePack: StateFlow<String?> = _messagePack
 
 
-    private val fakeGga = "\$GPGGA,172814.0,3723.46587704,N,12202.26957864,W,2,6,1.2,18.893,M,25.669,M,2.00031*4F"
+    private val fakeGga = "\$GPGGA,172814.0,3723.46587704,N,12202.26957864,W,1,10,1.2,18.893,M,25.669,M,2.00031*4F"
     private val fakeRmc = "\$GNRMC,060512.00,A,3150.788156,N,11711.922383,E,0.0,,311019,,,A,V*1B"
     private val fakeGbs = "\$GPGBS,015509.00,-0.031,-0.186,0.219,19,0.000,-0.354,6.972*4D"
 

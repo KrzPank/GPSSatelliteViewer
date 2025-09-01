@@ -1,31 +1,22 @@
 package com.example.gpssatelliteviewer.ui.cards
 
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.ui.components.InfoRow
 import com.example.gpssatelliteviewer.data.GNSSData
+import com.example.gpssatelliteviewer.ui.components.SNRBar
 
 
 @Composable
@@ -58,24 +49,30 @@ fun SatelliteCard(
         Column(modifier = Modifier.padding(16.dp)) {
             InfoRow(label = "Widoczne satelity", value = totalSatellites.toString())
             InfoRow(label = "Używane w fix", value = usedInFixCount.toString())
-            //Spacer(modifier = Modifier.height(8.dp))
             InfoRow(
-                label = "Średnie SNR satelitów użytych w fix",
+                label = "Avg. fix SNR",
                 value = if (averageSNRInFix != null) {
                     "${"%.1f".format(averageSNRInFix)} dBHz"
                 } else {
-                    "Brak satelitów w fix"
+                    "Brak fix"
                 }
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Średnie SNR:", style = MaterialTheme.typography.bodyMedium)
-            averageSNRByConstellation.forEach { (constellation, avgSNR) ->
-                Text(
-                    "$constellation: ${"%.1f".format(avgSNR)} dBHz",
-                    style = MaterialTheme.typography.bodySmall
-                )
+            Spacer(modifier = modifier.height(6.dp))
+            if (averageSNRInFix != null)
+            {
+                SNRBar(value = averageSNRInFix)
             }
 
+            //Spacer(modifier = Modifier.height(8.dp))
+            Text("Średnie SNR:", style = MaterialTheme.typography.bodyMedium)
+
+            averageSNRByConstellation.forEach { (constellation, avgSNR) ->
+                InfoRow(
+                    label = constellation,
+                    value = "${"%.1f".format(avgSNR)} dBHz"
+                )
+                Spacer(Modifier.height(4.dp))
+            }
         }
     }
 }

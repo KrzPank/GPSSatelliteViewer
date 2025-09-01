@@ -50,24 +50,25 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
 
-    private var lastGnssUpdateTime = 0L
+    private var nmeaMessageReceived = false
+    private var androidApiLocation = false
     private val updateInterval = 5000L // in milis
+    private val timeoutPeriod: Long = 30 * 1000 // 30 sec
 
-    private var hasNmeaData = false
-    private val nmeaTimeout: Long = 30 * 1000 // 30 sec in ms
     private val handler = Handler(Looper.getMainLooper())
-    private val fallbackRunnable = Runnable {
-        hasNmeaData = false
+    private val noNMEAMessageTimeout  = Runnable {
+        nmeaMessageReceived = false
+        _locationNMEA.value = null
+    }
+    private val noAndroidApiLocation = Runnable {
         _locationNMEA.value = null
     }
 
     private val gnssCallback = object : GnssStatus.Callback() {
         override fun onSatelliteStatusChanged(status: GnssStatus) {
-            val currentTime = System.currentTimeMillis()
-            if (currentTime - lastGnssUpdateTime < updateInterval) return
-            lastGnssUpdateTime = currentTime
-
-            Log.d("GNSSCallback", "Raw message: $status")
+            //val currentTime = System.currentTimeMillis()
+            //if (currentTime - lastGnssUpdateTime < updateInterval) return
+            //lastGnssUpdateTime = currentTime
 
             val list = mutableListOf<GNSSData>()
             for (i in 0 until status.satelliteCount) {
@@ -101,6 +102,11 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private val nmeaListener = OnNmeaMessageListener { message, _ ->
+
+        handler.removeCallbacks(noNMEAMessageTimeout)
+        nmeaMessageReceived = true
+        handler.postDelayed(noNMEAMessageTimeout, timeoutPeriod)
+
         when {
             message.startsWith("\$GPGGA") || message.startsWith("\$GNGGA") -> {
                 tmpGGA = parseGGA(message, tmpGGA)
@@ -123,6 +129,7 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
             hdop = tmpGGA?.hdop,
             altitude = tmpGGA?.altitude,
             geoidHeight = tmpGGA?.geoidHeight,
+            mslAltitude = tmpGGA?.mslAltitude,
             speedKnots = tmpRMC?.speedKnots,
             course = tmpRMC?.course,
             magneticVariation = tmpRMC?.magneticVariation,
@@ -134,7 +141,10 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
-            if (hasNmeaData) return
+            handler.removeCallbacks(noAndroidApiLocation)
+            handler.postDelayed(noAndroidApiLocation, timeoutPeriod)
+
+            if (nmeaMessageReceived) return
 
             val list = mutableListOf<ListenerData>()
 
@@ -185,8 +195,6 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
                 0f,
                 locationListener
             )
-
-            handler.postDelayed(fallbackRunnable, nmeaTimeout)
 
         } catch (_: SecurityException) {
             _satelliteList.value = listOf(

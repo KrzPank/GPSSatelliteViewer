@@ -27,6 +27,7 @@ data class NMEAData(
     val hdop: Float? = null,
     val altitude: Double? = null,
     val geoidHeight: Double? = null,
+    val mslAltitude: Double? = null,
     val speedKnots: Double? = null,
     val course: Double? = null,
     val magneticVariation: Double? = null,

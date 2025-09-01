@@ -19,21 +19,24 @@ fun parseGGA(message: String, existing: NMEAData? = null): NMEAData? {
         val hdop = parts[8].toFloatOrNull()
         val altitude = parts[9].toDoubleOrNull()
         val geoidHeight = parts[11].toDoubleOrNull()
+        val mslAltitude = if (altitude != null && geoidHeight != null){
+            altitude + geoidHeight
+        } else null
+
+        val latitude = if (lat != 0.0 && lon != 0.0) convertToDMS(lat, latHem) else null
+        val longitude = if (lat != 0.0 && lon != 0.0) convertToDMS(lon, lonHem) else null
 
         NMEAData(
             time = time,
             date = existing?.date,
-            latitude = if (lat != 0.0 && lon != 0.0) convertToDMS(lat, latHem) else null,
-            longitude = if (lat != 0.0 && lon != 0.0) convertToDMS(lon, lonHem) else null,
+            latitude = latitude,
+            longitude = longitude,
             fixQuality = mapFixQuality(fixQ),
             numSatellites = numSatellites,
             hdop = hdop,
             altitude = altitude,
             geoidHeight = geoidHeight,
-            speedKnots = existing?.speedKnots,
-            course = existing?.course,
-            magneticVariation = existing?.magneticVariation,
-            gbsErrors = existing?.gbsErrors
+            mslAltitude = mslAltitude
         )
     } catch (e: Exception) {
         e.printStackTrace()
@@ -59,6 +62,9 @@ fun parseRMC(message: String, existing: NMEAData? = null): NMEAData? {
 
         val latitude = if (lat != 0.0 && lon != 0.0) convertToDMS(lat, latHem) else null
         val longitude = if (lat != 0.0 && lon != 0.0) convertToDMS(lon, lonHem) else null
+        if (magVar != null && magVarHem != null) {
+            if (magVarHem.equals("W", ignoreCase = true)) -magVar else magVar
+        } else magVar
 
         NMEAData(
             time = time,
@@ -67,15 +73,8 @@ fun parseRMC(message: String, existing: NMEAData? = null): NMEAData? {
             longitude = longitude,
             speedKnots = speedKnots,
             course = course,
-            magneticVariation = if (magVar != null && magVarHem != null) {
-                if (magVarHem.equals("W", ignoreCase = true)) -magVar else magVar
-            } else magVar,
-            fixQuality = existing?.fixQuality,
-            numSatellites = existing?.numSatellites,
-            hdop = existing?.hdop,
-            altitude = existing?.altitude,
-            geoidHeight = existing?.geoidHeight,
-            gbsErrors = existing?.gbsErrors
+            magneticVariation = magVar
+
         )
     } catch (e: Exception) {
         e.printStackTrace()
@@ -93,18 +92,6 @@ fun parseGBS(message: String, existing: NMEAData? = null): NMEAData? {
         val errAlt = parts[4].toDoubleOrNull()
 
         NMEAData(
-            time = existing?.time,
-            date = existing?.date,
-            latitude = existing?.latitude,
-            longitude = existing?.longitude,
-            fixQuality = existing?.fixQuality,
-            numSatellites = existing?.numSatellites,
-            hdop = existing?.hdop,
-            altitude = existing?.altitude,
-            geoidHeight = existing?.geoidHeight,
-            speedKnots = existing?.speedKnots,
-            course = existing?.course,
-            magneticVariation = existing?.magneticVariation,
             gbsErrors = listOfNotNull(errLat, errLon, errAlt)
         )
     } catch (e: Exception) {
@@ -114,9 +101,8 @@ fun parseGBS(message: String, existing: NMEAData? = null): NMEAData? {
 }
 
 
-fun approximateLocationAccuracy(existing: NMEAData? = null, sensorAccuracyM: Double = 5.0): String {
+fun approximateLocationAccuracy(existing: NMEAData? = null, sensorAccuracyM: Double = 4.5): String {
     val data = existing ?: NMEAData()
-
     val hdopAccuracy = data.hdop?.times(sensorAccuracyM)
 
     val gbsError = data.gbsErrors?.let { list ->
@@ -131,8 +117,6 @@ fun approximateLocationAccuracy(existing: NMEAData? = null, sensorAccuracyM: Dou
         "Brak danych"
     }
 }
-
-
 
 
 @SuppressLint("DefaultLocale")
@@ -156,7 +140,8 @@ private fun formatNmeaDate(datestr: String?): String? {
         val year = datestr.substring(4, 6).toInt()
         val fullyear = 2000 + year
 
-        return String.format("%04d-%02d-%02d", fullyear, month, day)
+        //return String.format("%04d-%02d-%02d", fullyear, month, day)
+        return String.format("%02d-%02d-%03d", day, month, fullyear)
     }
 }
 
@@ -173,7 +158,7 @@ private fun formatNmeaTime(nmeaTime: String?): String? {
 
 private fun mapFixQuality(fixQuality: Int): String {
     return when(fixQuality) {
-        0 -> "Brak"
+        0 -> "Brak danych"
         1 -> "GPS"
         2 -> "DGPS"
         3 -> "PPS"
