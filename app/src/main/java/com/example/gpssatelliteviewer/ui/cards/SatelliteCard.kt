@@ -54,14 +54,12 @@ fun SatelliteCard(
                 value = if (averageSNRInFix != null) {
                     "${"%.1f".format(averageSNRInFix)} dBHz"
                 } else {
-                    "Brak fix"
+                    "0"
                 }
             )
             Spacer(modifier = modifier.height(6.dp))
-            if (averageSNRInFix != null)
-            {
-                SNRBar(value = averageSNRInFix)
-            }
+            if (averageSNRInFix == null) SNRBar(value = 0f)
+            else SNRBar(value = averageSNRInFix)
 
             //Spacer(modifier = Modifier.height(8.dp))
             Text("Średnie SNR:", style = MaterialTheme.typography.bodyMedium)
