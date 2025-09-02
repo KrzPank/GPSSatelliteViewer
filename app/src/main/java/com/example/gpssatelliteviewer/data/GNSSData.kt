@@ -1,13 +1,20 @@
 package com.example.gpssatelliteviewer.data
 
 
-data class GNSSData(
+data class GNSSStatusData(
     val constellation: String,
     val id: Int,
     val snr: Float,
     val usedInFix: Boolean
 )
 
+/**         *** TO DO ***
+data class GNSSNavigationData(
+
+)
+*/
+
+///         *** ZAMIENIC KIEDYS NA ?: = null ***
 data class ListenerData(
     val time: String,
     val latitude: Double,

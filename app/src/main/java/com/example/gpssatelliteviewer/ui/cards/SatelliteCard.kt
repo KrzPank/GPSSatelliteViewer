@@ -15,13 +15,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.ui.components.InfoRow
-import com.example.gpssatelliteviewer.data.GNSSData
+import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.ui.components.SNRBar
 
 
 @Composable
 fun SatelliteCard(
-    satellites: List<GNSSData>,
+    satellites: List<GNSSStatusData>,
     modifier: Modifier = Modifier
 ) {
     val totalSatellites = satellites.size

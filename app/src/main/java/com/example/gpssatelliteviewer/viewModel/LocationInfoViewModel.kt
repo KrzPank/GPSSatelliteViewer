@@ -8,10 +8,9 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.location.OnNmeaMessageListener
 import android.os.Bundle
-import android.util.Log
 import java.util.Locale
 import androidx.lifecycle.AndroidViewModel
-import com.example.gpssatelliteviewer.data.GNSSData
+import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.data.NMEAData
 import com.example.gpssatelliteviewer.utility.parseGGA
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,10 +29,10 @@ import kotlin.Int
 
 
 @RequiresApi(Build.VERSION_CODES.R)
-class SatelliteViewModel(application: Application) : AndroidViewModel(application) {
+class LocationInfoViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _satelliteList = MutableStateFlow<List<GNSSData>>(listOf())
-    val satelliteList: StateFlow<List<GNSSData>> = _satelliteList
+    private val _satelliteList = MutableStateFlow<List<GNSSStatusData>>(listOf())
+    val satelliteList: StateFlow<List<GNSSStatusData>> = _satelliteList
 
     private val _locationNMEA = MutableStateFlow<NMEAData?>(null)
     val locationNMEA: StateFlow<NMEAData?> = _locationNMEA
@@ -52,7 +51,7 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
 
     private var nmeaMessageReceived = false
     private var androidApiLocation = false
-    private val updateInterval = 5000L // in milis
+    private val updateInterval = 2000L // in milis
     private val timeoutPeriod: Long = 30 * 1000 // 30 sec
 
     private val handler = Handler(Looper.getMainLooper())
@@ -70,7 +69,7 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
             //if (currentTime - lastGnssUpdateTime < updateInterval) return
             //lastGnssUpdateTime = currentTime
 
-            val list = mutableListOf<GNSSData>()
+            val list = mutableListOf<GNSSStatusData>()
             for (i in 0 until status.satelliteCount) {
                 val constellation = when (status.getConstellationType(i)) {
                     GnssStatus.CONSTELLATION_GPS -> "GPS"
@@ -89,7 +88,7 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
                 val used = status.usedInFix(i)
 
                 list.add(
-                    GNSSData(
+                    GNSSStatusData(
                         constellation = constellation,
                         id = svid,
                         snr = cn0,
@@ -171,7 +170,7 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
         override fun onProviderDisabled(provider: String) {}
     }
 
-    init {
+    fun startLocationInfo() {
         try {
             //  UNDO IF THREADING IS SOMEHOW NOT DOABLE         ***LAG IN UI***
             //locationManager.registerGnssStatusCallback(gnssCallback)
@@ -179,16 +178,8 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
 
             val executor = Executors.newSingleThreadExecutor()
 
-            locationManager.registerGnssStatusCallback(
-                executor,
-                gnssCallback
-            )
-
-            locationManager.addNmeaListener(
-                executor,
-                nmeaListener
-            )
-
+            locationManager.registerGnssStatusCallback(executor, gnssCallback)
+            locationManager.addNmeaListener(executor, nmeaListener)
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
                 updateInterval,
@@ -197,8 +188,9 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
             )
 
         } catch (_: SecurityException) {
+            // *** Change this later ***
             _satelliteList.value = listOf(
-                GNSSData(
+                GNSSStatusData(
                     constellation = "Error",
                     id = 0,
                     snr = 0.0f,
@@ -210,8 +202,8 @@ class SatelliteViewModel(application: Application) : AndroidViewModel(applicatio
 
     override fun onCleared() {
         super.onCleared()
-        try {
-            locationManager.unregisterGnssStatusCallback(gnssCallback)
-        } catch (_: SecurityException) { }
+        locationManager.unregisterGnssStatusCallback(gnssCallback)
+        locationManager.removeNmeaListener(nmeaListener)
+        locationManager.removeUpdates(locationListener)
     }
 }

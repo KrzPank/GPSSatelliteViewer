@@ -23,8 +23,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 
-import com.example.gpssatelliteviewer.ui.LocationDeny
-import com.example.gpssatelliteviewer.ui.SatellitePanel
+import com.example.gpssatelliteviewer.ui.panels.LocationDeny
+import com.example.gpssatelliteviewer.ui.panels.LocationInfoPanel
+import com.example.gpssatelliteviewer.ui.panels.Satellite3DPanel
 
 
 class MainActivity : ComponentActivity() {
@@ -68,10 +69,15 @@ fun AppNavigation() {
     if (hasPermission) {
         NavHost(
             navController = navController,
-            startDestination = "SatellitePanel"
+            //   *** TO UNDO when Satellite3DPanel works ***
+            // startDestination = "LocationInfoPanel"
+            startDestination = "LocationInfoPanel"
         ) {
-            composable("SatellitePanel") {
-                SatellitePanel(navController)
+            composable("LocationInfoPanel") {
+                LocationInfoPanel(navController)
+            }
+            composable("Satellite3DPanel") {
+                Satellite3DPanel(navController)
             }
         }
     } else {
