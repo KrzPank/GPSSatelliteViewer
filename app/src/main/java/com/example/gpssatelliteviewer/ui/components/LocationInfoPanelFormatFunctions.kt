@@ -55,10 +55,10 @@ fun SNRBar(
 
     val ranges = listOf(
         0f to 10f to Color.Red,
-        10f to 20f to Color(0xFFFF9800), // Orange
+        10f to 20f to Color(0xFFFF9800),
         20f to 30f to Color.Yellow,
-        30f to 50f to Color(0xFF86D317), // Light green
-        50f to 99f to Color(0xFF39BB3F)  // Green
+        30f to 50f to Color(0xFF86D317),
+        50f to 99f to Color(0xFF39BB3F)
     )
 
     val thresholds = listOf(0f, 10f, 20f, 30f, 50f, 99f)
@@ -67,14 +67,13 @@ fun SNRBar(
         BoxWithConstraints(
             Modifier
                 .fillMaxWidth()
-                .height(17.dp) // bar height
+                .height(17.dp)
         ) {
             val barWidth = constraints.maxWidth.toFloat()
             val percent = clamped / 99f
             val indicatorX = barWidth * percent
 
             Canvas(Modifier.fillMaxSize()) {
-                // draw colored ranges
                 ranges.forEach { (range, color) ->
                     val (start, end) = range
                     val startX = (start / 99f) * size.width

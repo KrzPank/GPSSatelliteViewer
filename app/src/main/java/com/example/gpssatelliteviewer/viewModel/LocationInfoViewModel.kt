@@ -16,6 +16,7 @@ import com.example.gpssatelliteviewer.utility.parseGGA
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import android.icu.util.TimeZone
+import android.location.GnssNavigationMessage
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -33,6 +34,14 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
 
     private val _satelliteList = MutableStateFlow<List<GNSSStatusData>>(listOf())
     val satelliteList: StateFlow<List<GNSSStatusData>> = _satelliteList
+
+    // Satellite3DViewModel
+    private val _navMessages = MutableStateFlow<GnssNavigationMessage?>(null)
+    val navMessages: StateFlow<GnssNavigationMessage?> = _navMessages
+
+    private val _hasGNSSNavigationMessage = MutableStateFlow<String>("No capabilities")
+    val hasGNSSNavigationMessage: StateFlow<String> = _hasGNSSNavigationMessage
+    // Satellite3DViewModel
 
     private val _locationNMEA = MutableStateFlow<NMEAData?>(null)
     val locationNMEA: StateFlow<NMEAData?> = _locationNMEA
@@ -97,6 +106,16 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
                 )
             }
             _satelliteList.value = list
+        }
+    }
+
+    private val naviMessageCallback = object : GnssNavigationMessage.Callback() {
+        override fun onGnssNavigationMessageReceived(event: GnssNavigationMessage) {
+            _navMessages.value = event
+        }
+
+        override fun onStatusChanged(status: Int) {
+            super.onStatusChanged(status)
         }
     }
 
@@ -179,6 +198,7 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
             val executor = Executors.newSingleThreadExecutor()
 
             locationManager.registerGnssStatusCallback(executor, gnssCallback)
+            //locationManager.registerGnssNavigationMessageCallback(executor, naviMessageCallback)
             locationManager.addNmeaListener(executor, nmeaListener)
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
@@ -186,6 +206,9 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
                 0f,
                 locationListener
             )
+
+            //val gnssCapabilities = locationManager.gnssCapabilities
+            //_hasGNSSNavigationMessage.value = gnssCapabilities.toString()
 
         } catch (_: SecurityException) {
             // *** Change this later ***
@@ -197,6 +220,17 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
                     usedInFix = false
                 )
             )
+        }
+    }
+
+    fun startGNSSNavigation(){
+        try {
+            val tempExecutor = Executors.newSingleThreadExecutor()
+            locationManager.registerGnssNavigationMessageCallback(tempExecutor, naviMessageCallback)
+            val gnssCapabilities = locationManager.gnssCapabilities
+            _hasGNSSNavigationMessage.value = gnssCapabilities.toString()
+        } catch (e: SecurityException) {
+            e.printStackTrace()
         }
     }
 

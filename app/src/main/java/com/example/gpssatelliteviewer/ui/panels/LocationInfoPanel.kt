@@ -56,7 +56,7 @@ import androidx.compose.runtime.getValue
 @Composable
 fun LocationInfoPanel(
     navController: NavController,
-    viewModel: /* to change LocationInfoViewModel FakeSatelliteViewModel*/ LocationInfoViewModel = viewModel()
+    viewModel: /* to change LocationInfoViewModel FakeLocationInfoViewModel*/ LocationInfoViewModel = viewModel()
 ) {
 
     LaunchedEffect(Unit) {
@@ -88,7 +88,7 @@ fun LocationInfoPanel(
         ) {
             item {
                 Button(onClick = { navController.navigate("Satellite3DPanel") }) {
-                    Text("Satelite 3D Panel")
+                    Text("Widok 3D")
                 }
             }
             item {

@@ -9,12 +9,16 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+
+//import androidx.lifecycle.LiveData
+//import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.concurrent.Executors
 
+
+/*
+    For now abandoned viewModel everything in LocationInfoViewModel
 
 @RequiresApi(Build.VERSION_CODES.R)
 class Satellite3DViewModel (application: Application) : AndroidViewModel(application) {
@@ -44,7 +48,8 @@ class Satellite3DViewModel (application: Application) : AndroidViewModel(applica
 
     fun startGNSSNavigation(){
         try {
-            locationManager.registerGnssNavigationMessageCallback(navCallback)
+            val tempExecutor = Executors.newSingleThreadExecutor()
+            locationManager.registerGnssNavigationMessageCallback(tempExecutor, navCallback)
             val gnssCapabilities = locationManager.gnssCapabilities
             _hasGNSSNavigationMessage.value = gnssCapabilities.toString()
         } catch (e: SecurityException) {
@@ -52,3 +57,5 @@ class Satellite3DViewModel (application: Application) : AndroidViewModel(applica
         }
     }
 }
+
+ */

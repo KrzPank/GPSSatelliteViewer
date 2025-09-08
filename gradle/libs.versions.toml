@@ -1,4 +1,5 @@
 [versions]
+accompanistPermissions = "0.36.0"
 agp = "8.10.1"
 kotlin = "2.0.21"
 coreKtx = "1.17.0"
@@ -10,11 +11,11 @@ activityCompose = "1.10.1"
 composeBom = "2024.09.00"
 appcompat = "1.7.1"
 
-navigation = "2.7.7"
-lifecycle = "2.7.0"
-sceneformBase = "1.17.1"
+navigation = "2.9.3"
+lifecycle = "2.9.3"
 
 [libraries]
+accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -33,7 +34,6 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
-sceneform-base = { group = "com.google.ar.sceneform", name = "sceneform-base", version.ref = "sceneformBase" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

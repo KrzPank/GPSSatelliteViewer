@@ -69,8 +69,6 @@ fun AppNavigation() {
     if (hasPermission) {
         NavHost(
             navController = navController,
-            //   *** TO UNDO when Satellite3DPanel works ***
-            // startDestination = "LocationInfoPanel"
             startDestination = "LocationInfoPanel"
         ) {
             composable("LocationInfoPanel") {
