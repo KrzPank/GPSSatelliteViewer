@@ -38,10 +38,6 @@ fun Satellite3DPanel(
     navController: NavController,
     viewModel: LocationInfoViewModel = viewModel()
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.startGNSSNavigation()
-    }
-
     val navMessage by viewModel.navMessages.collectAsState()
     val gnssCapabilities = viewModel.hasGNSSNavigationMessage.collectAsState()
     val context = LocalContext.current
@@ -85,7 +81,7 @@ fun Satellite3DPanel(
                     modifier = Modifier.Companion.padding(8.dp)
                 )
             }
-             */
+            */
         }
     }
 }

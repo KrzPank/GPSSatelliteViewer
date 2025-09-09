@@ -189,6 +189,11 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
         override fun onProviderDisabled(provider: String) {}
     }
 
+    init {
+        startLocationInfo()
+        startGNSSNavigation()
+    }
+
     fun startLocationInfo() {
         try {
             //  UNDO IF THREADING IS SOMEHOW NOT DOABLE         ***LAG IN UI***

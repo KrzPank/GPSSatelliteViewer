@@ -34,9 +34,9 @@ fun geoToECEF(latDeg: Double, lonDeg: Double, alt: Double = 0.0): Float3 {
 // Scale & remap ECEF → SceneView
 fun ecefToScenePos(
     ecef: Float3,
-    modelRadius: Float = 0.5f,     // your Earth node radius in world units
+    modelRadius: Float = 0.5f,     // Earth node radius in world units
     earthRadius: Float = 6378137f, // meters
-    yawDeg: Float = 0f,            // optional prime-meridian texture offset
+    yawDeg: Float = -2f,            // optional prime-meridian texture offset
     flipLon: Boolean = false       // set true if East/West appears mirrored
 ): Float3 {
     val s = modelRadius / earthRadius
@@ -54,6 +54,6 @@ fun ecefToScenePos(
         v = Float3(v.x * c - v.z * si, v.y, v.x * si + v.z * c)
     }
 
-    Log.e("SceneView", "Model location x:${v.x}, y:${v.y}, z:${v.z}")
+    //Log.e("SceneView", "Model location x:${v.x}, y:${v.y}, z:${v.z}")
     return v
 }

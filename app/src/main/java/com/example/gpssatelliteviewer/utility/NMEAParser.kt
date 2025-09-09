@@ -2,6 +2,7 @@ package com.example.gpssatelliteviewer.utility
 
 import android.annotation.SuppressLint
 import com.example.gpssatelliteviewer.data.NMEAData
+import kotlin.Double
 
 
 fun parseGGA(message: String, existing: NMEAData? = null): NMEAData? {
@@ -36,7 +37,12 @@ fun parseGGA(message: String, existing: NMEAData? = null): NMEAData? {
             hdop = hdop,
             altitude = altitude,
             geoidHeight = geoidHeight,
-            mslAltitude = mslAltitude
+            mslAltitude = mslAltitude,
+            //speedKnots = 0.0,
+            //course = 0.0,
+            //magneticVariation = 0.0,
+            //gbsErrors = List<Double>()
+
         )
     } catch (e: Exception) {
         e.printStackTrace()

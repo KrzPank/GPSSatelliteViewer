@@ -1,6 +1,5 @@
 package com.example.gpssatelliteviewer.data
 
-
 data class GNSSStatusData(
     val constellation: String,
     val id: Int,
@@ -23,7 +22,7 @@ data class ListenerData(
     val latHemisphere: String,
     val longHemisphere: String,
 )
-
+//*
 data class NMEAData(
     val time: String? = null,
     val date: String? = null,
@@ -40,3 +39,25 @@ data class NMEAData(
     val magneticVariation: Double? = null,
     val gbsErrors: List<Double>? = null
 )
+
+ //*/
+
+/*
+data class NMEAData(
+    val time: String?,
+    val date: String?,
+    val latitude: String?,
+    val longitude: String?,
+    val fixQuality: String?,
+    val numSatellites: Int?,
+    val hdop: Float?,
+    val altitude: Double?,
+    val geoidHeight: Double?,
+    val mslAltitude: Double?,
+    val speedKnots: Double?,
+    val course: Double?,
+    val magneticVariation: Double?,
+    val gbsErrors: List<Double>?
+)
+
+ */

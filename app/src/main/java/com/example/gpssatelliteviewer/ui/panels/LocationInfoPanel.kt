@@ -50,6 +50,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.saveable.rememberSaveable
 
 @RequiresApi(Build.VERSION_CODES.R)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,10 +59,6 @@ fun LocationInfoPanel(
     navController: NavController,
     viewModel: /* to change LocationInfoViewModel FakeLocationInfoViewModel*/ LocationInfoViewModel = viewModel()
 ) {
-
-    LaunchedEffect(Unit) {
-        viewModel.startLocationInfo()
-    }
 
     val satellites by viewModel.satelliteList.collectAsState()
     val groupedSatellites = satellites.groupBy { it.constellation }
@@ -179,7 +176,7 @@ fun LocationInfoPanelPreview() {
 }
 
 
-// Fake ViewModel tylko dla preview
+// Fake ViewModel only for preview
 class FakeLocationInfoViewModel : ViewModel() {
 
     private val _locationNMEA = MutableStateFlow<NMEAData?>(null)
