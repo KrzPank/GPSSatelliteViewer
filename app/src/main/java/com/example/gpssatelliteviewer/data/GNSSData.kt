@@ -16,14 +16,14 @@ data class GNSSNavigationData(
 */
 
 data class ListenerData(
-    val time: String,
-    val latitude: Double,
-    val longitude: Double,
-    val altitude: Double,
-    val latHemisphere: String,
-    val longHemisphere: String,
+    val time: String = "",
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val altitude: Double = 0.0,
+    val latHemisphere: String = "",
+    val longHemisphere: String = "",
 )
-//*
+/*
 data class NMEAData(
     val time: String? = null,
     val date: String? = null,
@@ -41,24 +41,25 @@ data class NMEAData(
     val gbsErrors: List<Double>? = null
 )
 
- //*/
-
-/*
-data class NMEAData(
-    val time: String?,
-    val date: String?,
-    val latitude: String?,
-    val longitude: String?,
-    val fixQuality: String?,
-    val numSatellites: Int?,
-    val hdop: Float?,
-    val altitude: Double?,
-    val geoidHeight: Double?,
-    val mslAltitude: Double?,
-    val speedKnots: Double?,
-    val course: Double?,
-    val magneticVariation: Double?,
-    val gbsErrors: List<Double>?
-)
-
  */
+
+//*
+data class NMEAData(
+    val time: String = "",
+    val date: String = "",
+    val latitude: Double = 0.0,
+    val latHemisphere: String = "",
+    val longitude: Double = 0.0,
+    val lonHemisphere: String = "",
+    val fixQuality: String = "",
+    val numSatellites: Int = 0,
+    val hdop: Float = 0f,
+    val altitude: Double = 0.0,
+    val geoidHeight: Double = 0.0,
+    val mslAltitude: Double = 0.0,
+    val speedKnots: Double = 0.0,
+    val course: Double = 0.0,
+    val magneticVariation: Double = 0.0,
+    val gbsErrors: List<Double> = emptyList()
+)
+//*/

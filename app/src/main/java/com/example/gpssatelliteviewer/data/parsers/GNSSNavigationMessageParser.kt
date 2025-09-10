@@ -1,8 +1,8 @@
-package com.example.gpssatelliteviewer.utility
+package com.example.gpssatelliteviewer.data.parsers
 
 /**     *** TO DO ***
  *
 class GNSSNavigationMessageParser {
 }
 
- */
+*/

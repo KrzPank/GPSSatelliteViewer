@@ -1,11 +1,15 @@
-package com.example.gpssatelliteviewer.rendering3d
-
+package com.example.gpssatelliteviewer.ui.cards
 
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.example.gpssatelliteviewer.data.GNSSStatusData
+import com.example.gpssatelliteviewer.utils.CoordinateConversion
+import com.example.gpssatelliteviewer.utils.CoordinateConversion.azElToECEF
+import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.Scene
-import io.github.sceneview.math.Position
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.rememberCameraManipulator
 import io.github.sceneview.rememberCameraNode
@@ -14,13 +18,6 @@ import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberNode
 import io.github.sceneview.rememberOnGestureListener
-
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
-import androidx.compose.ui.Modifier
-import com.example.gpssatelliteviewer.data.GNSSStatusData
-import dev.romainguy.kotlin.math.scale
-import kotlinx.coroutines.flow.MutableStateFlow
 
 private val DEFAULT_LOCATIONS = listOf(
     40.7128 to -74.0060,   // New York
@@ -54,8 +51,11 @@ private val DEFAULT_LOCATIONS = listOf(
 
 
 @Composable
-fun Earth3DScene(satelliteList: List<GNSSStatusData>) {
-    Box(modifier = Modifier.fillMaxSize()) {
+fun Earth3DView(
+    satelliteList: List<GNSSStatusData>,
+    userLocation: Triple<Float, Float, Float>
+) {
+    Box(modifier = Modifier.Companion.fillMaxSize()) {
         val engine = rememberEngine()
         val modelLoader = rememberModelLoader(engine)
         val environmentLoader = rememberEnvironmentLoader(engine)
@@ -63,22 +63,25 @@ fun Earth3DScene(satelliteList: List<GNSSStatusData>) {
         val centerNode = rememberNode(engine)
 
         val cameraNode = rememberCameraNode(engine) {
-            position = Position(y = 0.5f, z = 3.0f)
+            position = Float3(y = 0.5f, z = 3.0f)
             lookAt(centerNode)
             centerNode.addChildNode(this)
         }
 
-        //val markers = DEFAULT_LOCATIONS.map { (lat, lon) ->
-        //    val instance = modelLoader.createModelInstance(
-        //        assetFileLocation = "models/RedSphere.glb"
-        //    )
-        //    ModelNode(
-        //        modelInstance = instance,
-        //        scaleToUnits = 0.02f
-        //    ).apply {
-        //        position = ecefToScenePos(geoToECEF(lat, lon, 1000000.0))
-        //    }
-        //}
+        /* *** OLD MARKERS WRONG? ***
+        val markers = DEFAULT_LOCATIONS.map { (lat, lon) ->
+            val instance = modelLoader.createModelInstance(
+                assetFileLocation = "models/RedSphere.glb"
+            )
+            ModelNode(
+                modelInstance = instance,
+                scaleToUnits = 0.02f
+            ).apply {
+                position = ecefToScenePos(geoToECEF(lat, lon, 1000000.0))
+            }
+        }
+
+         */
 
         val markers = satelliteList.map { sat ->
             val instance = modelLoader.createModelInstance(
@@ -88,16 +91,17 @@ fun Earth3DScene(satelliteList: List<GNSSStatusData>) {
                 modelInstance = instance,
                 scaleToUnits = 0.02f
             ).apply {
-                val pos = azElToScenePos(
-                    sat.azimuth,
-                    sat.elevation,
-                    radius = 1.0
+                val pos = CoordinateConversion.ecefToScenePos(
+                    azElToECEF(
+                        sat.azimuth,
+                        sat.elevation,
+                        userLocation
+                    )
                 )
                 Log.e("SatPos", "Sid:${sat.id} position: ${pos.x}, y:${pos.y}, z:${pos.z}")
                 position = pos
             }
         }
-
 
         val earthNode = rememberNode {
             ModelNode(
@@ -118,7 +122,7 @@ fun Earth3DScene(satelliteList: List<GNSSStatusData>) {
         }
 
         Scene(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.Companion.fillMaxSize(),
             engine = engine,
             modelLoader = modelLoader,
             cameraNode = cameraNode,

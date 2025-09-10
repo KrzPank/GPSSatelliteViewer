@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -26,6 +27,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.gpssatelliteviewer.ui.panels.LocationDeny
 import com.example.gpssatelliteviewer.ui.panels.LocationInfoPanel
 import com.example.gpssatelliteviewer.ui.panels.Satellite3DPanel
+import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
 
 class MainActivity : ComponentActivity() {
@@ -35,7 +37,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             MaterialTheme {
                 Surface {
-                    AppNavigation()
+                    val viewModel: GNSSViewModel = viewModel()
+                    AppNavigation(viewModel)
                 }
             }
         }
@@ -44,7 +47,7 @@ class MainActivity : ComponentActivity() {
 
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
-fun AppNavigation() {
+fun AppNavigation(viewModel: GNSSViewModel) {
     val navController = rememberNavController()
 
     val context = LocalContext.current
@@ -72,10 +75,10 @@ fun AppNavigation() {
             startDestination = "LocationInfoPanel"
         ) {
             composable("LocationInfoPanel") {
-                LocationInfoPanel(navController)
+                LocationInfoPanel(navController, viewModel)
             }
             composable("Satellite3DPanel") {
-                Satellite3DPanel(navController)
+                Satellite3DPanel(navController, viewModel)
             }
         }
     } else {

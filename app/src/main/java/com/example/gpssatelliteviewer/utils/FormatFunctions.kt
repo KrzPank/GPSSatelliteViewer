@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.ui.components
+package com.example.gpssatelliteviewer.utils
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
 
 @Composable
 fun InfoRow(label: String, value: String) {
@@ -54,9 +53,9 @@ fun SNRBar(
     val clamped = value.coerceIn(0f, 99f)
 
     val ranges = listOf(
-        0f to 10f to Color.Red,
+        0f to 10f to Color.Companion.Red,
         10f to 20f to Color(0xFFFF9800),
-        20f to 30f to Color.Yellow,
+        20f to 30f to Color.Companion.Yellow,
         30f to 50f to Color(0xFF86D317),
         50f to 99f to Color(0xFF39BB3F)
     )
@@ -65,7 +64,7 @@ fun SNRBar(
 
     Column(modifier) {
         BoxWithConstraints(
-            Modifier
+            Modifier.Companion
                 .fillMaxWidth()
                 .height(17.dp)
         ) {
@@ -73,7 +72,7 @@ fun SNRBar(
             val percent = clamped / 99f
             val indicatorX = barWidth * percent
 
-            Canvas(Modifier.fillMaxSize()) {
+            Canvas(Modifier.Companion.fillMaxSize()) {
                 ranges.forEach { (range, color) ->
                     val (start, end) = range
                     val startX = (start / 99f) * size.width
@@ -92,13 +91,13 @@ fun SNRBar(
                     lineTo(indicatorX + triangleWidth / 2, -8f)
                     close()
                 }
-                drawPath(path, color = Color.Black)
+                drawPath(path, color = Color.Companion.Black)
             }
         }
 
 
         BoxWithConstraints(
-            Modifier
+            Modifier.Companion
                 .fillMaxWidth()
                 .padding(top = 2.dp)
         ) {
@@ -108,7 +107,7 @@ fun SNRBar(
                 Text(
                     text = t.toInt().toString(),
                     fontSize = 12.sp,
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .offset { IntOffset(x.toInt(), -15) }
                 )
             }

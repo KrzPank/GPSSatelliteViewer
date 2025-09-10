@@ -21,14 +21,14 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
 import com.example.gpssatelliteviewer.data.ListenerData
-import com.example.gpssatelliteviewer.utility.NMEAParser
+import com.example.gpssatelliteviewer.data.parsers.NMEAParser
 import java.util.Date
 import java.util.concurrent.Executors
 import kotlin.Int
 
 
 @RequiresApi(Build.VERSION_CODES.R)
-class LocationInfoViewModel(application: Application) : AndroidViewModel(application) {
+class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _satelliteList = MutableStateFlow<List<GNSSStatusData>>(listOf())
     val satelliteList: StateFlow<List<GNSSStatusData>> = _satelliteList
@@ -41,33 +41,36 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
     val hasGNSSNavigationMessage: StateFlow<String> = _hasGNSSNavigationMessage
     // Satellite3DViewModel
 
-    private val _locationNMEA = MutableStateFlow<NMEAData?>(null)
-    val locationNMEA: StateFlow<NMEAData?> = _locationNMEA
+    private val _locationNMEA = MutableStateFlow<NMEAData>(NMEAData())
+    val locationNMEA: StateFlow<NMEAData> = _locationNMEA
 
-    private var tmpGGA: NMEAData? = null
-    private var tmpRMC: NMEAData? = null
-    private var tmpGBS: List<Double>? = null
+    private val _hasLocationNMEA = MutableStateFlow<Boolean>(true)
+    val hasLocationNMEA: StateFlow<Boolean> = _hasLocationNMEA
 
-    private val _locationAndroidApi = MutableStateFlow<ListenerData?>(null)
-    val locationAndroidApi: StateFlow<ListenerData?> = _locationAndroidApi
+    private var tmpGGA: NMEAData = NMEAData()
+    private var tmpRMC: NMEAData = NMEAData()
+    private var tmpGBS: NMEAData = NMEAData()
+
+    private val _locationAndroidApi = MutableStateFlow<ListenerData>(ListenerData())
+    val locationAndroidApi: StateFlow<ListenerData> = _locationAndroidApi
+
+    private val _hasLocationAndroidApi = MutableStateFlow<Boolean>(false)
+    val hasLocationAndroidApi: StateFlow<Boolean> = _hasLocationAndroidApi
 
     private val _messagePack = MutableStateFlow<String?>(String())
     var messagePack: StateFlow<String?> = _messagePack
 
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
 
-    private var nmeaMessageReceived = false
-    private var androidApiLocation = false
     private val updateInterval = 2000L // in milis
     private val timeoutPeriod: Long = 30 * 1000 // 30 sec
 
     private val handler = Handler(Looper.getMainLooper())
     private val noNMEAMessageTimeout  = Runnable {
-        nmeaMessageReceived = false
-        _locationNMEA.value = null
+        _hasLocationNMEA.value = false
     }
-    private val noAndroidApiLocation = Runnable {
-        _locationNMEA.value = null
+    private val noAndroidApiLocationTimeout = Runnable {
+        _hasLocationAndroidApi.value = false
     }
 
     private val gnssCallback = object : GnssStatus.Callback() {
@@ -123,8 +126,8 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
 
     private val nmeaListener = OnNmeaMessageListener { message, _ ->
 
+        _hasLocationNMEA.value = true
         handler.removeCallbacks(noNMEAMessageTimeout)
-        nmeaMessageReceived = true
         handler.postDelayed(noNMEAMessageTimeout, timeoutPeriod)
 
         when {
@@ -135,25 +138,25 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
                 tmpRMC = NMEAParser.parseRMC(message, tmpRMC)
             }
             message.startsWith("\$GPGBS") || message.startsWith("\$GNGBS") -> {
-                tmpGBS = NMEAParser.parseGBS(message, _locationNMEA.value)?.gbsErrors
+                tmpGBS = NMEAParser.parseGBS(message, _locationNMEA.value)
             }
         }
 
         val combined = NMEAData(
-            time = tmpRMC?.time ?: tmpGGA?.time,
-            date = tmpRMC?.date ?: tmpGGA?.date,
-            latitude = tmpGGA?.latitude,
-            longitude = tmpGGA?.longitude,
-            fixQuality = tmpGGA?.fixQuality,
-            numSatellites = tmpGGA?.numSatellites,
-            hdop = tmpGGA?.hdop,
-            altitude = tmpGGA?.altitude,
-            geoidHeight = tmpGGA?.geoidHeight,
-            mslAltitude = tmpGGA?.mslAltitude,
-            speedKnots = tmpRMC?.speedKnots,
-            course = tmpRMC?.course,
-            magneticVariation = tmpRMC?.magneticVariation,
-            gbsErrors = tmpGBS
+            time = if (tmpRMC.time.isNotEmpty()) tmpRMC.time else tmpGGA.time,
+            date = if (tmpRMC.date.isNotEmpty()) tmpRMC.date else tmpGGA.date,
+            latitude = if (tmpGGA.latitude != 0.0) tmpGGA.latitude else tmpRMC.latitude,
+            longitude = if (tmpGGA.longitude != 0.0) tmpGGA.longitude else tmpRMC.longitude,
+            fixQuality = tmpGGA.fixQuality,
+            numSatellites = tmpGGA.numSatellites,
+            hdop = tmpGGA.hdop,
+            altitude = tmpGGA.altitude,
+            geoidHeight = tmpGGA.geoidHeight,
+            mslAltitude = tmpGGA.mslAltitude,
+            speedKnots = tmpRMC.speedKnots,
+            course = tmpRMC.course,
+            magneticVariation = tmpRMC.magneticVariation,
+            gbsErrors = tmpGBS.gbsErrors
         )
 
         _locationNMEA.value = combined
@@ -161,29 +164,26 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
 
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
-            handler.removeCallbacks(noAndroidApiLocation)
-            handler.postDelayed(noAndroidApiLocation, timeoutPeriod)
 
-            if (nmeaMessageReceived) return
+            _hasLocationAndroidApi.value = true
+            handler.removeCallbacks(noAndroidApiLocationTimeout)
+            handler.postDelayed(noAndroidApiLocationTimeout, timeoutPeriod)
 
-            val list = mutableListOf<ListenerData>()
+            if (_hasLocationNMEA.value) return
 
             val sdf = SimpleDateFormat("HHmmss", Locale.US)
             sdf.timeZone = TimeZone.getTimeZone("UTC")
             val formattedTime = sdf.format(Date(System.currentTimeMillis()))
 
-            list.add(
-                ListenerData(
-                    time = formattedTime,
-                    latitude = location.latitude,
-                    longitude = location.longitude,
-                    altitude = location.altitude,
-                    latHemisphere = if (location.latitude >= 0) "N" else "S",
-                    longHemisphere = if (location.longitude >= 0) "E" else "W"
-                )
+            val listenerData = ListenerData(
+                time = formattedTime,
+                latitude = location.latitude,
+                longitude = location.longitude,
+                altitude = location.altitude,
+                latHemisphere = if (location.latitude >= 0) "N" else "S",
+                longHemisphere = if (location.longitude >= 0) "E" else "W"
             )
-
-            _locationAndroidApi.value = list.first() // Store the latest one
+            _locationAndroidApi.value = listenerData
         }
 
         override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}

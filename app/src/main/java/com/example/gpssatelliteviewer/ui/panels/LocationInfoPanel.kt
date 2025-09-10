@@ -23,7 +23,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
@@ -33,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.data.ListenerData
 import com.example.gpssatelliteviewer.data.NMEAData
@@ -41,21 +39,21 @@ import com.example.gpssatelliteviewer.ui.cards.AndroidApiLocation
 import com.example.gpssatelliteviewer.ui.cards.LoadingLocationText
 import com.example.gpssatelliteviewer.ui.cards.NMEALocationCard
 import com.example.gpssatelliteviewer.ui.cards.SatelliteCard
-import com.example.gpssatelliteviewer.viewModel.LocationInfoViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.saveable.rememberSaveable
-import com.example.gpssatelliteviewer.utility.NMEAParser
+import com.example.gpssatelliteviewer.data.parsers.NMEAParser
+import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
+//*
 @RequiresApi(Build.VERSION_CODES.R)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationInfoPanel(
     navController: NavController,
-    viewModel: /* to change LocationInfoViewModel FakeLocationInfoViewModel*/ LocationInfoViewModel = viewModel()
+    viewModel: /* to change LocationInfoViewModel FakeLocationInfoViewModel*/ GNSSViewModel
 ) {
 
     val satellites by viewModel.satelliteList.collectAsState()
@@ -63,6 +61,9 @@ fun LocationInfoPanel(
 
     val locationNMEA by viewModel.locationNMEA.collectAsState()
     val locationAndroidApi by viewModel.locationAndroidApi.collectAsState()
+
+    val hasLocationNMEA by viewModel.hasLocationNMEA.collectAsState()
+    val hasLocationAndroidApi by viewModel.hasLocationAndroidApi.collectAsState()
 
     val message by viewModel.messagePack.collectAsState()
 
@@ -87,9 +88,9 @@ fun LocationInfoPanel(
                 }
             }
             item {
-                if (locationNMEA != null) {
+                if (hasLocationNMEA) {
                     NMEALocationCard(locationNMEA)
-                } else if (locationAndroidApi != null) {
+                } else if (hasLocationAndroidApi) {
                     AndroidApiLocation(locationAndroidApi)
                 } else {
                     LoadingLocationText()
@@ -166,19 +167,22 @@ fun LocationInfoPanel(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun LocationInfoPanelPreview() {
-    val fakeViewModel = FakeLocationInfoViewModel()
-    LocationInfoPanel(
-        navController = rememberNavController(),
-        //viewModel = fakeViewModel
-    )
+    val fakeViewModel: FakeLocationInfoViewModel = viewModel()
+
 }
 
 
 // Fake ViewModel only for preview
 class FakeLocationInfoViewModel : ViewModel() {
 
-    private val _locationNMEA = MutableStateFlow<NMEAData?>(null)
-    val locationNMEA: StateFlow<NMEAData?> = _locationNMEA
+    private val _locationNMEA = MutableStateFlow<NMEAData>(NMEAData())
+    val locationNMEA: StateFlow<NMEAData> = _locationNMEA
+
+    private val _hasLocationAndroidApi = MutableStateFlow<Boolean>(false)
+    val hasLocationAndroidApi: StateFlow<Boolean> = _hasLocationAndroidApi
+
+    private val _hasLocationNMEA = MutableStateFlow<Boolean>(false)
+    val hasLocationNMEA: StateFlow<Boolean> = _hasLocationNMEA
 
    // /*
         private val _locationAndroidApi = MutableStateFlow<ListenerData?>(
@@ -202,36 +206,36 @@ class FakeLocationInfoViewModel : ViewModel() {
     private val fakeRmc = "\$GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A"
     private val fakeGbs = "\$GPGBS,015509.00,-0.031,-0.186,0.219,19,0.000,-0.354,6.972*4D"
 
-    private var tmpGGA: NMEAData? = null
-    private var tmpRMC: NMEAData? = null
-    private var tmpGBS: List<Double>? = null
+    private lateinit var tmpGGA: NMEAData
+    private lateinit var tmpRMC: NMEAData
+    private lateinit var tmpGBS: NMEAData
 
     init {
         simulateNmeaStream()
     }
 
     private fun simulateNmeaStream() {
-
         tmpGGA = NMEAParser.parseGGA(fakeGga, tmpGGA)
         tmpRMC = NMEAParser.parseRMC(fakeRmc, tmpRMC)
-        tmpGBS = NMEAParser.parseGBS(fakeGbs, _locationNMEA.value)?.gbsErrors
+        tmpGBS = NMEAParser.parseGBS(fakeGbs, _locationNMEA.value)
 
-        _locationNMEA.value = NMEAData(
-            time = tmpRMC?.time ?: tmpGGA?.time,
-            date = tmpRMC?.date ?: tmpGGA?.date,
-            latitude = tmpGGA?.latitude,
-            longitude = tmpGGA?.longitude,
-            fixQuality = tmpGGA?.fixQuality,
-            numSatellites = tmpGGA?.numSatellites,
-            hdop = tmpGGA?.hdop,
-            altitude = tmpGGA?.altitude,
-            geoidHeight = tmpGGA?.geoidHeight,
-            mslAltitude = tmpGGA?.mslAltitude,
-            speedKnots = tmpRMC?.speedKnots,
-            course = tmpRMC?.course,
-            magneticVariation = tmpRMC?.magneticVariation,
-            gbsErrors = tmpGBS
+        val combined = NMEAData(
+            time = if (tmpRMC.time.isNotEmpty()) tmpRMC.time else tmpGGA.time,
+            date = if (tmpRMC.date.isNotEmpty()) tmpRMC.date else tmpGGA.date,
+            latitude = if (tmpGGA.latitude != 0.0) tmpGGA.latitude else tmpRMC.latitude,
+            longitude = if (tmpGGA.longitude != 0.0) tmpGGA.longitude else tmpRMC.longitude,
+            fixQuality = tmpGGA.fixQuality,
+            numSatellites = tmpGGA.numSatellites,
+            hdop = tmpGGA.hdop,
+            altitude = tmpGGA.altitude,
+            geoidHeight = tmpGGA.geoidHeight,
+            mslAltitude = tmpGGA.mslAltitude,
+            speedKnots = tmpRMC.speedKnots,
+            course = tmpRMC.course,
+            magneticVariation = tmpRMC.magneticVariation,
+            gbsErrors = tmpGBS.gbsErrors
         )
+        _locationNMEA.value = combined
     }
 
     private val _satelliteList = MutableStateFlow(

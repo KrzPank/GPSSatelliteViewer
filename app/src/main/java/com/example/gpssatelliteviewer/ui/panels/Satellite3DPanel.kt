@@ -18,25 +18,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import com.example.gpssatelliteviewer.rendering3d.Earth3DScene
-import com.example.gpssatelliteviewer.viewModel.LocationInfoViewModel
-
+import com.example.gpssatelliteviewer.ui.cards.Earth3DView
+import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
 //import com.example.gpssatelliteviewer.viewModel.Satellite3DViewModel
 
-@RequiresApi(Build.VERSION_CODES.R)
-class Satellite3DPanel(viewModel: LocationInfoViewModel) {
 
-    val satelliteList = viewModel.satelliteList
-}
-
-//*
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun Satellite3DPanel(
     navController: NavController,
-    viewModel: LocationInfoViewModel = viewModel()
+    viewModel: GNSSViewModel
 ) {
     val navMessage by viewModel.navMessages.collectAsState()
     val gnssCapabilities = viewModel.hasGNSSNavigationMessage.collectAsState()
@@ -45,7 +38,7 @@ fun Satellite3DPanel(
     val satelliteList by viewModel.satelliteList.collectAsState()
     val locationNMEA by viewModel.locationNMEA.collectAsState()
 
-    val userLocation: Pair<String?, String?> = Pair(locationNMEA?.latitude, locationNMEA?.longitude)
+    val userLocation: Triple<Float, Float, Float> = Triple(locationNMEA.latitude.toFloat(), locationNMEA.longitude.toFloat(), locationNMEA.altitude.toFloat())
 
     Scaffold { innerPadding ->
 
@@ -61,7 +54,7 @@ fun Satellite3DPanel(
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                Earth3DScene(satelliteList)
+                Earth3DView(satelliteList, userLocation)
             }
 
             /* *** INFORMATION CHECK WORKS ***
@@ -84,5 +77,3 @@ fun Satellite3DPanel(
         }
     }
 }
-
-//*/
