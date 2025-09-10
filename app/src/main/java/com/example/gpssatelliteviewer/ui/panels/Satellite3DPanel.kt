@@ -4,33 +4,33 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
-import com.example.gpssatelliteviewer.rendering3d.Earth3DView
+import com.example.gpssatelliteviewer.rendering3d.Earth3DScene
 import com.example.gpssatelliteviewer.viewModel.LocationInfoViewModel
-import kotlin.toString
 
 
 //import com.example.gpssatelliteviewer.viewModel.Satellite3DViewModel
 
+@RequiresApi(Build.VERSION_CODES.R)
+class Satellite3DPanel(viewModel: LocationInfoViewModel) {
+
+    val satelliteList = viewModel.satelliteList
+}
+
+//*
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
@@ -42,14 +42,12 @@ fun Satellite3DPanel(
     val gnssCapabilities = viewModel.hasGNSSNavigationMessage.collectAsState()
     val context = LocalContext.current
 
-    Scaffold(
-        //topBar = {
-        //    TopAppBar(
-        //        title = { Text("GNSS navigation raw") }
-        //    )
-        //    Spacer(modifier = Modifier.Companion.height(10.dp))
-        //}
-    ) { innerPadding ->
+    val satelliteList by viewModel.satelliteList.collectAsState()
+    val locationNMEA by viewModel.locationNMEA.collectAsState()
+
+    val userLocation: Pair<String?, String?> = Pair(locationNMEA?.latitude, locationNMEA?.longitude)
+
+    Scaffold { innerPadding ->
 
         Column ( modifier = Modifier
             .padding(innerPadding)
@@ -63,8 +61,9 @@ fun Satellite3DPanel(
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                Earth3DView()
+                Earth3DScene(satelliteList)
             }
+
             /* *** INFORMATION CHECK WORKS ***
             Text(
                 text = gnssCapabilities.toString(),
@@ -85,3 +84,5 @@ fun Satellite3DPanel(
         }
     }
 }
+
+//*/

@@ -41,9 +41,6 @@ import com.example.gpssatelliteviewer.ui.cards.AndroidApiLocation
 import com.example.gpssatelliteviewer.ui.cards.LoadingLocationText
 import com.example.gpssatelliteviewer.ui.cards.NMEALocationCard
 import com.example.gpssatelliteviewer.ui.cards.SatelliteCard
-import com.example.gpssatelliteviewer.utility.parseGBS
-import com.example.gpssatelliteviewer.utility.parseGGA
-import com.example.gpssatelliteviewer.utility.parseRMC
 import com.example.gpssatelliteviewer.viewModel.LocationInfoViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,6 +48,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import com.example.gpssatelliteviewer.utility.NMEAParser
 
 @RequiresApi(Build.VERSION_CODES.R)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -214,9 +212,9 @@ class FakeLocationInfoViewModel : ViewModel() {
 
     private fun simulateNmeaStream() {
 
-        tmpGGA= parseGGA(fakeGga, tmpGGA)
-        tmpRMC = parseRMC(fakeRmc, tmpRMC)
-        tmpGBS = parseGBS(fakeGbs, _locationNMEA.value)?.gbsErrors
+        tmpGGA = NMEAParser.parseGGA(fakeGga, tmpGGA)
+        tmpRMC = NMEAParser.parseRMC(fakeRmc, tmpRMC)
+        tmpGBS = NMEAParser.parseGBS(fakeGbs, _locationNMEA.value)?.gbsErrors
 
         _locationNMEA.value = NMEAData(
             time = tmpRMC?.time ?: tmpGGA?.time,
@@ -238,25 +236,25 @@ class FakeLocationInfoViewModel : ViewModel() {
 
     private val _satelliteList = MutableStateFlow(
         listOf(
-            GNSSStatusData("GPS", 12, 35.5f, true),
-            GNSSStatusData("GPS", 14, 32.1f, true),
-            GNSSStatusData("GPS", 18, 28.4f, false),
-            GNSSStatusData("GLONASS", 3, 28.7f, false),
-            GNSSStatusData("GLONASS", 7, 30.0f, true),
-            GNSSStatusData("Galileo", 5, 42.0f, true),
-            GNSSStatusData("Galileo", 9, 37.5f, false),
-            GNSSStatusData("Galileo", 12, 33.2f, true),
-            GNSSStatusData("BeiDou", 8, 30.2f, false),
-            GNSSStatusData("BeiDou", 10, 27.9f, true),
-            GNSSStatusData("QZSS", 193, 25.4f, true),
-            GNSSStatusData("QZSS", 195, 22.7f, false),
-            GNSSStatusData("SBAS", 120, 20.0f, false),
-            GNSSStatusData("SBAS", 123, 21.5f, true),
-            GNSSStatusData("IRNSS", 11, 33.8f, true),
-            GNSSStatusData("IRNSS", 14, 29.9f, false),
-            GNSSStatusData("GPS", 21, 31.2f, true),
-            GNSSStatusData("GLONASS", 11, 26.5f, false),
-            GNSSStatusData("Galileo", 15, 36.1f, true)
+            GNSSStatusData("GPS", 12, 35.5f, true, 120.0f, 45.0f),
+            GNSSStatusData("GPS", 14, 32.1f, true, 135.0f, 40.5f),
+            GNSSStatusData("GPS", 18, 28.4f, false, 150.0f, 35.0f),
+            GNSSStatusData("GLONASS", 3, 28.7f, false, 100.0f, 42.0f),
+            GNSSStatusData("GLONASS", 7, 30.0f, true, 110.0f, 43.5f),
+            GNSSStatusData("Galileo", 5, 42.0f, true, 130.0f, 47.0f),
+            GNSSStatusData("Galileo", 9, 37.5f, false, 140.0f, 41.0f),
+            GNSSStatusData("Galileo", 12, 33.2f, true, 145.0f, 44.0f),
+            GNSSStatusData("BeiDou", 8, 30.2f, false, 125.0f, 38.5f),
+            GNSSStatusData("BeiDou", 10, 27.9f, true, 128.0f, 39.0f),
+            GNSSStatusData("QZSS", 193, 25.4f, true, 160.0f, 30.0f),
+            GNSSStatusData("QZSS", 195, 22.7f, false, 165.0f, 28.0f),
+            GNSSStatusData("SBAS", 120, 20.0f, false, 170.0f, 25.0f),
+            GNSSStatusData("SBAS", 123, 21.5f, true, 175.0f, 26.5f),
+            GNSSStatusData("IRNSS", 11, 33.8f, true, 115.0f, 41.5f),
+            GNSSStatusData("IRNSS", 14, 29.9f, false, 120.0f, 39.0f),
+            GNSSStatusData("GPS", 21, 31.2f, true, 137.0f, 43.0f),
+            GNSSStatusData("GLONASS", 11, 26.5f, false, 112.0f, 37.0f),
+            GNSSStatusData("Galileo", 15, 36.1f, true, 142.0f, 42.5f)
         )
     )
 

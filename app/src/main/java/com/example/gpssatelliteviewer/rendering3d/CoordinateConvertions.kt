@@ -57,3 +57,15 @@ fun ecefToScenePos(
     //Log.e("SceneView", "Model location x:${v.x}, y:${v.y}, z:${v.z}")
     return v
 }
+
+fun azElToScenePos(azimuth: Float, elevation: Float, radius: Double): Float3 {
+    val az = Math.toRadians(azimuth.toDouble())
+    val el = Math.toRadians(elevation.toDouble())
+
+    val x = radius * cos(el) * sin(az)
+    val y = radius * sin(el)
+    val z = radius * cos(el) * cos(az)
+
+    return Float3(x.toFloat(), y.toFloat(), z.toFloat())
+}
+

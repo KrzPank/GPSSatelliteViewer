@@ -12,7 +12,6 @@ import java.util.Locale
 import androidx.lifecycle.AndroidViewModel
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.data.NMEAData
-import com.example.gpssatelliteviewer.utility.parseGGA
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import android.icu.util.TimeZone
@@ -22,8 +21,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.annotation.RequiresApi
 import com.example.gpssatelliteviewer.data.ListenerData
-import com.example.gpssatelliteviewer.utility.parseGBS
-import com.example.gpssatelliteviewer.utility.parseRMC
+import com.example.gpssatelliteviewer.utility.NMEAParser
 import java.util.Date
 import java.util.concurrent.Executors
 import kotlin.Int
@@ -95,13 +93,17 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
                 val svid = status.getSvid(i)
                 val cn0 = status.getCn0DbHz(i)
                 val used = status.usedInFix(i)
+                val azim = status.getAzimuthDegrees(i)
+                val ele = status.getElevationDegrees(i)
 
                 list.add(
                     GNSSStatusData(
                         constellation = constellation,
                         id = svid,
                         snr = cn0,
-                        usedInFix = used
+                        usedInFix = used,
+                        azimuth = azim,
+                        elevation = ele
                     )
                 )
             }
@@ -109,7 +111,7 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
         }
     }
 
-    private val naviMessageCallback = object : GnssNavigationMessage.Callback() {
+    private val navMessageCallback = object : GnssNavigationMessage.Callback() {
         override fun onGnssNavigationMessageReceived(event: GnssNavigationMessage) {
             _navMessages.value = event
         }
@@ -127,13 +129,13 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
 
         when {
             message.startsWith("\$GPGGA") || message.startsWith("\$GNGGA") -> {
-                tmpGGA = parseGGA(message, tmpGGA)
+                tmpGGA = NMEAParser.parseGGA(message, tmpGGA)
             }
             message.startsWith("\$GPRMC") || message.startsWith("\$GNRMC") -> {
-                tmpRMC = parseRMC(message, tmpRMC)
+                tmpRMC = NMEAParser.parseRMC(message, tmpRMC)
             }
             message.startsWith("\$GPGBS") || message.startsWith("\$GNGBS") -> {
-                tmpGBS = parseGBS(message, _locationNMEA.value)?.gbsErrors
+                tmpGBS = NMEAParser.parseGBS(message, _locationNMEA.value)?.gbsErrors
             }
         }
 
@@ -203,7 +205,7 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
             val executor = Executors.newSingleThreadExecutor()
 
             locationManager.registerGnssStatusCallback(executor, gnssCallback)
-            //locationManager.registerGnssNavigationMessageCallback(executor, naviMessageCallback)
+            //locationManager.registerGnssNavigationMessageCallback(executor, navMessageCallback)
             locationManager.addNmeaListener(executor, nmeaListener)
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
@@ -222,7 +224,9 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
                     constellation = "Error",
                     id = 0,
                     snr = 0.0f,
-                    usedInFix = false
+                    usedInFix = false,
+                    azimuth = 0.0f,
+                    elevation = 0.0f
                 )
             )
         }
@@ -231,7 +235,7 @@ class LocationInfoViewModel(application: Application) : AndroidViewModel(applica
     fun startGNSSNavigation(){
         try {
             val tempExecutor = Executors.newSingleThreadExecutor()
-            locationManager.registerGnssNavigationMessageCallback(tempExecutor, naviMessageCallback)
+            locationManager.registerGnssNavigationMessageCallback(tempExecutor, navMessageCallback)
             val gnssCapabilities = locationManager.gnssCapabilities
             _hasGNSSNavigationMessage.value = gnssCapabilities.toString()
         } catch (e: SecurityException) {

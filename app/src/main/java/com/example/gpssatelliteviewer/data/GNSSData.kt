@@ -4,7 +4,9 @@ data class GNSSStatusData(
     val constellation: String,
     val id: Int,
     val snr: Float,
-    val usedInFix: Boolean
+    val usedInFix: Boolean,
+    val azimuth: Float,
+    val elevation: Float
 )
 
 /**         *** TO DO ***
@@ -13,7 +15,6 @@ data class GNSSNavigationData(
 )
 */
 
-///         *** ZAMIENIC KIEDYS NA ?: = null ***
 data class ListenerData(
     val time: String,
     val latitude: Double,
