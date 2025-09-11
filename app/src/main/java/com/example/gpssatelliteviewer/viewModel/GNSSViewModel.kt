@@ -44,7 +44,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val _locationNMEA = MutableStateFlow<NMEAData>(NMEAData())
     val locationNMEA: StateFlow<NMEAData> = _locationNMEA
 
-    private val _hasLocationNMEA = MutableStateFlow<Boolean>(true)
+    private val _hasLocationNMEA = MutableStateFlow<Boolean>(false)
     val hasLocationNMEA: StateFlow<Boolean> = _hasLocationNMEA
 
     private var tmpGGA: NMEAData = NMEAData()
@@ -63,7 +63,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
 
     private val updateInterval = 2000L // in milis
-    private val timeoutPeriod: Long = 30 * 1000 // 30 sec
+    private val timeoutPeriod: Long = 15 * 1000 // 15 sec
 
     private val handler = Handler(Looper.getMainLooper())
     private val noNMEAMessageTimeout  = Runnable {
@@ -248,5 +248,6 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
         locationManager.unregisterGnssStatusCallback(gnssCallback)
         locationManager.removeNmeaListener(nmeaListener)
         locationManager.removeUpdates(locationListener)
+        locationManager.unregisterGnssNavigationMessageCallback(navMessageCallback)
     }
 }

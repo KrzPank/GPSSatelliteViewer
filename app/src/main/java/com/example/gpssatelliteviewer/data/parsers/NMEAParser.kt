@@ -118,16 +118,16 @@ object NMEAParser {
 
     private fun mapFixQuality(fixQuality: Int): String {
         return when(fixQuality) {
-            0 -> "Brak danych"
+            0 -> "No data"
             1 -> "GPS"
             2 -> "DGPS"
             3 -> "PPS"
             4 -> "RTK"
             5 -> "Float RTK"
-            6 -> "Estymowany"
-            7 -> "Manualny"
-            8 -> "Simulowany"
-            else -> "Nieznany"
+            6 -> "Estimated"
+            7 -> "Manual"
+            8 -> "Simulated"
+            else -> "Unknown"
         }
     }
 }

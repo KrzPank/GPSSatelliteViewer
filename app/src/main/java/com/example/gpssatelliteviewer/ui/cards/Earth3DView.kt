@@ -1,5 +1,6 @@
 package com.example.gpssatelliteviewer.ui.cards
 
+import android.location.GnssStatus
 import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,6 +50,19 @@ private val DEFAULT_LOCATIONS = listOf(
     23.8103 to 90.4125     // Dhaka
 )
 
+val keysFor35786000 = setOf(1,2,3,4,5,6,7,8,9,10,13,16,31,38,39,40,56,59,60,61,62)
+
+val constellationAltitudes = mapOf(
+    "GPS" to 20180000f,       // Altitude in kilometers
+    "GLONASS" to 19100000f,
+    "Galileo" to 23222000f,
+    //"BeiDou" to 21500000f,    // Approximate MEO altitude; BeiDou has GEO and IGSO too
+    "QZSS" to 35786000f,
+    "IRNSS" to 36000000f,
+    "SBAS" to 35786000f,
+    "Unknown" to 0f,
+    "Other" to 0f
+)
 
 @Composable
 fun Earth3DView(
@@ -67,38 +81,32 @@ fun Earth3DView(
             lookAt(centerNode)
             centerNode.addChildNode(this)
         }
-
-        /* *** OLD MARKERS WRONG? ***
-        val markers = DEFAULT_LOCATIONS.map { (lat, lon) ->
-            val instance = modelLoader.createModelInstance(
-                assetFileLocation = "models/RedSphere.glb"
-            )
-            ModelNode(
-                modelInstance = instance,
-                scaleToUnits = 0.02f
-            ).apply {
-                position = ecefToScenePos(geoToECEF(lat, lon, 1000000.0))
-            }
-        }
-
-         */
-
-        val markers = satelliteList.map { sat ->
+    /* *** NEED TO ADD DESTRUCTION OF PREVIOUS SATELLITENODES RIGHT NOW IM JUST RENDERING NEW ONES WITHOUT CLEANING UP PREVIOUS
+    *       OR ADD A CHECK TO ONLY ADD SATELLITES WHICH ARE NEW     WILL SEE
+    *  */
+        val satelliteNode = satelliteList.map { sat ->
             val instance = modelLoader.createModelInstance(
                 assetFileLocation = "models/RedCircle.glb"
             )
             ModelNode(
                 modelInstance = instance,
-                scaleToUnits = 0.02f
+                scaleToUnits = 0.05f
             ).apply {
+                val altitude = if (sat.constellation == "BeiDou"){
+                    if (sat.id in keysFor35786000) 35786000f
+                    else 21500000f
+                } else
+                    constellationAltitudes[sat.constellation] ?: 0.0f
+
                 val pos = CoordinateConversion.ecefToScenePos(
                     azElToECEF(
                         sat.azimuth,
                         sat.elevation,
-                        userLocation
+                        userLocation,
+                        altitude
                     )
                 )
-                Log.e("SatPos", "Sid:${sat.id} position: ${pos.x}, y:${pos.y}, z:${pos.z}")
+                //Log.e("SatPos", "Sid:${sat.id} position: ${pos.x}, y:${pos.y}, z:${pos.z}")
                 position = pos
             }
         }
@@ -117,8 +125,8 @@ fun Earth3DView(
             addChildNode(cameraNode)
         }
 
-        markers.forEach { marker ->
-            centerNode.addChildNode(marker)
+        satelliteNode.forEach { satNode ->
+            centerNode.addChildNode(satNode)
         }
 
         Scene(
@@ -136,8 +144,8 @@ fun Earth3DView(
             )!!,
             onFrame = {
                 cameraNode.lookAt(centerNode)
-                markers.forEach { marker ->
-                    marker.lookAt(cameraNode.worldPosition)
+                satelliteNode.forEach { satellite ->
+                    satellite.lookAt(cameraNode.worldPosition)
                 }
             },
             onGestureListener = rememberOnGestureListener(

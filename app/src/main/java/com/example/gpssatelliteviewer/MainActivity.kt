@@ -9,6 +9,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -17,6 +20,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,41 +40,56 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val context = LocalContext.current
+
+            // null = not checked yet, true/false = actual state
+            var hasPermission by remember { mutableStateOf<Boolean?>(null) }
+
+            val launcher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission(),
+                onResult = { granted -> hasPermission = granted }
+            )
+
+            LaunchedEffect(Unit) {
+                val granted = ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.ACCESS_FINE_LOCATION
+                ) == PackageManager.PERMISSION_GRANTED
+
+                hasPermission = granted
+
+                if (!granted) {
+                    launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                }
+            }
+
             MaterialTheme {
                 Surface {
-                    val viewModel: GNSSViewModel = viewModel()
-                    AppNavigation(viewModel)
+                    when (hasPermission) {
+                        null -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                        true -> AppNavigation(true)
+                        false -> AppNavigation(false)
+                    }
                 }
             }
         }
     }
 }
 
+
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
-fun AppNavigation(viewModel: GNSSViewModel) {
+fun AppNavigation(hasPermission: Boolean) {
     val navController = rememberNavController()
 
-    val context = LocalContext.current
-
-    var hasPermission by remember { mutableStateOf(false) }
-
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { granted -> hasPermission = granted }
-    )
-
-    LaunchedEffect(Unit) {
-        hasPermission = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (!hasPermission) {
-            launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
-    }
-
     if (hasPermission) {
+        val viewModel: GNSSViewModel = viewModel()
         NavHost(
             navController = navController,
             startDestination = "LocationInfoPanel"

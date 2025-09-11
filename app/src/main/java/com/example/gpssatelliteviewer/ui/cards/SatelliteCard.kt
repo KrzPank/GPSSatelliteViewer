@@ -18,6 +18,10 @@ import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.utils.SNRBar
 
+data class SNRStats(
+    val average: Float,
+    val count: Float
+)
 
 @Composable
 fun SatelliteCard(
@@ -28,11 +32,17 @@ fun SatelliteCard(
 
     val groupedSatellites = satellites.groupBy { it.constellation }
     val usedInFixCount = satellites.count { it.usedInFix }
-    val averageSNRByConstellation = groupedSatellites.mapValues { entry ->
-        val list = entry.value
-        if (list.isNotEmpty()) list.map { it.snr }.average().toFloat() else 0f
-    }
 
+    val averageSNRByConstellation = groupedSatellites.mapValues { (_, sats) ->
+        val valid = sats.filter { it.snr != 0f}
+        if (valid.isNotEmpty()) {
+            val avg = valid.map { it.snr }.average().toFloat()
+            val count = valid.size.toFloat()
+            SNRStats(avg, count)
+        }
+        else
+            SNRStats(0f, 0f)
+    }
 
     val satellitesInFix = satellites.filter { it.usedInFix }
     val averageSNRInFix = if (satellitesInFix.isNotEmpty()) {
@@ -47,8 +57,8 @@ fun SatelliteCard(
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            InfoRow(label = "Widoczne satelity", value = totalSatellites.toString())
-            InfoRow(label = "Używane w fix", value = usedInFixCount.toString())
+            InfoRow(label = "In view", value = totalSatellites.toString())
+            InfoRow(label = "Used in fix", value = usedInFixCount.toString())
             InfoRow(
                 label = "Avg. fix SNR",
                 value = if (averageSNRInFix != null) {
@@ -57,17 +67,17 @@ fun SatelliteCard(
                     "0"
                 }
             )
-            Spacer(modifier = modifier.height(6.dp))
+            Spacer(modifier = modifier.height(8.dp))
             if (averageSNRInFix == null) SNRBar(value = 0f)
             else SNRBar(value = averageSNRInFix)
 
-            //Spacer(modifier = Modifier.height(8.dp))
-            Text("Średnie SNR:", style = MaterialTheme.typography.bodyMedium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Constellation  Avg. SNR/sat SNR!=0", style = MaterialTheme.typography.bodyMedium)
 
-            averageSNRByConstellation.forEach { (constellation, avgSNR) ->
+            averageSNRByConstellation.forEach { (constellation, stats) ->
                 InfoRow(
                     label = constellation,
-                    value = "${"%.1f".format(avgSNR)} dBHz"
+                    value = "${"%.1f".format(stats.average)} dBHz / ${"%.0f".format(stats.count)}"
                 )
                 Spacer(Modifier.height(4.dp))
             }

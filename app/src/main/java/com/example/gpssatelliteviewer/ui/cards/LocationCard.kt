@@ -40,9 +40,9 @@ fun NMEALocationCard(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(Modifier.Companion.padding(12.dp)) {
+        Column(Modifier.padding(12.dp)) {
             Text(
-                "Lokalizacja NMEA",
+                "NMEA Location",
                 style = MaterialTheme.typography.titleMedium,
                 fontSize = 20.sp
             )
@@ -52,76 +52,77 @@ fun NMEALocationCard(
                 label = "Fix",
                 value = listOf(
                     nmea.fixQuality,
-                    if (nmea.fixQuality == "Brak danych") "No fix"
-                    else nmea.numSatellites.let { if (it > 4) "3D fix" else "fix" }
+                    if (nmea.fixQuality == "No data") "No fix"
+                    else nmea.numSatellites.let { if (it > 4) "3D fix" else "Fix" }
                 ).joinToString(" / ")
             )
 
             Spacer(Modifier.height(6.dp))
 
             InfoRow(
-                label = "Ostatnia aktualizacja (UTC)",
-                value = if (nmea.time == "") "Brak danych"
+                label = "Last update (UTC)",
+                value = if (nmea.time == "") "No data"
                 else nmea.time
             )
             InfoRow(
-                label = "Data",
-                value = if (nmea.date == "") "Brak danych"
+                label = "Date",
+                value = if (nmea.date == "") "No data"
                 else nmea.date
             )
             InfoRow(
-                label = "Szerokość geograficzna",
-                value = if (nmea.latitude == 0.0) "Brak danych"
+                label = "Latitude",
+                value = if (nmea.latitude == 0.0) "No data"
                 else CoordinateConversion.geodeticToDMS(nmea.latitude, nmea.latHemisphere)
             )
             InfoRow(
-                label = "Długość geograficzna",
-                value = if (nmea.longitude == 0.0) "Brak danych"
+                label = "Longitude",
+                value = if (nmea.longitude == 0.0) "No data"
                 else CoordinateConversion.geodeticToDMS(nmea.longitude, nmea.lonHemisphere)
             )
             InfoRow(
-                label = "Wysokość MSL",
+                label = "Altitude MSL",
                 value = nmea.mslAltitude.let { "%.1f m".format(it) }
             )
             /*InfoRow(
-                    label = "Wysokość geoidy nad elipsoidą",
-                    value = nmea.geoidHeight?.let { "%.1f m".format(it) }
-                        ?: "Brak danych")*/
+                label = "Geoid height above ellipsoid",
+                value = nmea.geoidHeight?.let { "%.1f m".format(it) }
+                    ?: "No data")*/
             InfoRow(
-                label = "Dokładność",
+                label = "Accuracy",
                 value = approximateLocationAccuracy(nmea)
             )
             /*
-                InfoRow(
-                    label = "Liczba używanych satelitów",
-                    value = nmea.numSatellites?.toString() ?: "Brak danych"
-                )
-                InfoRow(
-                    label = "Jakość fix",
-                    value = nmea.fixQuality ?: "Brak danych"
-                )*/
-
-            val speedkmh = nmea.speedKnots.times(1.852)
             InfoRow(
-                label = "Prędkość",
+                label = "Satellites used",
+                value = nmea.numSatellites?.toString() ?: "No data"
+            )
+            InfoRow(
+                label = "Fix quality",
+                value = nmea.fixQuality ?: "No data"
+            )
+            */
+            val speedkmh = nmea.speedKnots * 1.852
+            InfoRow(
+                label = "Speed",
                 value = listOf(
                     nmea.speedKnots.let { "%.1f kn".format(it) },
                     speedkmh.let { "%.1f km/h".format(it) }
                 ).joinToString(" / ")
             )
             InfoRow(
-                label = "Kurs",
+                label = "Course",
                 value = nmea.course.let { "%.1f°".format(it) }
             )
             InfoRow(
-                label = "Odchylenie magnetyczne",
-                value = nmea.magneticVariation.let { "%.1f°".format(it) })
-
+                label = "Magnetic variation",
+                value = nmea.magneticVariation.let { "%.1f°".format(it) }
+            )
         }
+
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
+@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun AndroidApiLocation(
     locationAndroidApi: ListenerData,
@@ -132,25 +133,25 @@ fun AndroidApiLocation(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(Modifier.Companion.padding(12.dp)) {
+        Column(Modifier.padding(12.dp)) {
             val data = locationAndroidApi
             Text(
-                "Lokalizacja Szybka",
+                "Quick Location",
                 style = MaterialTheme.typography.titleMedium
             )
-            Spacer(Modifier.Companion.height(8.dp))
+            Spacer(Modifier.height(8.dp))
 
-            InfoRow(label = "Ostatnia aktualizacja (UTC)", value = data.time)
+            InfoRow(label = "Last update (UTC)", value = data.time)
             InfoRow(
-                label = "Szerokość geograficzna",
+                label = "Latitude",
                 value = "%.6f° ${data.latHemisphere}".format(data.latitude)
             )
             InfoRow(
-                label = "Długość geograficzna",
+                label = "Longitude",
                 value = "%.6f° ${data.longHemisphere}".format(data.longitude)
             )
             InfoRow(
-                label = "Wysokość m.n.p.m.",
+                label = "Altitude (MSL)",
                 value = "%.1f m".format(data.altitude)
             )
         }
@@ -158,7 +159,7 @@ fun AndroidApiLocation(
 }
 
 @Composable
-fun LoadingLocationText(baseText: String = "Oczekiwanie na lokalizację") {
+fun LoadingLocationText(baseText: String = "Waiting for location") {
     val dotCount = remember { Animatable(0f) }
 
     LaunchedEffect(Unit) {
@@ -171,5 +172,10 @@ fun LoadingLocationText(baseText: String = "Oczekiwanie na lokalizację") {
     }
 
     val dots = ".".repeat(dotCount.value.toInt())
-    Text("$baseText$dots", style = MaterialTheme.typography.bodyMedium)
+    Card {
+        InfoRow(
+            label = "$baseText$dots",
+            value = ""
+        )
+    }
 }

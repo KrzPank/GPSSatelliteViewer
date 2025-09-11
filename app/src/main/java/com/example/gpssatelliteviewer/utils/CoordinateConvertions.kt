@@ -74,7 +74,7 @@ object CoordinateConversion {
         azimuth: Float,
         elevation: Float,
         userLocation: Triple<Float, Float, Float>, // lat, lon, alt
-        range: Double = 20200000.0                // default satellite distance in meters (example for GPS)
+        altitude: Float = 20200000.0f                // default satellite distance in meters (example for GPS)
     ): Float3 {
         val (lat, lon, alt) = userLocation
 
@@ -85,9 +85,9 @@ object CoordinateConversion {
         val azRad = Math.toRadians(azimuth.toDouble())
         val elRad = Math.toRadians(elevation.toDouble())
 
-        val e = range * cos(elRad) * sin(azRad)
-        val n = range * cos(elRad) * cos(azRad)
-        val u = range * sin(elRad)
+        val e = altitude * cos(elRad) * sin(azRad)
+        val n = altitude * cos(elRad) * cos(azRad)
+        val u = altitude * sin(elRad)
 
         // Rotate ENU to ECEF
         val (dx, dy, dz) = enuToECEF(e, n, u, lat.toDouble(), lon.toDouble())
@@ -104,8 +104,8 @@ object CoordinateConversion {
     fun geodeticToDMS(value: Double, hemisphere: String): String {
         if (value == 0.0) return "0°0'0\""
 
-        val degrees = (value / 100).toInt()          // extract degrees
-        val minutesFull = value - (degrees * 100)    // extract minutes (with decimals)
+        val degrees = (value / 100).toInt()
+        val minutesFull = value - (degrees * 100)
         val minutes = minutesFull.toInt()
         val seconds = ((minutesFull - minutes) * 60)
 

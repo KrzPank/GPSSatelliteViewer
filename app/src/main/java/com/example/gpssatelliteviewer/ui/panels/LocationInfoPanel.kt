@@ -5,6 +5,7 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,10 +15,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,7 +54,11 @@ import kotlinx.coroutines.flow.StateFlow
 
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
 import com.example.gpssatelliteviewer.data.parsers.NMEAParser
+import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
 //*
@@ -53,9 +67,8 @@ import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 @Composable
 fun LocationInfoPanel(
     navController: NavController,
-    viewModel: /* to change LocationInfoViewModel FakeLocationInfoViewModel*/ GNSSViewModel
+    viewModel: GNSSViewModel
 ) {
-
     val satellites by viewModel.satelliteList.collectAsState()
     val groupedSatellites = satellites.groupBy { it.constellation }
 
@@ -65,93 +78,124 @@ fun LocationInfoPanel(
     val hasLocationNMEA by viewModel.hasLocationNMEA.collectAsState()
     val hasLocationAndroidApi by viewModel.hasLocationAndroidApi.collectAsState()
 
-    val message by viewModel.messagePack.collectAsState()
-
     val expandedMap = remember { mutableStateMapOf<String, Boolean>() }
+
+    var dropDownMenuExpanded = remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Location Info Panel") }
+                title = { Text("Location Info", style = MaterialTheme.typography.titleLarge) },
+                actions = {
+                    Box {
+                        IconButton(onClick = { dropDownMenuExpanded.value = true}) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "Menu"
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = dropDownMenuExpanded.value,
+                            onDismissRequest = { dropDownMenuExpanded.value = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("3D View") },
+                                onClick = {
+                                    dropDownMenuExpanded.value = false
+                                    navController.navigate("Satellite3DPanel")
+                                }
+                            )
+
+                            /*
+                            *** TO DO ADD MORE PANELS
+                            *
+                            * ONE WILL BE NMEA MESSAGES DISPLAY
+                            * NMEA what message
+                            * RAW message
+                            * thing we see from them...
+                            *
+                            *
+                             */
+                        }
+                    }
+                }
             )
         }
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier.Companion
+            modifier = Modifier
                 .padding(innerPadding)
-                .padding(16.dp)
-                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // --- Location Card ---
             item {
-                Button(onClick = { navController.navigate("Satellite3DPanel") }) {
-                    Text("Widok 3D")
+                when {
+                    hasLocationNMEA -> NMEALocationCard(locationNMEA)
+                    hasLocationAndroidApi -> AndroidApiLocation(locationAndroidApi)
+                    else -> LoadingLocationText()
                 }
-            }
-            item {
-                if (hasLocationNMEA) {
-                    NMEALocationCard(locationNMEA)
-                } else if (hasLocationAndroidApi) {
-                    AndroidApiLocation(locationAndroidApi)
-                } else {
-                    LoadingLocationText()
-                }
-                Spacer(Modifier.Companion.height(12.dp))
             }
 
+            // --- Summary of satellites ---
             item {
                 SatelliteCard(satellites)
             }
 
+            // --- Satellites grouped by constellation ---
+            item {
+                Text(
+                    "Satellites by Constellation",
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(top = 12.dp, bottom = 6.dp)
+                )
+            }
 
             groupedSatellites.forEach { (constellation, satellitesInGroup) ->
-
                 val expanded = expandedMap.getOrPut(constellation) { false }
 
                 item {
                     Card(
                         shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.Companion
+                        modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp)
                             .clickable { expandedMap[constellation] = !expanded },
                         elevation = CardDefaults.cardElevation(4.dp)
                     ) {
                         Row(
-                            modifier = Modifier.Companion
+                            modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
                                 text = "$constellation (${satellitesInGroup.size})",
-                                style = MaterialTheme.typography.titleMedium
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Icon(
+                                imageVector = if (expanded) Icons.Default.KeyboardArrowDown else Icons.Default.KeyboardArrowRight,
+                                contentDescription = null
                             )
                         }
                     }
                 }
 
-                if (expandedMap[constellation] == true) {
+                if (expanded) {
                     items(satellitesInGroup) { satellite ->
                         Card(
-                            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                            modifier = Modifier.Companion
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 2.dp),
+                                .padding(horizontal = 16.dp, vertical = 1.dp),
                             elevation = CardDefaults.cardElevation(2.dp)
                         ) {
-                            Column(modifier = Modifier.Companion.padding(12.dp)) {
-                                Text(
-                                    "ID: ${satellite.id}",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Text(
-                                    "SNR: ${satellite.snr} dBHz",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Text(
-                                    "Used in Fix: ${satellite.usedInFix}",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                InfoRow("ID", satellite.id.toString())
+                                InfoRow("SNR", "${satellite.snr} dBHz")
+                                InfoRow("Used in Fix", satellite.usedInFix.toString())
                             }
                         }
                     }
@@ -160,7 +204,6 @@ fun LocationInfoPanel(
         }
     }
 }
-
 
 @RequiresApi(Build.VERSION_CODES.R)
 @SuppressLint("ViewModelConstructorInComposable")
