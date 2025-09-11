@@ -1,7 +1,7 @@
 package com.example.gpssatelliteviewer.utils
 
 import android.annotation.SuppressLint
-import com.example.gpssatelliteviewer.data.NMEAData
+import com.example.gpssatelliteviewer.data.NMEALocationData
 import dev.romainguy.kotlin.math.Float3
 import kotlin.math.cos
 import kotlin.math.sin
@@ -115,7 +115,7 @@ object CoordinateConversion {
 }
 
 
-fun approximateLocationAccuracy(data: NMEAData, sensorAccuracyM: Double = 4.5): String {
+fun approximateLocationAccuracy(data: NMEALocationData, sensorAccuracyM: Double = 4.5): String {
 
     val hdopAccuracy = data.hdop.times(sensorAccuracyM)
 

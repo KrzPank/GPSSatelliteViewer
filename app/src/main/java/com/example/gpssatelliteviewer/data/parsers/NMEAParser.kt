@@ -1,10 +1,10 @@
 package com.example.gpssatelliteviewer.data.parsers
 
 import android.annotation.SuppressLint
-import com.example.gpssatelliteviewer.data.NMEAData
+import com.example.gpssatelliteviewer.data.NMEALocationData
 
 object NMEAParser {
-    fun parseGGA(message: String, existing: NMEAData = NMEAData()): NMEAData {
+    fun parseGGA(message: String, existing: NMEALocationData = NMEALocationData()): NMEALocationData {
         val parts = message.split(",")
         if (parts.size < 14) return existing
 
@@ -40,7 +40,7 @@ object NMEAParser {
         }
     }
 
-    fun parseRMC(message: String, existing: NMEAData = NMEAData()): NMEAData {
+    fun parseRMC(message: String, existing: NMEALocationData = NMEALocationData()): NMEALocationData {
         val parts = message.split(",")
         if (parts.size < 12) return existing
 
@@ -74,7 +74,7 @@ object NMEAParser {
         }
     }
 
-    fun parseGBS(message: String, existing: NMEAData = NMEAData()): NMEAData {
+    fun parseGBS(message: String, existing: NMEALocationData = NMEALocationData()): NMEALocationData {
         val parts = message.split(",")
         if (parts.size < 5) return existing
 

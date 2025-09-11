@@ -11,7 +11,7 @@ import android.os.Bundle
 import java.util.Locale
 import androidx.lifecycle.AndroidViewModel
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.data.NMEAData
+import com.example.gpssatelliteviewer.data.NMEALocationData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import android.icu.util.TimeZone
@@ -41,15 +41,18 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     val hasGNSSNavigationMessage: StateFlow<String> = _hasGNSSNavigationMessage
     // Satellite3DViewModel
 
-    private val _locationNMEA = MutableStateFlow<NMEAData>(NMEAData())
-    val locationNMEA: StateFlow<NMEAData> = _locationNMEA
+    private val _locationNMEA = MutableStateFlow<NMEALocationData>(NMEALocationData())
+    val locationNMEA: StateFlow<NMEALocationData> = _locationNMEA
 
     private val _hasLocationNMEA = MutableStateFlow<Boolean>(false)
     val hasLocationNMEA: StateFlow<Boolean> = _hasLocationNMEA
 
-    private var tmpGGA: NMEAData = NMEAData()
-    private var tmpRMC: NMEAData = NMEAData()
-    private var tmpGBS: NMEAData = NMEAData()
+    private val _NMEAMessageType = MutableStateFlow<List<String>>(listOf())
+    var NMEAMessageType: StateFlow<List<String>> = _NMEAMessageType
+
+    private var tmpGGA: NMEALocationData = NMEALocationData()
+    private var tmpRMC: NMEALocationData = NMEALocationData()
+    private var tmpGBS: NMEALocationData = NMEALocationData()
 
     private val _locationAndroidApi = MutableStateFlow<ListenerData>(ListenerData())
     val locationAndroidApi: StateFlow<ListenerData> = _locationAndroidApi
@@ -57,8 +60,10 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val _hasLocationAndroidApi = MutableStateFlow<Boolean>(false)
     val hasLocationAndroidApi: StateFlow<Boolean> = _hasLocationAndroidApi
 
-    private val _messagePack = MutableStateFlow<String?>(String())
-    var messagePack: StateFlow<String?> = _messagePack
+    private val _messagePack = MutableStateFlow<String>("")
+    var messagePack: StateFlow<String> = _messagePack
+
+
 
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
 
@@ -130,6 +135,16 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
         handler.removeCallbacks(noNMEAMessageTimeout)
         handler.postDelayed(noNMEAMessageTimeout, timeoutPeriod)
 
+        val messageType = if (message.length >= 6 && message[0] == '$') {
+            message.substring(1, 6)
+        } else if (message.length >= 5) {
+            message.substring(0, 5)
+        } else {
+            message
+        }
+        if (!_NMEAMessageType.value.contains(messageType))
+            _NMEAMessageType.value += messageType
+
         when {
             message.startsWith("\$GPGGA") || message.startsWith("\$GNGGA") -> {
                 tmpGGA = NMEAParser.parseGGA(message, tmpGGA)
@@ -142,7 +157,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
-        val combined = NMEAData(
+        val combined = NMEALocationData(
             time = if (tmpRMC.time.isNotEmpty()) tmpRMC.time else tmpGGA.time,
             date = if (tmpRMC.date.isNotEmpty()) tmpRMC.date else tmpGGA.date,
             latitude = if (tmpGGA.latitude != 0.0) tmpGGA.latitude else tmpRMC.latitude,

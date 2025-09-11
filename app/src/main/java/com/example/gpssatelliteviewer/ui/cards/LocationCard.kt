@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.data.ListenerData
-import com.example.gpssatelliteviewer.data.NMEAData
+import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.utils.CoordinateConversion
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.approximateLocationAccuracy
@@ -32,7 +32,7 @@ import com.example.gpssatelliteviewer.utils.approximateLocationAccuracy
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NMEALocationCard(
-    nmea: NMEAData,
+    nmea: NMEALocationData,
     modifier: Modifier = Modifier
 ) {
     Card(

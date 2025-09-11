@@ -8,19 +8,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -44,7 +40,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.data.ListenerData
-import com.example.gpssatelliteviewer.data.NMEAData
+import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.ui.cards.AndroidApiLocation
 import com.example.gpssatelliteviewer.ui.cards.LoadingLocationText
 import com.example.gpssatelliteviewer.ui.cards.NMEALocationCard
@@ -105,17 +101,26 @@ fun LocationInfoPanel(
                                     navController.navigate("Satellite3DPanel")
                                 }
                             )
-
+                            /*
+                            * NMEA what message
+                            * RAW message
+                            * thing we see from them...
+                            */
+                            DropdownMenuItem(
+                                text = { Text("NMEA messaegs") },
+                                onClick = {
+                                    dropDownMenuExpanded.value = false
+                                    navController.navigate("RawNMEADataPanel")
+                                }
+                            )
                             /*
                             *** TO DO ADD MORE PANELS
                             *
                             * ONE WILL BE NMEA MESSAGES DISPLAY
-                            * NMEA what message
-                            * RAW message
-                            * thing we see from them...
                             *
                             *
-                             */
+                            */
+
                         }
                     }
                 }
@@ -218,8 +223,8 @@ fun LocationInfoPanelPreview() {
 // Fake ViewModel only for preview
 class FakeLocationInfoViewModel : ViewModel() {
 
-    private val _locationNMEA = MutableStateFlow<NMEAData>(NMEAData())
-    val locationNMEA: StateFlow<NMEAData> = _locationNMEA
+    private val _locationNMEA = MutableStateFlow<NMEALocationData>(NMEALocationData())
+    val locationNMEA: StateFlow<NMEALocationData> = _locationNMEA
 
     private val _hasLocationAndroidApi = MutableStateFlow<Boolean>(false)
     val hasLocationAndroidApi: StateFlow<Boolean> = _hasLocationAndroidApi
@@ -249,9 +254,9 @@ class FakeLocationInfoViewModel : ViewModel() {
     private val fakeRmc = "\$GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A"
     private val fakeGbs = "\$GPGBS,015509.00,-0.031,-0.186,0.219,19,0.000,-0.354,6.972*4D"
 
-    private lateinit var tmpGGA: NMEAData
-    private lateinit var tmpRMC: NMEAData
-    private lateinit var tmpGBS: NMEAData
+    private lateinit var tmpGGA: NMEALocationData
+    private lateinit var tmpRMC: NMEALocationData
+    private lateinit var tmpGBS: NMEALocationData
 
     init {
         simulateNmeaStream()
@@ -262,7 +267,7 @@ class FakeLocationInfoViewModel : ViewModel() {
         tmpRMC = NMEAParser.parseRMC(fakeRmc, tmpRMC)
         tmpGBS = NMEAParser.parseGBS(fakeGbs, _locationNMEA.value)
 
-        val combined = NMEAData(
+        val combined = NMEALocationData(
             time = if (tmpRMC.time.isNotEmpty()) tmpRMC.time else tmpGGA.time,
             date = if (tmpRMC.date.isNotEmpty()) tmpRMC.date else tmpGGA.date,
             latitude = if (tmpGGA.latitude != 0.0) tmpGGA.latitude else tmpRMC.latitude,

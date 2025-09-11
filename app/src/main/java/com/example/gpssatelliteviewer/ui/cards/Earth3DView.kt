@@ -50,16 +50,18 @@ private val DEFAULT_LOCATIONS = listOf(
     23.8103 to 90.4125     // Dhaka
 )
 
+/*
+Orbit heights were taken from https://en.wikipedia.org/wiki/Satellite_navigation
+and https://en.wikipedia.org/wiki/List_of_BeiDou_satellites
+ */
 val keysFor35786000 = setOf(1,2,3,4,5,6,7,8,9,10,13,16,31,38,39,40,56,59,60,61,62)
 
 val constellationAltitudes = mapOf(
-    "GPS" to 20180000f,       // Altitude in kilometers
     "GLONASS" to 19100000f,
     "Galileo" to 23222000f,
-    //"BeiDou" to 21500000f,    // Approximate MEO altitude; BeiDou has GEO and IGSO too
-    "QZSS" to 35786000f,
+    "QZSS" to 35800000f, // average height (elliptical orbit 32,600–39,000 km)
     "IRNSS" to 36000000f,
-    "SBAS" to 35786000f,
+    "SBAS" to 35786000f, // Usually GEO
     "Unknown" to 0f,
     "Other" to 0f
 )
