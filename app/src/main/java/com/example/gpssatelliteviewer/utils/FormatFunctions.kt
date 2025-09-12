@@ -114,3 +114,26 @@ fun SNRBar(
         }
     }
 }
+
+fun mapFixQuality(fixQuality: Int): String {
+    return when(fixQuality) {
+        0 -> "No fix"
+        1 -> "GPS"
+        2 -> "DGPS"
+        3 -> "PPS"
+        4 -> "RTK"
+        5 -> "Float RTK"
+        6 -> "Estimated"
+        7 -> "Manual"
+        8 -> "Simulated"
+        else -> "Unknown"
+    }
+}
+fun mapFixType(fixType: Int): String {
+    return when(fixType) {
+        1 -> "Not available"
+        2 -> "2D Fix"
+        3 -> "3D Fix"
+        else -> "Unknown"
+    }
+}

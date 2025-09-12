@@ -31,9 +31,9 @@ fun Satellite3DPanel(
     navController: NavController,
     viewModel: GNSSViewModel
 ) {
-    val navMessage by viewModel.navMessages.collectAsState()
-    val gnssCapabilities = viewModel.hasGNSSNavigationMessage.collectAsState()
-    val context = LocalContext.current
+    //val navMessage by viewModel.navMessages.collectAsState()
+    //val gnssCapabilities = viewModel.hasGNSSNavigationMessage.collectAsState()
+    //val context = LocalContext.current
 
     val satelliteList by viewModel.satelliteList.collectAsState()
     val locationNMEA by viewModel.locationNMEA.collectAsState()

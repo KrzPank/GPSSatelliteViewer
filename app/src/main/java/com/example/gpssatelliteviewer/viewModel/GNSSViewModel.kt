@@ -15,7 +15,6 @@ import com.example.gpssatelliteviewer.data.NMEALocationData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import android.icu.util.TimeZone
-import android.location.GnssNavigationMessage
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -26,63 +25,30 @@ import java.util.Date
 import java.util.concurrent.Executors
 import kotlin.Int
 
+import com.example.gpssatelliteviewer.data.GGA
+import com.example.gpssatelliteviewer.data.GSA
+import com.example.gpssatelliteviewer.data.GSV
+import com.example.gpssatelliteviewer.data.RMC
+import com.example.gpssatelliteviewer.data.SatInfo
+import com.example.gpssatelliteviewer.data.VTG
+
 
 @RequiresApi(Build.VERSION_CODES.R)
 class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _satelliteList = MutableStateFlow<List<GNSSStatusData>>(listOf())
-    val satelliteList: StateFlow<List<GNSSStatusData>> = _satelliteList
-
-    // Satellite3DViewModel
-    private val _navMessages = MutableStateFlow<GnssNavigationMessage?>(null)
-    val navMessages: StateFlow<GnssNavigationMessage?> = _navMessages
-
-    private val _hasGNSSNavigationMessage = MutableStateFlow<String>("No capabilities")
-    val hasGNSSNavigationMessage: StateFlow<String> = _hasGNSSNavigationMessage
-    // Satellite3DViewModel
-
-    private val _locationNMEA = MutableStateFlow<NMEALocationData>(NMEALocationData())
-    val locationNMEA: StateFlow<NMEALocationData> = _locationNMEA
-
-    private val _hasLocationNMEA = MutableStateFlow<Boolean>(false)
-    val hasLocationNMEA: StateFlow<Boolean> = _hasLocationNMEA
-
-    private val _NMEAMessageType = MutableStateFlow<List<String>>(listOf())
-    var NMEAMessageType: StateFlow<List<String>> = _NMEAMessageType
-
-    private var tmpGGA: NMEALocationData = NMEALocationData()
-    private var tmpRMC: NMEALocationData = NMEALocationData()
-    private var tmpGBS: NMEALocationData = NMEALocationData()
-
-    private val _locationAndroidApi = MutableStateFlow<ListenerData>(ListenerData())
-    val locationAndroidApi: StateFlow<ListenerData> = _locationAndroidApi
-
-    private val _hasLocationAndroidApi = MutableStateFlow<Boolean>(false)
-    val hasLocationAndroidApi: StateFlow<Boolean> = _hasLocationAndroidApi
-
-    private val _messagePack = MutableStateFlow<String>("")
-    var messagePack: StateFlow<String> = _messagePack
-
-
-
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
-
     private val updateInterval = 2000L // in milis
     private val timeoutPeriod: Long = 15 * 1000 // 15 sec
 
-    private val handler = Handler(Looper.getMainLooper())
-    private val noNMEAMessageTimeout  = Runnable {
-        _hasLocationNMEA.value = false
-    }
-    private val noAndroidApiLocationTimeout = Runnable {
-        _hasLocationAndroidApi.value = false
-    }
+    private val _NMEAMessage = MutableStateFlow<String?>(null)
+    var nmeaMessage: StateFlow<String?> = _NMEAMessage
+
+
+    private val _satelliteList = MutableStateFlow<List<GNSSStatusData>>(listOf())
+    val satelliteList: StateFlow<List<GNSSStatusData>> = _satelliteList
 
     private val gnssCallback = object : GnssStatus.Callback() {
         override fun onSatelliteStatusChanged(status: GnssStatus) {
-            //val currentTime = System.currentTimeMillis()
-            //if (currentTime - lastGnssUpdateTime < updateInterval) return
-            //lastGnssUpdateTime = currentTime
 
             val list = mutableListOf<GNSSStatusData>()
             for (i in 0 until status.satelliteCount) {
@@ -107,7 +73,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                 list.add(
                     GNSSStatusData(
                         constellation = constellation,
-                        id = svid,
+                        prn = svid,
                         snr = cn0,
                         usedInFix = used,
                         azimuth = azim,
@@ -119,6 +85,13 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /* Satellite3DViewModel
+    private val _navMessages = MutableStateFlow<GnssNavigationMessage?>(null)
+    val navMessages: StateFlow<GnssNavigationMessage?> = _navMessages
+
+    private val _hasGNSSNavigationMessage = MutableStateFlow<String>("No capabilities")
+    val hasGNSSNavigationMessage: StateFlow<String> = _hasGNSSNavigationMessage
+
     private val navMessageCallback = object : GnssNavigationMessage.Callback() {
         override fun onGnssNavigationMessageReceived(event: GnssNavigationMessage) {
             _navMessages.value = event
@@ -128,6 +101,41 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
             super.onStatusChanged(status)
         }
     }
+     */
+
+
+    private val _locationNMEA = MutableStateFlow<NMEALocationData>(NMEALocationData())
+    val locationNMEA: StateFlow<NMEALocationData> = _locationNMEA
+
+    private val _hasLocationNMEA = MutableStateFlow<Boolean>(false)
+    val hasLocationNMEA: StateFlow<Boolean> = _hasLocationNMEA
+
+    private val _NMEAMessageType = MutableStateFlow<List<String>>(listOf())
+    var NMEAMessageType: StateFlow<List<String>> = _NMEAMessageType
+
+    private val _parsedGGA = MutableStateFlow<GGA?>(null)
+    val parsedGGA: StateFlow<GGA?> = _parsedGGA
+
+    private val _parsedRMC = MutableStateFlow<RMC?>(null)
+    val parsedRMC: StateFlow<RMC?> = _parsedRMC
+
+    private val _parsedGSA = MutableStateFlow<GSA?>(null)
+    val parsedGSA: StateFlow<GSA?> = _parsedGSA
+
+    private val _parsedVTG = MutableStateFlow<VTG?>(null)
+    val parsedVTG: StateFlow<VTG?> = _parsedVTG
+
+    private val _parsedGSVCombined = MutableStateFlow<List<SatInfo>>(emptyList())
+    val gsvCombined: StateFlow<List<SatInfo>> = _parsedGSVCombined
+
+    private var tmpGGA: GGA? = null
+    private var tmpRMC: RMC? = null
+
+    private val handler = Handler(Looper.getMainLooper())
+    private val noNMEAMessageTimeout  = Runnable {
+        _hasLocationNMEA.value = false
+    }
+    private val gsvCycle = mutableListOf<GSV>()
 
     private val nmeaListener = OnNmeaMessageListener { message, _ ->
 
@@ -135,48 +143,89 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
         handler.removeCallbacks(noNMEAMessageTimeout)
         handler.postDelayed(noNMEAMessageTimeout, timeoutPeriod)
 
-        val messageType = if (message.length >= 6 && message[0] == '$') {
-            message.substring(1, 6)
-        } else if (message.length >= 5) {
-            message.substring(0, 5)
-        } else {
-            message
-        }
-        if (!_NMEAMessageType.value.contains(messageType))
+        val messageType = NMEAParser.getMessageType(message)
+        if (!_NMEAMessageType.value.contains(messageType)) {
             _NMEAMessageType.value += messageType
+        }
 
         when {
             message.startsWith("\$GPGGA") || message.startsWith("\$GNGGA") -> {
-                tmpGGA = NMEAParser.parseGGA(message, tmpGGA)
+                tmpGGA = NMEAParser.parseGGA(message)
+                _parsedGGA.value = tmpGGA
             }
             message.startsWith("\$GPRMC") || message.startsWith("\$GNRMC") -> {
-                tmpRMC = NMEAParser.parseRMC(message, tmpRMC)
+                tmpRMC = NMEAParser.parseRMC(message)
+                _parsedRMC.value = tmpRMC
             }
-            message.startsWith("\$GPGBS") || message.startsWith("\$GNGBS") -> {
-                tmpGBS = NMEAParser.parseGBS(message, _locationNMEA.value)
+            message.startsWith("\$GPGSA") || message.startsWith("\$GNGSA") -> {
+                _parsedGSA.value = NMEAParser.parseGSA(message)
+            }
+            message.startsWith("\$GPVTG") || message.startsWith("\$GNVTG") -> {
+                _parsedVTG.value = NMEAParser.parseVTG(message)
+            }
+            message.contains("GSV") -> {
+                val gsv = NMEAParser.parseGSV(message)
+                if (gsv != null) {
+                    gsvCycle.add(gsv)
+
+                    // If this is the last message of the cycle
+                    if (gsvCycle.size == gsv.totalMessages) {
+
+                        // Merge all satellites from this cycle into one list
+                        val allSatellites = gsvCycle.flatMap { part ->
+                            val talker = message.substring(1, 3) // GP, GL, GB, etc.
+                            part.satellitesInfo.map { sat ->
+                                sat.copy(prn = adjustPrn(talker, sat.prn))
+                            }
+                        }
+
+                        // Update combined GSV satellites
+                        _parsedGSVCombined.value = allSatellites
+
+                        // Clear cycle storage for next GSV sequence
+                        gsvCycle.clear()
+                    }
+                }
+            }
+            else -> {
+                _NMEAMessage.value = message
             }
         }
 
         val combined = NMEALocationData(
-            time = if (tmpRMC.time.isNotEmpty()) tmpRMC.time else tmpGGA.time,
-            date = if (tmpRMC.date.isNotEmpty()) tmpRMC.date else tmpGGA.date,
-            latitude = if (tmpGGA.latitude != 0.0) tmpGGA.latitude else tmpRMC.latitude,
-            longitude = if (tmpGGA.longitude != 0.0) tmpGGA.longitude else tmpRMC.longitude,
-            fixQuality = tmpGGA.fixQuality,
-            numSatellites = tmpGGA.numSatellites,
-            hdop = tmpGGA.hdop,
-            altitude = tmpGGA.altitude,
-            geoidHeight = tmpGGA.geoidHeight,
-            mslAltitude = tmpGGA.mslAltitude,
-            speedKnots = tmpRMC.speedKnots,
-            course = tmpRMC.course,
-            magneticVariation = tmpRMC.magneticVariation,
-            gbsErrors = tmpGBS.gbsErrors
+            time = tmpRMC?.time ?: tmpGGA?.time.orEmpty(),
+            date = tmpRMC?.date ?: tmpGGA?.time.orEmpty(),
+            latitude = tmpGGA?.latitude?.takeIf { it != 0.0 } ?: (tmpRMC?.latitude ?: 0.0),
+            latHemisphere = (tmpGGA?.latDirection ?: tmpRMC?.latDirection)!!,
+            longitude = tmpGGA?.longitude?.takeIf { it != 0.0 } ?: (tmpRMC?.longitude ?: 0.0),
+            lonHemisphere = (tmpGGA?.lonDirection ?: tmpRMC?.lonDirection)!!,
+            fixQuality = tmpGGA?.fixQuality ?: 0,
+            fixType = _parsedGSA.value?.fixType ?: 0,
+            numSatellites = tmpGGA?.numSatellites ?: 0,
+            hdop = tmpGGA?.horizontalDilution ?: 0.0,
+            altitude = tmpGGA?.altitude ?: 0.0,
+            geoidHeight = tmpGGA?.geoidSeparation ?: 0.0,
+            mslAltitude = tmpGGA?.let { gga ->
+                gga.altitude + (gga.geoidSeparation ?: 0.0)
+            } ?: 0.0,
+            speedKnots = tmpRMC?.speedOverGround ?: 0.0,
+            course = tmpRMC?.courseOverGround ?: 0.0,
+            magneticVariation = tmpRMC?.magneticVariation ?: 0.0
         )
-
         _locationNMEA.value = combined
     }
 
+
+
+    private val _locationAndroidApi = MutableStateFlow<ListenerData>(ListenerData())
+    val locationAndroidApi: StateFlow<ListenerData> = _locationAndroidApi
+
+    private val _hasLocationAndroidApi = MutableStateFlow<Boolean>(false)
+    val hasLocationAndroidApi: StateFlow<Boolean> = _hasLocationAndroidApi
+
+    private val noAndroidApiLocationTimeout = Runnable {
+        _hasLocationAndroidApi.value = false
+    }
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
 
@@ -208,7 +257,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         startLocationInfo()
-        startGNSSNavigation()
+        //startGNSSNavigation()
     }
 
     fun startLocationInfo() {
@@ -232,21 +281,12 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
             //val gnssCapabilities = locationManager.gnssCapabilities
             //_hasGNSSNavigationMessage.value = gnssCapabilities.toString()
 
-        } catch (_: SecurityException) {
-            // *** Change this later ***
-            _satelliteList.value = listOf(
-                GNSSStatusData(
-                    constellation = "Error",
-                    id = 0,
-                    snr = 0.0f,
-                    usedInFix = false,
-                    azimuth = 0.0f,
-                    elevation = 0.0f
-                )
-            )
+        } catch (e: SecurityException) {
+            e.printStackTrace()
         }
     }
 
+    /* Satellite3DViewModel
     fun startGNSSNavigation(){
         try {
             val tempExecutor = Executors.newSingleThreadExecutor()
@@ -257,12 +297,23 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
             e.printStackTrace()
         }
     }
+     */
+
+    // Adjust PRN based on constellation talker ID
+    private fun adjustPrn(talker: String, prn: Int): Int {
+        return when (talker) {
+            "GP" -> if (prn > 32) prn + 87 else prn        // GPS/SBAS
+            "GL" -> prn - 64                                // GLONASS
+            "GB" -> prn - 100                               // BeiDou
+            else -> prn                                     // GA, GQ, etc.
+        }
+    }
 
     override fun onCleared() {
         super.onCleared()
         locationManager.unregisterGnssStatusCallback(gnssCallback)
         locationManager.removeNmeaListener(nmeaListener)
         locationManager.removeUpdates(locationListener)
-        locationManager.unregisterGnssNavigationMessageCallback(navMessageCallback)
+        //locationManager.unregisterGnssNavigationMessageCallback(navMessageCallback)
     }
 }

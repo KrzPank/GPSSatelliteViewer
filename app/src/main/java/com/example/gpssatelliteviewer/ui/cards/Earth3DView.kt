@@ -1,7 +1,5 @@
 package com.example.gpssatelliteviewer.ui.cards
 
-import android.location.GnssStatus
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -95,7 +93,7 @@ fun Earth3DView(
                 scaleToUnits = 0.05f
             ).apply {
                 val altitude = if (sat.constellation == "BeiDou"){
-                    if (sat.id in keysFor35786000) 35786000f
+                    if (sat.prn in keysFor35786000) 35786000f
                     else 21500000f
                 } else
                     constellationAltitudes[sat.constellation] ?: 0.0f

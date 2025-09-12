@@ -24,9 +24,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.data.ListenerData
 import com.example.gpssatelliteviewer.data.NMEALocationData
+import com.example.gpssatelliteviewer.data.parsers.NMEAParser
 import com.example.gpssatelliteviewer.utils.CoordinateConversion
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.approximateLocationAccuracy
+import com.example.gpssatelliteviewer.utils.mapFixQuality
+import com.example.gpssatelliteviewer.utils.mapFixType
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -51,13 +54,12 @@ fun NMEALocationCard(
             InfoRow(
                 label = "Fix",
                 value = listOf(
-                    nmea.fixQuality,
-                    if (nmea.fixQuality == "No data") "No fix"
-                    else nmea.numSatellites.let { if (it > 4) "3D fix" else "Fix" }
+                    mapFixQuality(nmea.fixQuality),
+                    mapFixType(nmea.fixType)
                 ).joinToString(" / ")
             )
 
-            Spacer(Modifier.height(6.dp))
+            //Spacer(Modifier.height(6.dp))
 
             InfoRow(
                 label = "Last update (UTC)",
@@ -111,11 +113,13 @@ fun NMEALocationCard(
             )
             InfoRow(
                 label = "Course",
-                value = nmea.course.let { "%.1f°".format(it) }
+                value = if (nmea.course == 0.0) "-"
+                    else nmea.course.let { "%.1f°".format(it) }
             )
             InfoRow(
                 label = "Magnetic variation",
-                value = nmea.magneticVariation.let { "%.1f°".format(it) }
+                value = if (nmea.magneticVariation == 0.0) "-"
+                    else nmea.magneticVariation.let { "%.1f°".format(it) }
             )
         }
 

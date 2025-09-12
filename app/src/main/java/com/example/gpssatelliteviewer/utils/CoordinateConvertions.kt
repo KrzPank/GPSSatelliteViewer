@@ -1,6 +1,7 @@
 package com.example.gpssatelliteviewer.utils
 
 import android.annotation.SuppressLint
+import android.util.Log
 import com.example.gpssatelliteviewer.data.NMEALocationData
 import dev.romainguy.kotlin.math.Float3
 import kotlin.math.cos
@@ -55,7 +56,7 @@ object CoordinateConversion {
             v = Float3(v.x * c - v.z * si, v.y, v.x * si + v.z * c)
         }
 
-        //Log.e("SceneView", "Model location x:${v.x}, y:${v.y}, z:${v.z}")
+        Log.e("SceneView", "Model location x:${v.x}, y:${v.y}, z:${v.z}")
         return v
     }
 
@@ -101,7 +102,7 @@ object CoordinateConversion {
     }
 
     @SuppressLint("DefaultLocale")
-    fun geodeticToDMS(value: Double, hemisphere: String): String {
+    fun geodeticToDMS(value: Double, hemisphere: Char): String {
         if (value == 0.0) return "0°0'0\""
 
         val degrees = (value / 100).toInt()
@@ -115,19 +116,26 @@ object CoordinateConversion {
 }
 
 
-fun approximateLocationAccuracy(data: NMEALocationData, sensorAccuracyM: Double = 4.5): String {
+fun approximateLocationAccuracy(data: NMEALocationData): String {
+    val fixQuality = data.fixQuality
+    val hdop = data.hdop
+    val numSatellites = data.numSatellites
 
-    val hdopAccuracy = data.hdop.times(sensorAccuracyM)
+    if (fixQuality == 0) return "No fix"
 
-    val gbsError = data.gbsErrors.let { list ->
-        if (list.isNotEmpty()) list.sum() else null
+    val hdopValue = hdop.takeIf { it > 0 } ?: 99.0
+    val satellites = numSatellites.takeIf { it > 0 } ?: 0
+
+    val baselineAccuracy = 5.0
+
+    val satFactor = when {
+        satellites >= 12 -> 0.8
+        satellites >= 8 -> 1.0
+        satellites >= 4 -> 1.2
+        else -> 2.0
     }
 
-    val totalAccuracy = listOfNotNull(hdopAccuracy, gbsError).sum()
+    val accuracyMeters = hdopValue * baselineAccuracy * satFactor
 
-    return if (totalAccuracy > 0) {
-        "%.1f m".format(totalAccuracy)
-    } else {
-        "Brak danych"
-    }
+    return "%.1f m".format(accuracyMeters)
 }

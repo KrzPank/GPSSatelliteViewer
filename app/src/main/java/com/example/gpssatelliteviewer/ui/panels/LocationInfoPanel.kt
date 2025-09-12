@@ -1,6 +1,5 @@
 package com.example.gpssatelliteviewer.ui.panels
 
-import android.annotation.SuppressLint
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
@@ -8,7 +7,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -33,27 +34,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.data.ListenerData
-import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.ui.cards.AndroidApiLocation
 import com.example.gpssatelliteviewer.ui.cards.LoadingLocationText
 import com.example.gpssatelliteviewer.ui.cards.NMEALocationCard
 import com.example.gpssatelliteviewer.ui.cards.SatelliteCard
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
-import com.example.gpssatelliteviewer.data.parsers.NMEAParser
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
@@ -198,7 +190,7 @@ fun LocationInfoPanel(
                             elevation = CardDefaults.cardElevation(2.dp)
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
-                                InfoRow("ID", satellite.id.toString())
+                                InfoRow("ID", satellite.prn.toString())
                                 InfoRow("SNR", "${satellite.snr} dBHz")
                                 InfoRow("Used in Fix", satellite.usedInFix.toString())
                             }
@@ -206,10 +198,12 @@ fun LocationInfoPanel(
                     }
                 }
             }
+
         }
     }
 }
 
+/* Fake viewModel for preview
 @RequiresApi(Build.VERSION_CODES.R)
 @SuppressLint("ViewModelConstructorInComposable")
 @Preview(showBackground = true, showSystemUi = true)
@@ -219,8 +213,6 @@ fun LocationInfoPanelPreview() {
 
 }
 
-
-// Fake ViewModel only for preview
 class FakeLocationInfoViewModel : ViewModel() {
 
     private val _locationNMEA = MutableStateFlow<NMEALocationData>(NMEALocationData())
@@ -254,34 +246,33 @@ class FakeLocationInfoViewModel : ViewModel() {
     private val fakeRmc = "\$GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A"
     private val fakeGbs = "\$GPGBS,015509.00,-0.031,-0.186,0.219,19,0.000,-0.354,6.972*4D"
 
-    private lateinit var tmpGGA: NMEALocationData
-    private lateinit var tmpRMC: NMEALocationData
-    private lateinit var tmpGBS: NMEALocationData
+    private var tmpGGA: GGA? = null
+    private var tmpRMC: RMC? = null
 
     init {
         simulateNmeaStream()
     }
 
     private fun simulateNmeaStream() {
-        tmpGGA = NMEAParser.parseGGA(fakeGga, tmpGGA)
-        tmpRMC = NMEAParser.parseRMC(fakeRmc, tmpRMC)
-        tmpGBS = NMEAParser.parseGBS(fakeGbs, _locationNMEA.value)
+        tmpGGA = NMEAParser.parseGGA(fakeGga)
+        tmpRMC = NMEAParser.parseRMC(fakeRmc)
 
         val combined = NMEALocationData(
-            time = if (tmpRMC.time.isNotEmpty()) tmpRMC.time else tmpGGA.time,
-            date = if (tmpRMC.date.isNotEmpty()) tmpRMC.date else tmpGGA.date,
-            latitude = if (tmpGGA.latitude != 0.0) tmpGGA.latitude else tmpRMC.latitude,
-            longitude = if (tmpGGA.longitude != 0.0) tmpGGA.longitude else tmpRMC.longitude,
-            fixQuality = tmpGGA.fixQuality,
-            numSatellites = tmpGGA.numSatellites,
-            hdop = tmpGGA.hdop,
-            altitude = tmpGGA.altitude,
-            geoidHeight = tmpGGA.geoidHeight,
-            mslAltitude = tmpGGA.mslAltitude,
-            speedKnots = tmpRMC.speedKnots,
-            course = tmpRMC.course,
-            magneticVariation = tmpRMC.magneticVariation,
-            gbsErrors = tmpGBS.gbsErrors
+            time = tmpRMC?.time ?: tmpGGA?.time.orEmpty(),
+            date = tmpRMC?.date ?: tmpGGA?.time.orEmpty(),
+            latitude = tmpGGA?.latitude?.takeIf { it != 0.0 } ?: (tmpRMC?.latitude ?: 0.0),
+            longitude = tmpGGA?.longitude?.takeIf { it != 0.0 } ?: (tmpRMC?.longitude ?: 0.0),
+            fixQuality = tmpGGA?.fixQuality ?: 0,
+            numSatellites = tmpGGA?.numSatellites ?: 0,
+            hdop = tmpGGA?.horizontalDilution ?: 0.0,
+            altitude = tmpGGA?.altitude ?: 0.0,
+            geoidHeight = tmpGGA?.geoidSeparation ?: 0.0,
+            mslAltitude = tmpGGA?.let { gga ->
+                gga.altitude + (gga.geoidSeparation ?: 0.0)
+            } ?: 0.0,
+            speedKnots = tmpRMC?.speedOverGround ?: 0.0,
+            course = tmpRMC?.courseOverGround ?: 0.0,
+            magneticVariation = tmpRMC?.magneticVariation ?: 0.0
         )
         _locationNMEA.value = combined
     }
@@ -312,3 +303,6 @@ class FakeLocationInfoViewModel : ViewModel() {
 
     val satelliteList: StateFlow<List<GNSSStatusData>> = _satelliteList
 }
+
+
+ */

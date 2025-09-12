@@ -2,7 +2,7 @@ package com.example.gpssatelliteviewer.data
 
 data class GNSSStatusData(
     val constellation: String,
-    val id: Int,
+    val prn: Int,
     val snr: Float,
     val usedInFix: Boolean,
     val azimuth: Float,
@@ -28,27 +28,28 @@ data class NMEALocationData(
     val time: String = "",
     val date: String = "",
     val latitude: Double = 0.0,
-    val latHemisphere: String = "",
+    val latHemisphere: Char = 0.toChar(),
     val longitude: Double = 0.0,
-    val lonHemisphere: String = "",
-    val fixQuality: String = "",
+    val lonHemisphere: Char = 0.toChar(),
+    val fixQuality: Int = 0,
+    val fixType: Int = 0,
     val numSatellites: Int = 0,
-    val hdop: Float = 0f,
+    val hdop: Double = 0.0,
     val altitude: Double = 0.0,
     val geoidHeight: Double = 0.0,
     val mslAltitude: Double = 0.0,
     val speedKnots: Double = 0.0,
     val course: Double = 0.0,
-    val magneticVariation: Double = 0.0,
-    val gbsErrors: List<Double> = emptyList()
+    val magneticVariation: Double = 0.0
 )
 
 data class GGA(
-    val time: String,            // UTC time hhmmss.ss
+    val message: String,
+    val time: String,
     val latitude: Double,
-    val latDirection: Char,      // N or S
+    val latDirection: Char,
     val longitude: Double,
-    val lonDirection: Char,      // E or W
+    val lonDirection: Char,
     val fixQuality: Int,
     val numSatellites: Int,
     val horizontalDilution: Double,
@@ -61,22 +62,33 @@ data class GGA(
 )
 
 data class GSA(
-    val mode: Char,              // Auto/Manual
-    val fixType: Int,            // 1 = no fix, 2 = 2D fix, 3 = 3D fix
+    val message: String,
+    val mode: Char,
+    val fixType: Int,
     val satelliteIds: List<Int>,
     val pdop: Double,
     val hdop: Double,
-    val vdop: Double
+    val vdop: Double,
+    val systemId: Int?
+)
+
+data class SatInfo(
+    val prn: Int,
+    val elevation: Int?,
+    val azimuth: Int?,
+    val snr: Int?
 )
 
 data class GSV(
+    val message: String,
     val totalMessages: Int,
     val messageNumber: Int,
     val satellitesInView: Int,
-    val satellitesInfo: List<GNSSStatusData>
+    val satellitesInfo: List<SatInfo>
 )
 
 data class RMC(
+    val message: String,
     val time: String,
     val status: Char,            // A=active, V=void
     val latitude: Double,
@@ -91,6 +103,7 @@ data class RMC(
 )
 
 data class VTG(
+    val message: String,
     val courseTrue: Double,
     val courseMagnetic: Double?,
     val speedKnots: Double,
@@ -98,6 +111,7 @@ data class VTG(
 )
 
 data class ACCURACY(
+    val message: String,
     val horizontalAccuracy: Double?,
     val verticalAccuracy: Double?
 )

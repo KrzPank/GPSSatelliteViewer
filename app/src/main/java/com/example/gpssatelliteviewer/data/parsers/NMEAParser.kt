@@ -1,94 +1,170 @@
 package com.example.gpssatelliteviewer.data.parsers
 
 import android.annotation.SuppressLint
+import com.example.gpssatelliteviewer.data.GGA
+import com.example.gpssatelliteviewer.data.GSA
+import com.example.gpssatelliteviewer.data.GSV
 import com.example.gpssatelliteviewer.data.NMEALocationData
+import com.example.gpssatelliteviewer.data.RMC
+import com.example.gpssatelliteviewer.data.SatInfo
+import com.example.gpssatelliteviewer.data.VTG
+
 
 object NMEAParser {
-    fun parseGGA(message: String, existing: NMEALocationData = NMEALocationData()): NMEALocationData {
+    fun parseGGA(message: String): GGA? {
         val parts = message.split(",")
-        if (parts.size < 14) return existing
+        if (parts.size < 14) return null
 
         return try {
-            val time = formatNmeaTime(parts[1])
-            val lat = parts[2].toDoubleOrNull()
-            val latHem = parts[3]
-            val lon = parts[4].toDoubleOrNull()
-            val lonHem = parts[5]
-            val fixQ = parts[6].toIntOrNull()
-            val numSatellites = parts[7].toIntOrNull()
-            val hdop = parts[8].toFloatOrNull()
-            val altitude = parts[9].toDoubleOrNull()
-            val geoidHeight = parts[11].toDoubleOrNull()
-            val mslAltitude = if (altitude != null && geoidHeight != null) altitude + geoidHeight else existing.mslAltitude
-
-            existing.copy(
-                time = if (time.isNotEmpty()) time else existing.time,
-                latitude = lat ?: existing.latitude,
-                latHemisphere = if (latHem.isNotEmpty()) latHem else existing.latHemisphere,
-                longitude = lon ?: existing.longitude,
-                lonHemisphere = if (lonHem.isNotEmpty()) lonHem else existing.lonHemisphere,
-                fixQuality = fixQ?.let { mapFixQuality(it) } ?: existing.fixQuality,
-                numSatellites = numSatellites ?: existing.numSatellites,
-                hdop = hdop ?: existing.hdop,
-                altitude = altitude ?: existing.altitude,
-                geoidHeight = geoidHeight ?: existing.geoidHeight,
-                mslAltitude = mslAltitude
+            GGA(
+                message = message,
+                time = formatNmeaTime(parts[1]),
+                latitude = parts[2].toDoubleOrNull() ?: 0.0,
+                latDirection = parts[3].firstOrNull() ?: 'N',
+                longitude = parts[4].toDoubleOrNull() ?: 0.0,
+                lonDirection = parts[5].firstOrNull() ?: 'E',
+                fixQuality = parts[6].toIntOrNull() ?: 0,
+                numSatellites = parts[7].toIntOrNull() ?: 0,
+                horizontalDilution = parts[8].toDoubleOrNull() ?: 0.0,
+                altitude = parts[9].toDoubleOrNull() ?: 0.0,
+                altitudeUnits = parts[10].firstOrNull() ?: 'M',
+                geoidSeparation = parts[11].toDoubleOrNull(),
+                geoidSeparationUnits = parts[12].firstOrNull(),
+                dgpsAge = parts[13].toDoubleOrNull(),
+                dgpsStationId = parts.getOrNull(14)
             )
         } catch (e: Exception) {
             e.printStackTrace()
-            existing
+            null
         }
     }
 
-    fun parseRMC(message: String, existing: NMEALocationData = NMEALocationData()): NMEALocationData {
+    fun parseGSA(message: String) : GSA? {
         val parts = message.split(",")
-        if (parts.size < 12) return existing
+        if (parts.size < 15) return null
 
         return try {
-            val time = formatNmeaTime(parts[1])
-            val lat = parts[3].toDoubleOrNull()
-            val latHem = parts[4]
-            val lon = parts[5].toDoubleOrNull()
-            val lonHem = parts[6]
-            val speedKnots = parts[7].toDoubleOrNull()
-            val course = parts[8].toDoubleOrNull()
-            val date = formatNmeaDate(parts[9])
-            val magVar = parts[10].toDoubleOrNull()
-            val magVarHem = parts.getOrNull(11)
-            val magneticVariation = if (magVar != null && magVarHem != null && magVarHem.equals("W", true)) -magVar else magVar ?: existing.magneticVariation
+            val mode = parts[1].firstOrNull() ?: 'M'
+            val fixType = parts[2].toIntOrNull() ?: 1
 
-            existing.copy(
-                time = if (time.isNotEmpty()) time else existing.time,
-                date = if (date.isNotEmpty()) date else existing.date,
-                latitude = lat ?: existing.latitude,
-                latHemisphere = if (latHem.isNotEmpty()) latHem else existing.latHemisphere,
-                longitude = lon ?: existing.longitude,
-                lonHemisphere = if (lonHem.isNotEmpty()) lonHem else existing.lonHemisphere,
-                speedKnots = speedKnots ?: existing.speedKnots,
-                course = course ?: existing.course,
-                magneticVariation = magneticVariation
+            // Extract up to 12 PRN numbers (fields 3–14)
+            val satelliteIds = parts.subList(3, 15)
+                .mapNotNull { it.toIntOrNull() }
+
+            val pdop = parts.getOrNull(15)?.toDoubleOrNull() ?: 0.0
+            val hdop = parts.getOrNull(16)?.toDoubleOrNull() ?: 0.0
+            val vdop = parts.getOrNull(17)?.substringBefore("*")?.toDoubleOrNull() ?: 0.0
+
+            // NMEA 4.10 extension: System ID may exist at field 18
+            val systemId = parts.getOrNull(18)?.substringBefore("*")?.toIntOrNull()
+
+            GSA(
+                message = message,
+                mode = mode,
+                fixType = fixType,
+                satelliteIds = satelliteIds,
+                pdop = pdop,
+                hdop = hdop,
+                vdop = vdop,
+                systemId = systemId
             )
         } catch (e: Exception) {
             e.printStackTrace()
-            existing
+            null
         }
     }
 
-    fun parseGBS(message: String, existing: NMEALocationData = NMEALocationData()): NMEALocationData {
+    fun parseGSV(message: String): GSV? {
         val parts = message.split(",")
-        if (parts.size < 5) return existing
+
+        if (parts.size < 4) return null // minimum required fields
 
         return try {
-            val errors = listOfNotNull(
-                parts[2].toDoubleOrNull(),
-                parts[3].toDoubleOrNull(),
-                parts[4].toDoubleOrNull()
+            val totalMessages = parts[1].toIntOrNull() ?: return null
+            val messageNumber = parts[2].toIntOrNull() ?: return null
+            val satellitesInView = parts[3].toIntOrNull() ?: 0
+
+            val satellites = mutableListOf<SatInfo>()
+
+            // Each satellite has 4 fields: PRN, elevation, azimuth, SNR
+            var index = 4
+            while (index + 3 < parts.size) {
+                val prn = parts[index].toIntOrNull()
+                val elevation = parts[index + 1].toIntOrNull()
+                val azimuth = parts[index + 2].toIntOrNull()
+                val snr = parts[index + 3].toIntOrNull()
+
+                if (prn != null) {
+                    satellites.add(
+                        SatInfo(
+                            prn = prn,
+                            elevation = elevation,
+                            azimuth = azimuth,
+                            snr = snr
+                        )
+                    )
+                }
+                index += 4
+            }
+
+            GSV(
+                message = message,
+                totalMessages = totalMessages,
+                messageNumber = messageNumber,
+                satellitesInView = satellitesInView,
+                satellitesInfo = satellites
             )
-            existing.copy(gbsErrors = errors)
         } catch (e: Exception) {
             e.printStackTrace()
-            existing
+            null
         }
+    }
+
+    fun parseRMC(message: String): RMC? {
+        val parts = message.split(",")
+        if (parts.size < 12) return null
+
+        return try {
+            RMC(
+                message = message,
+                time = formatNmeaTime(parts[1]),
+                status = parts[2].firstOrNull() ?: 'V',
+                latitude = parts[3].toDoubleOrNull() ?: 0.0,
+                latDirection = parts[4].firstOrNull() ?: 'N',
+                longitude = parts[5].toDoubleOrNull() ?: 0.0,
+                lonDirection = parts[6].firstOrNull() ?: 'E',
+                speedOverGround = parts[7].toDoubleOrNull() ?: 0.0,
+                courseOverGround = parts[8].toDoubleOrNull() ?: 0.0,
+                date = formatNmeaDate(parts[9]),
+                magneticVariation = parts[10].toDoubleOrNull(),
+                variationDirection = parts.getOrNull(11)?.firstOrNull()
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun parseVTG(message: String): VTG? {
+        val parts = message.trim().split(",")
+        if (parts.size < 9) return null
+
+        return try {
+            VTG(
+                message = message,
+                courseTrue = parts[1].toDoubleOrNull() ?: 0.0,
+                courseMagnetic = parts[3].toDoubleOrNull(),
+                speedKnots = parts[5].toDoubleOrNull() ?: 0.0,
+                speedKmph = parts[7].toDoubleOrNull() ?: 0.0
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    fun getMessageType(message: String): String {
+        return message.split(",")[0].substring(1)
     }
 
     @SuppressLint("DefaultLocale")
@@ -113,21 +189,6 @@ object NMEAParser {
             val mm = nmeaTime.substring(2, 4).toInt()
             val ss = nmeaTime.substring(4, 6).toInt()
             return String.format("%02d:%02d:%02d", hh, mm, ss)
-        }
-    }
-
-    private fun mapFixQuality(fixQuality: Int): String {
-        return when(fixQuality) {
-            0 -> "No data"
-            1 -> "GPS"
-            2 -> "DGPS"
-            3 -> "PPS"
-            4 -> "RTK"
-            5 -> "Float RTK"
-            6 -> "Estimated"
-            7 -> "Manual"
-            8 -> "Simulated"
-            else -> "Unknown"
         }
     }
 }
