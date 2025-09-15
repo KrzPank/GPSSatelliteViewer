@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import com.example.gpssatelliteviewer.data.GGA
 import com.example.gpssatelliteviewer.data.GSA
 import com.example.gpssatelliteviewer.data.GSV
-import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.data.RMC
 import com.example.gpssatelliteviewer.data.SatInfo
 import com.example.gpssatelliteviewer.data.VTG
@@ -80,6 +79,7 @@ object NMEAParser {
         if (parts.size < 4) return null // minimum required fields
 
         return try {
+            val talker = parts[0].substring(1, 6)
             val totalMessages = parts[1].toIntOrNull() ?: return null
             val messageNumber = parts[2].toIntOrNull() ?: return null
             val satellitesInView = parts[3].toIntOrNull() ?: 0
@@ -94,16 +94,16 @@ object NMEAParser {
                 val azimuth = parts[index + 2].toIntOrNull()
                 val snr = parts[index + 3].toIntOrNull()
 
-                if (prn != null) {
-                    satellites.add(
-                        SatInfo(
-                            prn = prn,
-                            elevation = elevation,
-                            azimuth = azimuth,
-                            snr = snr
-                        )
+
+                if (prn != null) {satellites.add(
+                    SatInfo(
+                        prn = adjustPrn(talker, prn),
+                        elevation = elevation,
+                        azimuth = azimuth,
+                        snr = snr
                     )
-                }
+                )}
+
                 index += 4
             }
 
@@ -112,7 +112,8 @@ object NMEAParser {
                 totalMessages = totalMessages,
                 messageNumber = messageNumber,
                 satellitesInView = satellitesInView,
-                satellitesInfo = satellites
+                satellitesInfo = satellites,
+                talker = talker
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -189,6 +190,16 @@ object NMEAParser {
             val mm = nmeaTime.substring(2, 4).toInt()
             val ss = nmeaTime.substring(4, 6).toInt()
             return String.format("%02d:%02d:%02d", hh, mm, ss)
+        }
+    }
+
+    // Adjust PRN based on constellation talker ID
+    private fun adjustPrn(talker: String, prn: Int): Int {
+        return when (talker) {
+            "GPGSV" -> if (prn > 32) prn + 87 else prn        // GPS/SBAS
+            "GLGSV" -> prn - 64                                // GLONASS
+            "GBGSV" -> prn - 100                               // BeiDou
+            else -> prn                                     // GA, GQ, etc.
         }
     }
 }

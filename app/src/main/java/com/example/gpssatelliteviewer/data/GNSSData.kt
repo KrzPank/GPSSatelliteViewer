@@ -84,7 +84,8 @@ data class GSV(
     val totalMessages: Int,
     val messageNumber: Int,
     val satellitesInView: Int,
-    val satellitesInfo: List<SatInfo>
+    val satellitesInfo: List<SatInfo>,
+    val talker: String
 )
 
 data class RMC(

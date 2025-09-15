@@ -28,10 +28,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.gpssatelliteviewer.ui.panels.LiveNMEADataPanel
 
 import com.example.gpssatelliteviewer.ui.panels.LocationDeny
 import com.example.gpssatelliteviewer.ui.panels.LocationInfoPanel
-import com.example.gpssatelliteviewer.ui.panels.RawNMEADataPanel
 import com.example.gpssatelliteviewer.ui.panels.Satellite3DPanel
 import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
@@ -101,8 +101,8 @@ fun AppNavigation(hasPermission: Boolean) {
             composable("Satellite3DPanel") {
                 Satellite3DPanel(navController, viewModel)
             }
-            composable("RawNMEADataPanel") {
-                RawNMEADataPanel(navController, viewModel)
+            composable("LiveNMEADataPanel") {
+                LiveNMEADataPanel(navController, viewModel)
             }
         }
     } else {

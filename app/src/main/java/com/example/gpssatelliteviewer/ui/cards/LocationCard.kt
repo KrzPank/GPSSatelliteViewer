@@ -85,24 +85,10 @@ fun NMEALocationCard(
                 label = "Altitude MSL",
                 value = nmea.mslAltitude.let { "%.1f m".format(it) }
             )
-            /*InfoRow(
-                label = "Geoid height above ellipsoid",
-                value = nmea.geoidHeight?.let { "%.1f m".format(it) }
-                    ?: "No data")*/
             InfoRow(
                 label = "Accuracy",
                 value = approximateLocationAccuracy(nmea)
             )
-            /*
-            InfoRow(
-                label = "Satellites used",
-                value = nmea.numSatellites?.toString() ?: "No data"
-            )
-            InfoRow(
-                label = "Fix quality",
-                value = nmea.fixQuality ?: "No data"
-            )
-            */
             val speedkmh = nmea.speedKnots * 1.852
             InfoRow(
                 label = "Speed",
@@ -122,7 +108,6 @@ fun NMEALocationCard(
                     else nmea.magneticVariation.let { "%.1f°".format(it) }
             )
         }
-
     }
 }
 

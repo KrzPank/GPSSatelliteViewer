@@ -131,9 +131,20 @@ fun mapFixQuality(fixQuality: Int): String {
 }
 fun mapFixType(fixType: Int): String {
     return when(fixType) {
-        1 -> "Not available"
+        1 -> "N/A"
         2 -> "2D Fix"
         3 -> "3D Fix"
+        else -> "Unknown"
+    }
+}
+
+fun mapTalker(talker: String): String {
+    return when (talker) {
+        "GPGSV" -> "GPS/SBAS"
+        "GLGSV" -> "GLONASS"
+        "GBGSV" -> "BeiDou"
+        "GAGSV" -> "Galileo"
+        "GQGSV" -> "QZSS"
         else -> "Unknown"
     }
 }

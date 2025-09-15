@@ -102,7 +102,7 @@ fun LocationInfoPanel(
                                 text = { Text("NMEA messaegs") },
                                 onClick = {
                                     dropDownMenuExpanded.value = false
-                                    navController.navigate("RawNMEADataPanel")
+                                    navController.navigate("LiveNMEADataPanel")
                                 }
                             )
                             /*
