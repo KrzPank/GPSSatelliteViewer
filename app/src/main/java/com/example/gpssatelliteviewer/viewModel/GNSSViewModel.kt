@@ -108,9 +108,6 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val _hasLocationNMEA = MutableStateFlow<Boolean>(false)
     val hasLocationNMEA: StateFlow<Boolean> = _hasLocationNMEA
 
-    private val _NMEAMessageType = MutableStateFlow<List<String>>(listOf())
-    var NMEAMessageType: StateFlow<List<String>> = _NMEAMessageType
-
     private val _nmeaMessageMap = MutableStateFlow<Map<String, String>>(mapOf())
     val nmeaMessageMap: StateFlow<Map<String, String>> = _nmeaMessageMap
 

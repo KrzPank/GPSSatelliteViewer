@@ -1,5 +1,6 @@
 package com.example.gpssatelliteviewer.ui.cards
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -60,6 +61,8 @@ val constellationAltitudes = mapOf(
     "QZSS" to 35800000f, // average height (elliptical orbit 32,600–39,000 km)
     "IRNSS" to 36000000f,
     "SBAS" to 35786000f, // Usually GEO
+    "BeiDou" to 21500000f,
+    "GPS" to 20180000f,
     "Unknown" to 0f,
     "Other" to 0f
 )
@@ -92,11 +95,11 @@ fun Earth3DView(
                 modelInstance = instance,
                 scaleToUnits = 0.05f
             ).apply {
-                val altitude = if (sat.constellation == "BeiDou"){
-                    if (sat.prn in keysFor35786000) 35786000f
-                    else 21500000f
-                } else
-                    constellationAltitudes[sat.constellation] ?: 0.0f
+                val altitude = when {
+                    sat.constellation == "BeiDou" && sat.prn in keysFor35786000 -> 35786000f
+                    sat.constellation in constellationAltitudes -> constellationAltitudes[sat.constellation]!!
+                    else -> 0f
+                }
 
                 val pos = CoordinateConversion.ecefToScenePos(
                     azElToECEF(
@@ -106,7 +109,7 @@ fun Earth3DView(
                         altitude
                     )
                 )
-                //Log.e("SatPos", "Sid:${sat.id} position: ${pos.x}, y:${pos.y}, z:${pos.z}")
+                if (altitude == 0f) Log.e("SatPos", "Sid:${sat.constellation} position: ${pos.x}, y:${pos.y}, z:${pos.z}")
                 position = pos
             }
         }
