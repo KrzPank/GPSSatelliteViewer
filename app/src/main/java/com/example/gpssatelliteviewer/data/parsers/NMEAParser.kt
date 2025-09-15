@@ -16,7 +16,6 @@ object NMEAParser {
 
         return try {
             GGA(
-                message = message,
                 time = formatNmeaTime(parts[1]),
                 latitude = parts[2].toDoubleOrNull() ?: 0.0,
                 latDirection = parts[3].firstOrNull() ?: 'N',
@@ -58,7 +57,6 @@ object NMEAParser {
             val systemId = parts.getOrNull(18)?.substringBefore("*")?.toIntOrNull()
 
             GSA(
-                message = message,
                 mode = mode,
                 fixType = fixType,
                 satelliteIds = satelliteIds,
@@ -108,7 +106,6 @@ object NMEAParser {
             }
 
             GSV(
-                message = message,
                 totalMessages = totalMessages,
                 messageNumber = messageNumber,
                 satellitesInView = satellitesInView,
@@ -127,7 +124,6 @@ object NMEAParser {
 
         return try {
             RMC(
-                message = message,
                 time = formatNmeaTime(parts[1]),
                 status = parts[2].firstOrNull() ?: 'V',
                 latitude = parts[3].toDoubleOrNull() ?: 0.0,
@@ -152,7 +148,6 @@ object NMEAParser {
 
         return try {
             VTG(
-                message = message,
                 courseTrue = parts[1].toDoubleOrNull() ?: 0.0,
                 courseMagnetic = parts[3].toDoubleOrNull(),
                 speedKnots = parts[5].toDoubleOrNull() ?: 0.0,

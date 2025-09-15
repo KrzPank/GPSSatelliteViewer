@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.ui.cards.DefaultNMEATypeCard
+import kotlinx.coroutines.flow.compose
 
 
 //
@@ -35,13 +36,15 @@ fun LiveNMEADataPanel(
     navController: NavController,
     viewModel: GNSSViewModel
 ) {
-    val nmeaMessageTypes by viewModel.NMEAMessageType.collectAsState()
     val gga by viewModel.parsedGGA.collectAsState()
     val rmc by viewModel.parsedRMC.collectAsState()
     val gsa by viewModel.parsedGSA.collectAsState()
     val gsv by viewModel.parsedGSV.collectAsState()
     val vtg by viewModel.parsedVTG.collectAsState()
-    val nmeaMessage by viewModel.nmeaMessage.collectAsState()
+
+    val nmeaMessageMap by viewModel.nmeaMessageMap.collectAsState()
+
+    val nmeaMessageTypes = nmeaMessageMap.keys.toList()
 
     Scaffold(
         topBar = {
@@ -73,9 +76,9 @@ fun LiveNMEADataPanel(
                         rmc,
                         gsa,
                         vtg,
-                        gsv
+                        gsv,
+                        nmeaMessageMap
                     )
-
                 }
             }
         }

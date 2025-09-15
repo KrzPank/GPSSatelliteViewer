@@ -44,7 +44,6 @@ data class NMEALocationData(
 )
 
 data class GGA(
-    val message: String,
     val time: String,
     val latitude: Double,
     val latDirection: Char,
@@ -62,7 +61,6 @@ data class GGA(
 )
 
 data class GSA(
-    val message: String,
     val mode: Char,
     val fixType: Int,
     val satelliteIds: List<Int>,
@@ -80,7 +78,6 @@ data class SatInfo(
 )
 
 data class GSV(
-    val message: String,
     val totalMessages: Int,
     val messageNumber: Int,
     val satellitesInView: Int,
@@ -89,7 +86,6 @@ data class GSV(
 )
 
 data class RMC(
-    val message: String,
     val time: String,
     val status: Char,            // A=active, V=void
     val latitude: Double,
@@ -104,7 +100,6 @@ data class RMC(
 )
 
 data class VTG(
-    val message: String,
     val courseTrue: Double,
     val courseMagnetic: Double?,
     val speedKnots: Double,
@@ -112,7 +107,6 @@ data class VTG(
 )
 
 data class ACCURACY(
-    val message: String,
     val horizontalAccuracy: Double?,
     val verticalAccuracy: Double?
 )

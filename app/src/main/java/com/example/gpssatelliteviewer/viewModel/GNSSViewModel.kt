@@ -30,6 +30,7 @@ import com.example.gpssatelliteviewer.data.GSA
 import com.example.gpssatelliteviewer.data.GSV
 import com.example.gpssatelliteviewer.data.RMC
 import com.example.gpssatelliteviewer.data.VTG
+import com.example.gpssatelliteviewer.utils.mapTalker
 import kotlinx.coroutines.flow.take
 
 
@@ -110,8 +111,8 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val _NMEAMessageType = MutableStateFlow<List<String>>(listOf())
     var NMEAMessageType: StateFlow<List<String>> = _NMEAMessageType
 
-    private val _NMEAMessage = MutableStateFlow<List<String>>(listOf())
-    var nmeaMessage: StateFlow<List<String>> = _NMEAMessage
+    private val _nmeaMessageMap = MutableStateFlow<Map<String, String>>(mapOf())
+    val nmeaMessageMap: StateFlow<Map<String, String>> = _nmeaMessageMap
 
     private val _parsedGGA = MutableStateFlow<GGA?>(null)
     val parsedGGA: StateFlow<GGA?> = _parsedGGA
@@ -232,15 +233,10 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun handleNMEAMessage(message: String) {
         val messageType = NMEAParser.getMessageType(message)
-        if (!_NMEAMessageType.value.contains(messageType)) {
-            if ((messageType.contains("GSV")) && !gotGSV){
-                gotGSV = true
-                _NMEAMessageType.value += "GSV"
-            }
-            else if (!messageType.contains("GSV")) {
-                _NMEAMessageType.value += messageType
-            }
-        }
+        val updatedMap = _nmeaMessageMap.value.toMutableMap()
+        updatedMap[messageType] = message
+
+        _nmeaMessageMap.value = updatedMap
 
         when {
             message.startsWith("\$GPGGA") || message.startsWith("\$GNGGA") -> {
@@ -260,11 +256,9 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
             message.contains("GSV") -> {
                 val gsv = NMEAParser.parseGSV(message)
                 if (gsv != null) {
-                    // Store latest GSV per constellation (GP, GL, GB, etc.)
                     _parsedGSV.value = _parsedGSV.value + (gsv.talker to gsv)
                 }
             }
-
         }
 
 

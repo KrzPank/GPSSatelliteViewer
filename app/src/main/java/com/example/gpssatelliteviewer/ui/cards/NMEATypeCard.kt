@@ -32,8 +32,10 @@ fun DefaultNMEATypeCard(
     rmc: RMC?,
     gsa: GSA?,
     vtg: VTG?,
-    gsv: Map<String, GSV>
+    gsv: Map<String, GSV>,
+    nmeaMessageMap: Map<String, String>
 ) {
+    val rawMessage = nmeaMessageMap[type]
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -47,10 +49,12 @@ fun DefaultNMEATypeCard(
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(6.dp))
+            rawMessage?.let {
+                InfoRow("Raw message", it)
+            }
 
             when {
                 type.contains("GGA", ignoreCase = true) && gga != null -> {
-                    InfoRow("Raw message", gga.message)
                     InfoRow("Time (UTC)", gga.time)
                     InfoRow(
                         "Latitude",
@@ -71,7 +75,6 @@ fun DefaultNMEATypeCard(
                 }
 
                 type.contains("RMC", ignoreCase = true) && rmc != null -> {
-                    InfoRow("Raw message", rmc.message)
                     InfoRow("Time (UTC)", rmc.time)
                     InfoRow("Date", rmc.date)
                     InfoRow(
@@ -91,7 +94,6 @@ fun DefaultNMEATypeCard(
                 }
 
                 type.contains("GSA", ignoreCase = true) && gsa != null -> {
-                    InfoRow("Raw message", gsa.message)
                     InfoRow("Mode", gsa.mode.toString())
                     InfoRow("Fix Type", mapFixType(gsa.fixType))
                     InfoRow("PDOP", gsa.pdop.toString())
@@ -101,7 +103,6 @@ fun DefaultNMEATypeCard(
                 }
 
                 type.contains("VTG", ignoreCase = true) && vtg != null -> {
-                    InfoRow("Raw message", vtg.message)
                     InfoRow("Course True", vtg.courseTrue.toString())
                     InfoRow(
                         "Course Magnetic",
@@ -124,6 +125,9 @@ fun DefaultNMEATypeCard(
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                     }
+                }
+                else -> {
+                    InfoRow("Info", "No data available")
                 }
             }
         }
