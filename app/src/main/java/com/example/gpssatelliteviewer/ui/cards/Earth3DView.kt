@@ -1,13 +1,32 @@
 package com.example.gpssatelliteviewer.ui.cards
 
 import android.util.Log
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.utils.CoordinateConversion
 import com.example.gpssatelliteviewer.utils.CoordinateConversion.azElToECEF
+import com.example.gpssatelliteviewer.utils.Scene3D
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.Scene
 import io.github.sceneview.node.ModelNode
@@ -18,6 +37,14 @@ import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberNode
 import io.github.sceneview.rememberOnGestureListener
+
+
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
+import kotlin.math.roundToInt
 
 private val DEFAULT_LOCATIONS = listOf(
     40.7128 to -74.0060,   // New York
@@ -49,29 +76,37 @@ private val DEFAULT_LOCATIONS = listOf(
     23.8103 to 90.4125     // Dhaka
 )
 
-/*
-Orbit heights were taken from https://en.wikipedia.org/wiki/Satellite_navigation
-and https://en.wikipedia.org/wiki/List_of_BeiDou_satellites
- */
-val keysFor35786000 = setOf(1,2,3,4,5,6,7,8,9,10,13,16,31,38,39,40,56,59,60,61,62)
-
-val constellationAltitudes = mapOf(
-    "GLONASS" to 19100000f,
-    "Galileo" to 23222000f,
-    "QZSS" to 35800000f, // average height (elliptical orbit 32,600–39,000 km)
-    "IRNSS" to 36000000f,
-    "SBAS" to 35786000f, // Usually GEO
-    "BeiDou" to 21500000f,
-    "GPS" to 20180000f,
-    "Unknown" to 0f,
-    "Other" to 0f
-)
 
 @Composable
 fun Earth3DView(
     satelliteList: List<GNSSStatusData>,
     userLocation: Triple<Float, Float, Float>
 ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        val engine = rememberEngine()
+        val modelLoader = rememberModelLoader(engine)
+        val environmentLoader = rememberEnvironmentLoader(engine)
+
+        val scene = remember {
+            Scene3D(
+                modifier = Modifier.fillMaxSize(),
+                environmentLoader = environmentLoader,
+                modelLoader = modelLoader,
+                engine = engine
+            )
+        }
+
+        scene.Render()
+        scene.updateSatellites(satelliteList, userLocation)
+
+        DisposableEffect(Unit) {
+            onDispose { scene.cleanup() }
+        }
+    }
+
+
+
+    /*
     Box(modifier = Modifier.Companion.fillMaxSize()) {
         val engine = rememberEngine()
         val modelLoader = rememberModelLoader(engine)
@@ -155,4 +190,6 @@ fun Earth3DView(
             )
         )
     }
+
+     */
 }

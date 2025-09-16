@@ -27,8 +27,13 @@ import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.ui.cards.DefaultNMEATypeCard
 import kotlinx.coroutines.flow.compose
 
+private val gsvMessages: List<String> = listOf(
+    "GLGSV",
+    "GPGSV",
+    "GBGSV",
+    "GAGSV"
+)
 
-//
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
@@ -66,19 +71,34 @@ fun LiveNMEADataPanel(
                 modifier = Modifier
                     .padding(vertical = 8.dp, horizontal = 12.dp)
             ) {
+                var seenGSV = false
 
                 items(
                     items = nmeaMessageTypes,
                 ) { type ->
-                    DefaultNMEATypeCard(
-                        type,
-                        gga,
-                        rmc,
-                        gsa,
-                        vtg,
-                        gsv,
-                        nmeaMessageMap
-                    )
+                    if (type.contains("GSV") && !seenGSV) {
+                        DefaultNMEATypeCard(
+                            "GSV",
+                            gga,
+                            rmc,
+                            gsa,
+                            vtg,
+                            gsv,
+                            nmeaMessageMap
+                        )
+                        seenGSV = true
+                    }
+                    else if (type !in gsvMessages){
+                        DefaultNMEATypeCard(
+                            type,
+                            gga,
+                            rmc,
+                            gsa,
+                            vtg,
+                            gsv,
+                            nmeaMessageMap
+                        )
+                    }
                 }
             }
         }

@@ -30,9 +30,6 @@ import com.example.gpssatelliteviewer.data.GSA
 import com.example.gpssatelliteviewer.data.GSV
 import com.example.gpssatelliteviewer.data.RMC
 import com.example.gpssatelliteviewer.data.VTG
-import com.example.gpssatelliteviewer.utils.mapTalker
-import kotlinx.coroutines.flow.take
-
 
 @RequiresApi(Build.VERSION_CODES.R)
 class GNSSViewModel(application: Application) : AndroidViewModel(application) {
@@ -97,6 +94,17 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
         override fun onStatusChanged(status: Int) {
             super.onStatusChanged(status)
+        }
+    }
+
+    fun startGNSSNavigation(){
+        try {
+            val tempExecutor = Executors.newSingleThreadExecutor()
+            locationManager.registerGnssNavigationMessageCallback(tempExecutor, navMessageCallback)
+            val gnssCapabilities = locationManager.gnssCapabilities
+            _hasGNSSNavigationMessage.value = gnssCapabilities.toString()
+        } catch (e: SecurityException) {
+            e.printStackTrace()
         }
     }
      */
@@ -183,6 +191,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
         override fun onProviderDisabled(provider: String) {}
     }
 
+
     init {
         startLocationInfo()
         //startGNSSNavigation()
@@ -213,20 +222,6 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
             e.printStackTrace()
         }
     }
-
-    /* Satellite3DViewModel
-    fun startGNSSNavigation(){
-        try {
-            val tempExecutor = Executors.newSingleThreadExecutor()
-            locationManager.registerGnssNavigationMessageCallback(tempExecutor, navMessageCallback)
-            val gnssCapabilities = locationManager.gnssCapabilities
-            _hasGNSSNavigationMessage.value = gnssCapabilities.toString()
-        } catch (e: SecurityException) {
-            e.printStackTrace()
-        }
-    }
-    */
-
 
     private fun handleNMEAMessage(message: String) {
         val messageType = NMEAParser.getMessageType(message)
