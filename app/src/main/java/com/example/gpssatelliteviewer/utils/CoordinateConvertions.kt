@@ -56,7 +56,7 @@ object CoordinateConversion {
             v = Float3(v.x * c - v.z * si, v.y, v.x * si + v.z * c)
         }
 
-        Log.e("SceneView", "Model location x:${v.x}, y:${v.y}, z:${v.z}")
+        //Log.e("SceneView", "Model location x:${v.x}, y:${v.y}, z:${v.z}")
         return v
     }
 

@@ -33,9 +33,8 @@ fun DefaultNMEATypeCard(
     gsa: GSA?,
     vtg: VTG?,
     gsv: Map<String, GSV>,
-    nmeaMessageMap: Map<String, String>
+    rawMessage: String
 ) {
-    val rawMessage = nmeaMessageMap[type]
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -118,16 +117,13 @@ fun DefaultNMEATypeCard(
                         InfoRow("Msg #${msg.messageNumber}/${msg.totalMessages}", "")
                         InfoRow("SV in view", msg.satellitesInView.toString())
                         msg.satellitesInfo.forEach { sat ->
-                            InfoRow(
-                                "PRN ${sat.prn}",
-                                "E:${sat.elevation}° Az:${sat.azimuth}° SNR:${sat.snr}"
-                            )
+                            InfoRow("PRN ${sat.prn}", "E:${sat.elevation}° Az:${sat.azimuth}° SNR:${sat.snr}")
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
                 else -> {
-                    InfoRow("Info", "No data available")
+                    InfoRow("Info", "Vendor defined message")
                 }
             }
         }

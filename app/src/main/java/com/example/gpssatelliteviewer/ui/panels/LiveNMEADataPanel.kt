@@ -1,6 +1,7 @@
 package com.example.gpssatelliteviewer.ui.panels
 
 
+import android.content.pm.ActivityInfo
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.ui.cards.DefaultNMEATypeCard
+import com.example.gpssatelliteviewer.utils.SetOrientation
 import kotlinx.coroutines.flow.compose
 
 private val gsvMessages: List<String> = listOf(
@@ -41,6 +43,7 @@ fun LiveNMEADataPanel(
     navController: NavController,
     viewModel: GNSSViewModel
 ) {
+
     val gga by viewModel.parsedGGA.collectAsState()
     val rmc by viewModel.parsedRMC.collectAsState()
     val gsa by viewModel.parsedGSA.collectAsState()
@@ -84,7 +87,7 @@ fun LiveNMEADataPanel(
                             gsa,
                             vtg,
                             gsv,
-                            nmeaMessageMap
+                            nmeaMessageMap[type].toString()
                         )
                         seenGSV = true
                     }
@@ -96,7 +99,7 @@ fun LiveNMEADataPanel(
                             gsa,
                             vtg,
                             gsv,
-                            nmeaMessageMap
+                            nmeaMessageMap[type].toString()
                         )
                     }
                 }

@@ -1,6 +1,7 @@
 package com.example.gpssatelliteviewer
 
 import android.Manifest
+import android.content.pm.ActivityInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -33,6 +34,7 @@ import com.example.gpssatelliteviewer.ui.panels.LiveNMEADataPanel
 import com.example.gpssatelliteviewer.ui.panels.LocationDeny
 import com.example.gpssatelliteviewer.ui.panels.LocationInfoPanel
 import com.example.gpssatelliteviewer.ui.panels.Satellite3DPanel
+import com.example.gpssatelliteviewer.utils.SetOrientation
 import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
 

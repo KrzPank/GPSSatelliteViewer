@@ -1,10 +1,12 @@
 package com.example.gpssatelliteviewer.utils
 
 import android.util.Log
+import android.view.MotionEvent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.utils.CoordinateConversion.azElToECEF
@@ -20,24 +22,6 @@ import io.github.sceneview.rememberCameraManipulator
 import io.github.sceneview.rememberOnGestureListener
 
 
-/*
-Orbit heights were taken from https://en.wikipedia.org/wiki/Satellite_navigation
-and https://en.wikipedia.org/wiki/List_of_BeiDou_satellites
- */
-val keysFor35786000 = setOf(1,2,3,4,5,6,7,8,9,10,13,16,31,38,39,40,56,59,60,61,62)
-
-val constellationAltitudes = mapOf(
-    "GLONASS" to 19100000f,
-    "Galileo" to 23222000f,
-    "QZSS" to 35800000f, // average height (elliptical orbit 32,600–39,000 km)
-    "IRNSS" to 36000000f,
-    "SBAS" to 35786000f, // Usually GEO
-    "BeiDou" to 21500000f,
-    "GPS" to 20180000f,
-    "Unknown" to 0f,
-    "Other" to 0f
-)
-
 class Scene3D(
     private val modifier: Modifier = Modifier
         .fillMaxSize()
@@ -47,6 +31,22 @@ class Scene3D(
     private val modelLoader: ModelLoader,
     private val engine: Engine
 ) {
+    /*
+    Orbit heights were taken from https://en.wikipedia.org/wiki/Satellite_navigation
+    and https://en.wikipedia.org/wiki/List_of_BeiDou_satellites
+    */
+    private val keysFor35786000 = setOf(1,2,3,4,5,6,7,8,9,10,13,16,31,38,39,40,56,59,60,61,62)
+    private val constellationAltitudes = mapOf(
+        "GLONASS" to 19100000f,
+        "Galileo" to 23222000f,
+        "QZSS" to 35800000f, // average height (elliptical orbit 32,600–39,000 km)
+        "IRNSS" to 36000000f,
+        "SBAS" to 35786000f, // Usually GEO
+        "BeiDou" to 21500000f,
+        "GPS" to 20180000f,
+        "Unknown" to 0f,
+        "Other" to 0f
+    )
     private val centerNode = Node(engine)
     private val cameraNode = CameraNode(engine).apply {
         position = Float3(y = 0.5f, z = 3.0f)
@@ -56,6 +56,8 @@ class Scene3D(
 
     private val satelliteNodes = mutableListOf<ModelNode>()
     private var earthNode: ModelNode? = null
+
+    var menuVisible: Boolean = true
 
     init {
         setupScene()
@@ -82,7 +84,11 @@ class Scene3D(
             childNodes = listOf(centerNode),
             environment = environmentLoader.createHDREnvironment("envs/sky_2k.hdr")!!,
             onFrame = { updateCameraAndSatellites() },
-            onGestureListener = rememberOnGestureListener()
+            onGestureListener = rememberOnGestureListener (
+                onDoubleTap = {_, node ->
+                    toggleMenu()
+                }
+            )
         )
     }
 
@@ -117,10 +123,15 @@ class Scene3D(
                 position = pos
                 centerNode.addChildNode(this)
             }
-
             satelliteNodes.add(satelliteNode)
         }
     }
+
+    private fun toggleMenu(): Boolean {
+        menuVisible = !menuVisible
+        return menuVisible
+    }
+
 
     private fun calculateSatelliteAltitude(sat: GNSSStatusData): Float {
         return when {
@@ -133,6 +144,8 @@ class Scene3D(
     fun cleanup() {
         cleanupSatellites()
         earthNode?.destroy()
+        cameraNode.destroy()
+        centerNode.destroy()
     }
 
     private fun cleanupSatellites() {

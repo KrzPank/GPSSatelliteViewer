@@ -136,7 +136,6 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
     private var tmpGGA: GGA? = null
     private var tmpRMC: RMC? = null
-    private var gotGSV = false
 
     private val handler = Handler(Looper.getMainLooper())
     private val noNMEAMessageTimeout  = Runnable {

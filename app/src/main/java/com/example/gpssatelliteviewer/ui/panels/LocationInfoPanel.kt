@@ -1,5 +1,6 @@
 package com.example.gpssatelliteviewer.ui.panels
 
+import android.content.pm.ActivityInfo
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
@@ -47,6 +48,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
 import com.example.gpssatelliteviewer.utils.InfoRow
+import com.example.gpssatelliteviewer.utils.SetOrientation
 import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
 //*
@@ -93,11 +95,6 @@ fun LocationInfoPanel(
                                     navController.navigate("Satellite3DPanel")
                                 }
                             )
-                            /*
-                            * NMEA what message
-                            * RAW message
-                            * thing we see from them...
-                            */
                             DropdownMenuItem(
                                 text = { Text("NMEA messaegs") },
                                 onClick = {
@@ -105,14 +102,6 @@ fun LocationInfoPanel(
                                     navController.navigate("LiveNMEADataPanel")
                                 }
                             )
-                            /*
-                            *** TO DO ADD MORE PANELS
-                            *
-                            * ONE WILL BE NMEA MESSAGES DISPLAY
-                            *
-                            *
-                            */
-
                         }
                     }
                 }
