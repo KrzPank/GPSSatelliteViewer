@@ -45,7 +45,7 @@ fun NMEALocationCard(
     ) {
         Column(Modifier.padding(12.dp)) {
             Text(
-                "NMEA Location",
+                "Current location",
                 style = MaterialTheme.typography.titleMedium,
                 fontSize = 20.sp
             )

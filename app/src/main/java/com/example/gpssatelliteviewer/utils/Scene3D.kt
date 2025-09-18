@@ -3,8 +3,6 @@ package com.example.gpssatelliteviewer.utils
 import android.util.Log
 import android.view.MotionEvent
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
@@ -24,9 +22,7 @@ import io.github.sceneview.rememberOnGestureListener
 
 class Scene3D(
     private val modifier: Modifier = Modifier
-        .fillMaxSize()
-        .systemBarsPadding()
-        .imePadding(),
+        .fillMaxSize(),
     private val environmentLoader: EnvironmentLoader,
     private val modelLoader: ModelLoader,
     private val engine: Engine
@@ -57,6 +53,10 @@ class Scene3D(
     private val satelliteNodes = mutableListOf<ModelNode>()
     private var earthNode: ModelNode? = null
 
+    private val earthModelPath = "models/Earth_base.glb"
+    private val satelliteModelPath = "models/RedCircle.glb"
+    private val environmentPath = "envs/sky_2k.hdr"//"envs/8k_stars_milky_way.hdr"
+
     var menuVisible: Boolean = true
 
     init {
@@ -65,7 +65,7 @@ class Scene3D(
 
     private fun setupScene() {
         earthNode = ModelNode(
-            modelInstance = modelLoader.createModelInstance("models/Earth_base.glb"),
+            modelInstance = modelLoader.createModelInstance(earthModelPath),
             scaleToUnits = 1.0f
         ).also { centerNode.addChildNode(it) }
     }
@@ -82,8 +82,9 @@ class Scene3D(
                 targetPosition = centerNode.worldPosition
             ),
             childNodes = listOf(centerNode),
-            environment = environmentLoader.createHDREnvironment("envs/sky_2k.hdr")!!,
+            environment = environmentLoader.createHDREnvironment(environmentPath)!!,
             onFrame = { updateCameraAndSatellites() },
+            //mainLightNode = ,
             onGestureListener = rememberOnGestureListener (
                 onDoubleTap = {_, node ->
                     toggleMenu()
@@ -103,7 +104,7 @@ class Scene3D(
         cleanupSatellites()
 
         satelliteList.forEach { sat ->
-            val instance = modelLoader.createModelInstance("models/RedCircle.glb")
+            val instance = modelLoader.createModelInstance(satelliteModelPath)
             val satelliteNode = ModelNode(
                 modelInstance = instance,
                 scaleToUnits = 0.05f
@@ -127,11 +128,9 @@ class Scene3D(
         }
     }
 
-    private fun toggleMenu(): Boolean {
+    private fun toggleMenu() {
         menuVisible = !menuVisible
-        return menuVisible
     }
-
 
     private fun calculateSatelliteAltitude(sat: GNSSStatusData): Float {
         return when {

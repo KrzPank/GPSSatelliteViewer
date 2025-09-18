@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,7 +27,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.ui.cards.DefaultNMEATypeCard
-import com.example.gpssatelliteviewer.utils.SetOrientation
 import kotlinx.coroutines.flow.compose
 
 private val gsvMessages: List<String> = listOf(
@@ -57,7 +57,12 @@ fun LiveNMEADataPanel(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Live NMEA messages", style = MaterialTheme.typography.titleLarge) }
+                title = {
+                    Text("Live NMEA messages", style = MaterialTheme.typography.titleLarge)
+                },
+                actions = {
+                    Button(onClick = { navController.navigate("LocationInfoPanel") }) { Text("Location panel") }
+                }
             )
         }
     ) { innerPadding ->
@@ -66,10 +71,6 @@ fun LiveNMEADataPanel(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            Button(onClick = { navController.navigate("LocationInfoPanel") }) {
-                Text("Panel lokalizacji")
-            }
-
             LazyColumn(
                 modifier = Modifier
                     .padding(vertical = 8.dp, horizontal = 12.dp)

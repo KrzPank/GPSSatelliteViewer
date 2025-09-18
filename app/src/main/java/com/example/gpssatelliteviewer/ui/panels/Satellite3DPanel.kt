@@ -35,10 +35,17 @@ import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.absolutePadding
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Checkbox
@@ -46,15 +53,14 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.LayoutDirection
 import com.example.gpssatelliteviewer.utils.HideSystemUI
 import com.example.gpssatelliteviewer.utils.Scene3D
-import com.example.gpssatelliteviewer.utils.SetOrientation
+import com.example.gpssatelliteviewer.utils.findActivity
 import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberModelLoader
-
-
-//import com.example.gpssatelliteviewer.viewModel.Satellite3DViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -65,6 +71,8 @@ fun Satellite3DPanel(
     viewModel: GNSSViewModel
 ) {
     HideSystemUI()
+    val context = LocalContext.current
+    val activity = context.findActivity()
 
     val satelliteList by viewModel.satelliteList.collectAsState()
     val locationNMEA by viewModel.locationNMEA.collectAsState()
@@ -103,15 +111,26 @@ fun Satellite3DPanel(
         selectedConstellations.contains(sat.constellation) && (!onlyUsedInFix || sat.usedInFix)
     }
 
+    val menuWidth = 300.dp
+    val safeInsets = WindowInsets.safeDrawing.asPaddingValues()
+    val totalMenuWidth = menuWidth + safeInsets.calculateLeftPadding(LayoutDirection.Ltr)
+
+    val sceneOffsetX by animateDpAsState(
+        targetValue = if (scene.menuVisible) totalMenuWidth else 0.dp,
+        //label = "SceneOffset"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxSize()
     ) {
-        scene.Render()
-        scene.updateSatellites(filteredSatellites, userLocation)
-
-        DisposableEffect(Unit) {
-            onDispose { scene.cleanup() }
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .offset(x = sceneOffsetX/2)
+        ) {
+            scene.Render()
+            scene.updateSatellites(filteredSatellites, userLocation)
         }
 
         val scrollState = rememberScrollState()
@@ -121,32 +140,33 @@ fun Satellite3DPanel(
             enter = slideInHorizontally(initialOffsetX = { -it }),
             exit = slideOutHorizontally(targetOffsetX = { -it })
         ) {
+            val safeInsets = WindowInsets.safeDrawing.asPaddingValues()
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(300.dp)
-                    .background(Color(0xAA000000)) // semi-transparent black
-                    .padding(13.dp)
+                    .requiredWidth(totalMenuWidth)
+                    .background(Color(0xFF000000)) // semi-transparent black
+                    .padding(safeInsets)
+                    .absolutePadding(0.dp, 10.dp, 10.dp, 15.dp)
                     .verticalScroll(scrollState),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
+                Spacer(Modifier.height(2.dp))
                 Text("Double tap to open/close menu", color = Color.White)
-                Spacer(Modifier.height(4.dp))
                 Button(
                     onClick = { navController.navigate("LocationInfoPanel") },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Location Panel")
                 }
-
-                // Constellation filters
+                Spacer(Modifier.height(5.dp))
                 Text("Constellations", color = Color.White)
 
                 val allConstellations = satelliteList.map { it.constellation }.distinct()
 
                 // Select All / Deselect All row
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Button(
@@ -164,8 +184,6 @@ fun Satellite3DPanel(
                         Text("Deselect All")
                     }
                 }
-
-                //Spacer(Modifier.height(4.dp))
 
                 // Individual constellation checkboxes
                 allConstellations.forEach { constellation ->
@@ -202,6 +220,14 @@ fun Satellite3DPanel(
                     )
                     Text("Only in fix", color = Color.White)
                 }
+            }
+        }
+
+        DisposableEffect(Unit) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            onDispose {
+                scene.cleanup()
+                activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
             }
         }
     }

@@ -34,7 +34,6 @@ import com.example.gpssatelliteviewer.ui.panels.LiveNMEADataPanel
 import com.example.gpssatelliteviewer.ui.panels.LocationDeny
 import com.example.gpssatelliteviewer.ui.panels.LocationInfoPanel
 import com.example.gpssatelliteviewer.ui.panels.Satellite3DPanel
-import com.example.gpssatelliteviewer.utils.SetOrientation
 import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
 

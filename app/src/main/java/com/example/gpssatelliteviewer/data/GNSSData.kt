@@ -106,7 +106,3 @@ data class VTG(
     val speedKmph: Double
 )
 
-data class ACCURACY(
-    val horizontalAccuracy: Double?,
-    val verticalAccuracy: Double?
-)

@@ -48,9 +48,7 @@ fun DefaultNMEATypeCard(
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(6.dp))
-            rawMessage?.let {
-                InfoRow("Raw message", it)
-            }
+            InfoRow("Raw message", rawMessage)
 
             when {
                 type.contains("GGA", ignoreCase = true) && gga != null -> {
@@ -103,10 +101,7 @@ fun DefaultNMEATypeCard(
 
                 type.contains("VTG", ignoreCase = true) && vtg != null -> {
                     InfoRow("Course True", vtg.courseTrue.toString())
-                    InfoRow(
-                        "Course Magnetic",
-                        vtg.courseMagnetic?.toString() ?: "N/A"
-                    )
+                    InfoRow("Course Magnetic", vtg.courseMagnetic?.toString() ?: "N/A")
                     InfoRow("Speed Knots", vtg.speedKnots.toString())
                     InfoRow("Speed Km/h", vtg.speedKmph.toString())
                 }
@@ -124,6 +119,10 @@ fun DefaultNMEATypeCard(
                 }
                 else -> {
                     InfoRow("Info", "Vendor defined message")
+                    val parsed = NMEAParser.parseVendorMessage(rawMessage)
+                    parsed.forEach { part ->
+                        if (part != "") InfoRow("Data", part)
+                    }
                 }
             }
         }

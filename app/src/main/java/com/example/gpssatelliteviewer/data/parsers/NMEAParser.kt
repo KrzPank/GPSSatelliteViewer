@@ -159,6 +159,11 @@ object NMEAParser {
         }
     }
 
+    fun parseVendorMessage(message: String): List<String> {
+        return message.trim().split(",")
+    }
+
+
     fun getMessageType(message: String): String {
         return message.split(",")[0].substring(1)
     }

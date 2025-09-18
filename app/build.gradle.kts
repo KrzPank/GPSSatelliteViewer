@@ -63,5 +63,5 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    implementation("io.github.sceneview:sceneview:2.3.0")
+    implementation(libs.sceneview)
 }
