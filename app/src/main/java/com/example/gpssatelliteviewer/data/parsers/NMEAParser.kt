@@ -176,8 +176,6 @@ object NMEAParser {
             val month = datestr.substring(2, 4).toInt()
             val year = datestr.substring(4, 6).toInt()
             val fullyear = 2000 + year
-
-            //return String.format("%04d-%02d-%02d", fullyear, month, day)
             return String.format("%02d-%02d-%03d", day, month, fullyear)
         }
     }

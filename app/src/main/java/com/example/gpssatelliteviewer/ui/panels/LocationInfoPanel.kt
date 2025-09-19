@@ -179,9 +179,11 @@ fun LocationInfoPanel(
                             elevation = CardDefaults.cardElevation(2.dp)
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
-                                InfoRow("ID", satellite.prn.toString())
+                                InfoRow("PRN", satellite.prn.toString())
                                 InfoRow("SNR", "${satellite.snr} dBHz")
                                 InfoRow("Used in Fix", satellite.usedInFix.toString())
+                                InfoRow("Azimuth", "${satellite.azimuth}°")
+                                InfoRow("Elevetion", "${satellite.elevation}°")
                             }
                         }
                     }

@@ -52,7 +52,7 @@ fun NMEALocationCard(
             Spacer(Modifier.height(8.dp))
 
             InfoRow(
-                label = "Fix",
+                label = "Fix / Type",
                 value = listOf(
                     mapFixQuality(nmea.fixQuality),
                     mapFixType(nmea.fixType)
@@ -79,7 +79,7 @@ fun NMEALocationCard(
             InfoRow(
                 label = "Longitude",
                 value = if (nmea.longitude == 0.0) "No data"
-                else CoordinateConversion.geodeticToDMS(nmea.longitude, nmea.lonHemisphere)
+                 else CoordinateConversion.geodeticToDMS(nmea.longitude, nmea.lonHemisphere)
             )
             InfoRow(
                 label = "Altitude MSL",
