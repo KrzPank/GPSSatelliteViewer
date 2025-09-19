@@ -79,7 +79,7 @@ fun NMEALocationCard(
             InfoRow(
                 label = "Longitude",
                 value = if (nmea.longitude == 0.0) "No data"
-                 else CoordinateConversion.geodeticToDMS(nmea.longitude, nmea.lonHemisphere)
+                else CoordinateConversion.geodeticToDMS(nmea.longitude, nmea.lonHemisphere)
             )
             InfoRow(
                 label = "Altitude MSL",

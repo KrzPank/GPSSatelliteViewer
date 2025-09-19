@@ -1,7 +1,7 @@
 package com.example.gpssatelliteviewer
 
 import android.Manifest
-import android.content.pm.ActivityInfo
+import android.app.Application
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -35,6 +37,9 @@ import com.example.gpssatelliteviewer.ui.panels.LocationDeny
 import com.example.gpssatelliteviewer.ui.panels.LocationInfoPanel
 import com.example.gpssatelliteviewer.ui.panels.Satellite3DPanel
 import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
+import com.example.gpssatelliteviewer.viewModel.LocationListenerViewModel
+import com.example.gpssatelliteviewer.viewModel.NMEAViewModel
+//import com.example.gpssatelliteviewer.viewModel.NMEAViewModelFactory
 
 
 class MainActivity : ComponentActivity() {
@@ -91,19 +96,36 @@ fun AppNavigation(hasPermission: Boolean) {
     val navController = rememberNavController()
 
     if (hasPermission) {
-        val viewModel: GNSSViewModel = viewModel()
+        val context = LocalContext.current
+        val app = context.applicationContext as Application
+
+        val gnssViewModel: GNSSViewModel = viewModel(
+            factory = ViewModelProvider.AndroidViewModelFactory.getInstance(app)
+        )
+        val nmeaViewModel: NMEAViewModel = viewModel(
+            factory = ViewModelProvider.AndroidViewModelFactory.getInstance(app)
+        )
+        val locationListenerViewModel: LocationListenerViewModel = viewModel(
+            factory = ViewModelProvider.AndroidViewModelFactory.getInstance(app)
+        )
+
+        gnssViewModel.startLocationInfo()
+        nmeaViewModel.startNMEAInfo()
+        locationListenerViewModel.startLocationListenerInfo()
+
         NavHost(
             navController = navController,
             startDestination = "LocationInfoPanel"
         ) {
             composable("LocationInfoPanel") {
-                LocationInfoPanel(navController, viewModel)
+                LocationInfoPanel(navController, gnssViewModel, nmeaViewModel, locationListenerViewModel)
             }
             composable("Satellite3DPanel") {
-                Satellite3DPanel(navController, viewModel)
+                val locationNMEA by nmeaViewModel.locationNMEA.collectAsState()
+                Satellite3DPanel(navController, gnssViewModel, locationNMEA)
             }
             composable("LiveNMEADataPanel") {
-                LiveNMEADataPanel(navController, viewModel)
+                LiveNMEADataPanel(navController, nmeaViewModel)
             }
         }
     } else {

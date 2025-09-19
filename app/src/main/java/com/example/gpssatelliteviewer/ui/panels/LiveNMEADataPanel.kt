@@ -1,11 +1,9 @@
 package com.example.gpssatelliteviewer.ui.panels
 
 
-import android.content.pm.ActivityInfo
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,7 +17,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.navigation.NavController
-import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
 // GOLD NEVER FORGET
 import androidx.compose.runtime.getValue
@@ -27,7 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.ui.cards.DefaultNMEATypeCard
-import kotlinx.coroutines.flow.compose
+import com.example.gpssatelliteviewer.viewModel.NMEAViewModel
 
 private val gsvMessages: List<String> = listOf(
     "GLGSV",
@@ -41,9 +38,8 @@ private val gsvMessages: List<String> = listOf(
 @Composable
 fun LiveNMEADataPanel(
     navController: NavController,
-    viewModel: GNSSViewModel
+    viewModel: NMEAViewModel
 ) {
-
     val gga by viewModel.parsedGGA.collectAsState()
     val rmc by viewModel.parsedRMC.collectAsState()
     val gsa by viewModel.parsedGSA.collectAsState()

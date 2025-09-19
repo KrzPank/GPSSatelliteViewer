@@ -160,7 +160,10 @@ object NMEAParser {
     }
 
     fun parseVendorMessage(message: String): List<String> {
-        return message.trim().split(",")
+        return message.trim()
+            .split(",")
+            .drop(1)
+            .dropLast(1)
     }
 
 
