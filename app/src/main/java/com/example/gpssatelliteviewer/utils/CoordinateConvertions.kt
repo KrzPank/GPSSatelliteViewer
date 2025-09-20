@@ -103,14 +103,29 @@ object CoordinateConversion {
 
     @SuppressLint("DefaultLocale")
     fun geodeticToDMS(value: Double, hemisphere: Char): String {
-        if (value == 0.0) return "0°0'0\""
+        if (value == 0.0) return "0°0'0\" N/A"
 
+        // NMEA coordinates are in DDMM.MMMM format (degrees + minutes as decimal)
         val degrees = (value / 100).toInt()
-        val minutesFull = value - (degrees * 100)
-        val minutes = minutesFull.toInt()
-        val seconds = ((minutesFull - minutes) * 60)
+        val minutesDecimal = value - (degrees * 100)
+        val minutes = minutesDecimal.toInt()
+        val seconds = (minutesDecimal - minutes) * 60
 
-        return String.format("%d°%d'%.3f\" %s", degrees, minutes, seconds, hemisphere)
+        return String.format("%d°%02d'%06.3f\" %c", degrees, minutes, seconds, hemisphere)
+    }
+
+    @SuppressLint("DefaultLocale")
+    fun nmeaCoordinateToDecimal(nmeaCoord: Double, hemisphere: Char): Double {
+        if (nmeaCoord == 0.0) return 0.0
+        
+        val degrees = (nmeaCoord / 100).toInt()
+        val minutes = nmeaCoord - (degrees * 100)
+        var decimal = degrees + (minutes / 60.0)
+        
+        if (hemisphere == 'S' || hemisphere == 'W') {
+            decimal *= -1
+        }
+        return decimal
     }
 
 }

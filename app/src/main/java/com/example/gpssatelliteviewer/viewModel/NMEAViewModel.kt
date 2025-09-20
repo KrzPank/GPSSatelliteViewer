@@ -100,12 +100,12 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun combineData(){
         val combined = NMEALocationData(
-            time = tmpRMC?.time ?: tmpGGA?.time.orEmpty(),
-            date = tmpRMC?.date ?: tmpGGA?.time.orEmpty(),
+            time = tmpRMC?.time ?: tmpGGA?.time ?: "",
+            date = tmpRMC?.date ?: "",
             latitude = tmpGGA?.latitude?.takeIf { it != 0.0 } ?: (tmpRMC?.latitude ?: 0.0),
-            latHemisphere = (tmpGGA?.latDirection ?: tmpRMC?.latDirection)!!,
+            latHemisphere = tmpGGA?.latDirection ?: tmpRMC?.latDirection ?: 'N',
             longitude = tmpGGA?.longitude?.takeIf { it != 0.0 } ?: (tmpRMC?.longitude ?: 0.0),
-            lonHemisphere = (tmpGGA?.lonDirection ?: tmpRMC?.lonDirection)!!,
+            lonHemisphere = tmpGGA?.lonDirection ?: tmpRMC?.lonDirection ?: 'E',
             fixQuality = tmpGGA?.fixQuality ?: 0,
             fixType = _parsedGSA.value?.fixType ?: 0,
             numSatellites = tmpGGA?.numSatellites ?: 0,

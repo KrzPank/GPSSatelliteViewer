@@ -11,24 +11,29 @@ import com.example.gpssatelliteviewer.data.VTG
 
 object NMEAParser {
     fun parseGGA(message: String): GGA? {
+        if (message.isBlank()) return null
+        
         val parts = message.split(",")
         if (parts.size < 14) return null
+        
+        // Validate message format
+        if (!parts[0].startsWith("$") || !parts[0].contains("GGA")) return null
 
         return try {
             GGA(
-                time = formatNmeaTime(parts[1]),
-                latitude = parts[2].toDoubleOrNull() ?: 0.0,
-                latDirection = parts[3].firstOrNull() ?: 'N',
-                longitude = parts[4].toDoubleOrNull() ?: 0.0,
-                lonDirection = parts[5].firstOrNull() ?: 'E',
-                fixQuality = parts[6].toIntOrNull() ?: 0,
-                numSatellites = parts[7].toIntOrNull() ?: 0,
-                horizontalDilution = parts[8].toDoubleOrNull() ?: 0.0,
-                altitude = parts[9].toDoubleOrNull() ?: 0.0,
-                altitudeUnits = parts[10].firstOrNull() ?: 'M',
-                geoidSeparation = parts[11].toDoubleOrNull(),
-                geoidSeparationUnits = parts[12].firstOrNull(),
-                dgpsAge = parts[13].toDoubleOrNull(),
+                time = formatNmeaTime(parts.getOrNull(1) ?: ""),
+                latitude = parts.getOrNull(2)?.toDoubleOrNull() ?: 0.0,
+                latDirection = parts.getOrNull(3)?.firstOrNull() ?: 'N',
+                longitude = parts.getOrNull(4)?.toDoubleOrNull() ?: 0.0,
+                lonDirection = parts.getOrNull(5)?.firstOrNull() ?: 'E',
+                fixQuality = parts.getOrNull(6)?.toIntOrNull() ?: 0,
+                numSatellites = parts.getOrNull(7)?.toIntOrNull() ?: 0,
+                horizontalDilution = parts.getOrNull(8)?.toDoubleOrNull() ?: 0.0,
+                altitude = parts.getOrNull(9)?.toDoubleOrNull() ?: 0.0,
+                altitudeUnits = parts.getOrNull(10)?.firstOrNull() ?: 'M',
+                geoidSeparation = parts.getOrNull(11)?.toDoubleOrNull(),
+                geoidSeparationUnits = parts.getOrNull(12)?.firstOrNull(),
+                dgpsAge = parts.getOrNull(13)?.toDoubleOrNull(),
                 dgpsStationId = parts.getOrNull(14)
             )
         } catch (e: Exception) {
@@ -72,15 +77,19 @@ object NMEAParser {
     }
 
     fun parseGSV(message: String): GSV? {
+        if (message.isBlank()) return null
+        
         val parts = message.split(",")
-
         if (parts.size < 4) return null // minimum required fields
+        
+        // Validate message format
+        if (!parts[0].startsWith("$") || !parts[0].contains("GSV") || parts[0].length < 6) return null
 
         return try {
             val talker = parts[0].substring(1, 6)
-            val totalMessages = parts[1].toIntOrNull() ?: return null
-            val messageNumber = parts[2].toIntOrNull() ?: return null
-            val satellitesInView = parts[3].toIntOrNull() ?: 0
+            val totalMessages = parts.getOrNull(1)?.toIntOrNull() ?: return null
+            val messageNumber = parts.getOrNull(2)?.toIntOrNull() ?: return null
+            val satellitesInView = parts.getOrNull(3)?.toIntOrNull() ?: 0
 
             val satellites = mutableListOf<SatInfo>()
 
@@ -119,21 +128,26 @@ object NMEAParser {
     }
 
     fun parseRMC(message: String): RMC? {
+        if (message.isBlank()) return null
+        
         val parts = message.split(",")
         if (parts.size < 12) return null
+        
+        // Validate message format
+        if (!parts[0].startsWith("$") || !parts[0].contains("RMC")) return null
 
         return try {
             RMC(
-                time = formatNmeaTime(parts[1]),
-                status = parts[2].firstOrNull() ?: 'V',
-                latitude = parts[3].toDoubleOrNull() ?: 0.0,
-                latDirection = parts[4].firstOrNull() ?: 'N',
-                longitude = parts[5].toDoubleOrNull() ?: 0.0,
-                lonDirection = parts[6].firstOrNull() ?: 'E',
-                speedOverGround = parts[7].toDoubleOrNull() ?: 0.0,
-                courseOverGround = parts[8].toDoubleOrNull() ?: 0.0,
-                date = formatNmeaDate(parts[9]),
-                magneticVariation = parts[10].toDoubleOrNull(),
+                time = formatNmeaTime(parts.getOrNull(1) ?: ""),
+                status = parts.getOrNull(2)?.firstOrNull() ?: 'V',
+                latitude = parts.getOrNull(3)?.toDoubleOrNull() ?: 0.0,
+                latDirection = parts.getOrNull(4)?.firstOrNull() ?: 'N',
+                longitude = parts.getOrNull(5)?.toDoubleOrNull() ?: 0.0,
+                lonDirection = parts.getOrNull(6)?.firstOrNull() ?: 'E',
+                speedOverGround = parts.getOrNull(7)?.toDoubleOrNull() ?: 0.0,
+                courseOverGround = parts.getOrNull(8)?.toDoubleOrNull() ?: 0.0,
+                date = formatNmeaDate(parts.getOrNull(9) ?: ""),
+                magneticVariation = parts.getOrNull(10)?.toDoubleOrNull(),
                 variationDirection = parts.getOrNull(11)?.firstOrNull()
             )
         } catch (e: Exception) {
@@ -168,7 +182,14 @@ object NMEAParser {
 
 
     fun getMessageType(message: String): String {
-        return message.split(",")[0].substring(1)
+        if (message.isBlank()) return "UNKNOWN"
+        
+        val parts = message.split(",")
+        if (parts.isEmpty() || !parts[0].startsWith("$") || parts[0].length <= 1) {
+            return "UNKNOWN"
+        }
+        
+        return parts[0].substring(1)
     }
 
     @SuppressLint("DefaultLocale")
