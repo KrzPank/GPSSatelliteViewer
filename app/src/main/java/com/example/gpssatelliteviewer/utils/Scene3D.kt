@@ -50,12 +50,14 @@ class Scene3D(
         centerNode.addChildNode(this)
     }
 
-    private val satelliteNodes = mutableListOf<ModelNode>()
+    // Dynamic object pooling for satellite nodes
+    private val satelliteNodePool = mutableListOf<ModelNode>() // Reusable nodes from disappeared satellites
+    private val activeSatelliteNodes = mutableMapOf<Int, ModelNode>() // PRN -> active ModelNode
     private var earthNode: ModelNode? = null
 
     private val earthModelPath = "models/Earth_base.glb"
     private val satelliteModelPath = "models/RedCircle.glb"
-    private val environmentPath = "envs/sky_2k.hdr"//"envs/8k_stars_milky_way.hdr"
+    private val environmentPath = "envs/8k_stars_milky_way.hdr"//"envs/sky_2k.hdr"//"envs/8k_stars_milky_way.hdr"
 
     var menuVisible: Boolean = true
 
@@ -95,37 +97,100 @@ class Scene3D(
 
     private fun updateCameraAndSatellites() {
         cameraNode.lookAt(centerNode)
-        satelliteNodes.forEach { satellite ->
+        // Update orientation for all active satellite nodes
+        activeSatelliteNodes.values.forEach { satellite ->
             satellite.lookAt(cameraNode.worldPosition)
         }
     }
 
     fun updateSatellites(satelliteList: List<GNSSStatusData>, userLocation: Triple<Float, Float, Float>) {
-        cleanupSatellites()
-
+        val currentSatellitePrns = satelliteList.map { it.prn }.toSet()
+        val activePrns = activeSatelliteNodes.keys.toSet()
+        
+        // Remove satellites that are no longer visible (return nodes to pool)
+        val disappearedSatellites = activePrns - currentSatellitePrns
+        disappearedSatellites.forEach { prn ->
+            activeSatelliteNodes[prn]?.let { node ->
+                centerNode.removeChildNode(node)
+                returnNodeToPool(node)
+                activeSatelliteNodes.remove(prn)
+            }
+        }
+        
+        // Add or update satellites
         satelliteList.forEach { sat ->
+            val existingNode = activeSatelliteNodes[sat.prn]
+            
+            if (existingNode != null) {
+                // Update position of existing satellite
+                updateSatellitePosition(existingNode, sat, userLocation)
+            } else {
+                // Create or reuse node for new satellite
+                val satelliteNode = getOrCreateSatelliteNode()
+                setupSatelliteNode(satelliteNode, sat, userLocation)
+                activeSatelliteNodes[sat.prn] = satelliteNode
+            }
+        }
+        
+        // Log pool statistics for monitoring
+        logPoolStats()
+    }
+    
+    /**
+     * Get a satellite node from pool or create a new one if pool is empty
+     */
+    private fun getOrCreateSatelliteNode(): ModelNode {
+        return if (satelliteNodePool.isNotEmpty()) {
+            // Reuse node from pool
+            satelliteNodePool.removeAt(satelliteNodePool.size - 1)
+        } else {
+            // Create new node when pool is empty
             val instance = modelLoader.createModelInstance(satelliteModelPath)
-            val satelliteNode = ModelNode(
+            ModelNode(
                 modelInstance = instance,
                 scaleToUnits = 0.05f
-            ).apply {
-                val altitude = calculateSatelliteAltitude(sat)
-                val pos = CoordinateConversion.ecefToScenePos(
-                    azElToECEF(
-                        sat.azimuth,
-                        sat.elevation,
-                        userLocation,
-                        altitude
-                    )
-                )
-
-                if (altitude == 0f) Log.e("SatPos", "Sid:${sat.constellation} position: ${pos.x}, y:${pos.y}, z:${pos.z}")
-
-                position = pos
-                centerNode.addChildNode(this)
-            }
-            satelliteNodes.add(satelliteNode)
+            )
         }
+    }
+    
+    /**
+     * Return a node to the pool for reuse
+     */
+    private fun returnNodeToPool(node: ModelNode) {
+        // Reset node state before returning to pool
+        node.position = Float3(0f, 0f, 0f)
+        node.rotation = Float3(0f, 0f, 0f)
+        
+        satelliteNodePool.add(node)
+    }
+    
+    /**
+     * Setup a satellite node with position and add to scene
+     */
+    private fun setupSatelliteNode(node: ModelNode, sat: GNSSStatusData, userLocation: Triple<Float, Float, Float>) {
+        updateSatellitePosition(node, sat, userLocation)
+        centerNode.addChildNode(node)
+    }
+    
+    /**
+     * Update satellite position without recreating the node
+     */
+    private fun updateSatellitePosition(node: ModelNode, sat: GNSSStatusData, userLocation: Triple<Float, Float, Float>) {
+        val altitude = calculateSatelliteAltitude(sat)
+        val pos = CoordinateConversion.ecefToScenePos(
+            azElToECEF(
+                sat.azimuth,
+                sat.elevation,
+                userLocation,
+                altitude
+            )
+        )
+        
+        if (altitude == 0f) {
+            Log.e("SatPos", "Constellation:${sat.constellation} PRN:${sat.prn} position: x:${pos.x}, y:${pos.y}, z:${pos.z}")
+        }
+        
+        node.position = pos
     }
 
     private fun toggleMenu() {
@@ -148,9 +213,24 @@ class Scene3D(
     }
 
     private fun cleanupSatellites() {
-        satelliteNodes.forEach { node ->
+        // Destroy all active satellite nodes
+        activeSatelliteNodes.values.forEach { node ->
+            centerNode.removeChildNode(node)
             node.destroy()
         }
-        satelliteNodes.clear()
+        activeSatelliteNodes.clear()
+        
+        // Destroy all pooled satellite nodes
+        satelliteNodePool.forEach { node ->
+            node.destroy()
+        }
+        satelliteNodePool.clear()
+    }
+    
+    /**
+     * Log pool statistics for debugging and performance monitoring
+     */
+    private fun logPoolStats() {
+        Log.d("ActiveSatellites", "Active satellites: ${activeSatelliteNodes.size}, Pooled nodes: ${satelliteNodePool.size}")
     }
 }
