@@ -9,16 +9,30 @@ import androidx.compose.ui.Modifier
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.utils.CoordinateConversion.azElToECEF
 import com.google.android.filament.Engine
+import com.google.android.filament.LightManager
+import com.google.android.filament.LightManager.Type.DIRECTIONAL
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.Scene
 import io.github.sceneview.loaders.EnvironmentLoader
 import io.github.sceneview.loaders.ModelLoader
 import io.github.sceneview.node.CameraNode
+import io.github.sceneview.node.LightNode
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
 import io.github.sceneview.rememberCameraManipulator
+import io.github.sceneview.rememberMainLightNode
 import io.github.sceneview.rememberOnGestureListener
+import kotlin.math.sqrt
 
+// Extension functions for Float3 vector operations
+private fun Float3.normalized(): Float3 {
+    val length = sqrt(x * x + y * y + z * z)
+    return if (length > 0f) {
+        Float3(x / length, y / length, z / length)
+    } else {
+        Float3(0f, 0f, 0f)
+    }
+}
 
 class Scene3D(
     private val modifier: Modifier = Modifier
@@ -49,13 +63,16 @@ class Scene3D(
         lookAt(centerNode)
         centerNode.addChildNode(this)
     }
+    
+    // Camera-following light for consistent satellite illumination
+
 
     // Dynamic object pooling for satellite nodes
     private val satelliteNodePool = mutableListOf<ModelNode>() // Reusable nodes from disappeared satellites
     private val activeSatelliteNodes = mutableMapOf<Int, ModelNode>() // PRN -> active ModelNode
     private var earthNode: ModelNode? = null
 
-    private val earthModelPath = "models/Earth_base.glb"
+    private val earthModelPath = "models/newtexture.glb"//"models/Earth_base.glb"
     private val satelliteModelPath = "models/RedCircle.glb"
     private val environmentPath = "envs/8k_stars_milky_way.hdr"//"envs/sky_2k.hdr"//"envs/8k_stars_milky_way.hdr"
 
@@ -74,6 +91,11 @@ class Scene3D(
 
     @Composable
     fun Render() {
+        // Create camera-following light source
+        val mainLightNode = rememberMainLightNode(engine) {
+            intensity = 1_000_000.0f
+        }
+        
         Scene(
             modifier = modifier,
             engine = engine,
@@ -85,8 +107,17 @@ class Scene3D(
             ),
             childNodes = listOf(centerNode),
             environment = environmentLoader.createHDREnvironment(environmentPath)!!,
-            onFrame = { updateCameraAndSatellites() },
-            //mainLightNode = ,
+            onFrame = { 
+                updateCameraAndSatellites()
+                // Update light to follow camera and illuminate from viewer's perspective
+                mainLightNode?.let { light ->
+                    // Position light AT camera position pointing toward what camera sees
+                    // This makes it appear as if YOU are the light source illuminating Earth
+                    light.position = cameraNode.worldPosition
+                    light.lookAt(centerNode.worldPosition)
+                }
+            },
+            mainLightNode = mainLightNode,
             onGestureListener = rememberOnGestureListener (
                 onDoubleTap = {_, node ->
                     toggleMenu()
@@ -97,6 +128,7 @@ class Scene3D(
 
     private fun updateCameraAndSatellites() {
         cameraNode.lookAt(centerNode)
+        
         // Update orientation for all active satellite nodes
         activeSatelliteNodes.values.forEach { satellite ->
             satellite.lookAt(cameraNode.worldPosition)
