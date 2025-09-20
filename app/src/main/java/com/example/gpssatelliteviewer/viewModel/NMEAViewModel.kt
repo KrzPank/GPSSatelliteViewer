@@ -13,6 +13,8 @@ import android.os.Looper
 import androidx.annotation.RequiresApi
 import com.example.gpssatelliteviewer.data.parsers.NMEAParser
 import java.util.concurrent.Executors
+import kotlinx.coroutines.*
+import androidx.lifecycle.viewModelScope
 
 import com.example.gpssatelliteviewer.data.GGA
 import com.example.gpssatelliteviewer.data.GSA
@@ -20,10 +22,22 @@ import com.example.gpssatelliteviewer.data.GSV
 import com.example.gpssatelliteviewer.data.RMC
 import com.example.gpssatelliteviewer.data.VTG
 
+// Data class to hold parsed NMEA data for batch updates
+private data class ParsedNMEAData(
+    val gga: GGA? = null,
+    val rmc: RMC? = null,
+    val gsa: GSA? = null,
+    val vtg: VTG? = null,
+    val gsv: GSV? = null
+)
+
 @RequiresApi(Build.VERSION_CODES.R)
 class NMEAViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
     private val timeoutPeriod: Long = 15 * 1000 // 15 sec
+    
+    // Background parsing scope with IO dispatcher
+    private val parsingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val _locationNMEA = MutableStateFlow<NMEALocationData>(NMEALocationData())
     val locationNMEA: StateFlow<NMEALocationData> = _locationNMEA
@@ -67,35 +81,73 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun handleNMEAMessage(message: String) {
-        val messageType = NMEAParser.getMessageType(message)
-        val updatedMap = _nmeaMessageMap.value.toMutableMap()
-        updatedMap[messageType] = message
-
-        _nmeaMessageMap.value = updatedMap
-
-        when {
-            message.startsWith("\$GPGGA") || message.startsWith("\$GNGGA") -> {
-                tmpGGA = NMEAParser.parseGGA(message)
-                _parsedGGA.value = tmpGGA
-            }
-            message.startsWith("\$GPRMC") || message.startsWith("\$GNRMC") -> {
-                tmpRMC = NMEAParser.parseRMC(message)
-                _parsedRMC.value = tmpRMC
-            }
-            message.startsWith("\$GPGSA") || message.startsWith("\$GNGSA") -> {
-                _parsedGSA.value = NMEAParser.parseGSA(message)
-            }
-            message.startsWith("\$GPVTG") || message.startsWith("\$GNVTG") -> {
-                _parsedVTG.value = NMEAParser.parseVTG(message)
-            }
-            message.contains("GSV") -> {
-                val gsv = NMEAParser.parseGSV(message)
-                if (gsv != null) {
-                    _parsedGSV.value = _parsedGSV.value + (gsv.talker to gsv)
+        // Quick validation before launching expensive parsing
+        if (message.isBlank() || !message.startsWith("$")) return
+        
+        // Parse in background thread to avoid blocking UI
+        parsingScope.launch {
+            try {
+                val messageType = NMEAParser.getMessageTypeOptimized(message)
+                
+                // Update message map on main thread (quick operation)
+                withContext(Dispatchers.Main) {
+                    val updatedMap = _nmeaMessageMap.value.toMutableMap()
+                    updatedMap[messageType] = message
+                    _nmeaMessageMap.value = updatedMap
                 }
+                
+                // Heavy parsing operations in background
+                val parsedData = when {
+                    messageType.endsWith("GGA") -> {
+                        ParsedNMEAData(gga = NMEAParser.parseGGA(message))
+                    }
+                    messageType.endsWith("RMC") -> {
+                        ParsedNMEAData(rmc = NMEAParser.parseRMC(message))
+                    }
+                    messageType.endsWith("GSA") -> {
+                        ParsedNMEAData(gsa = NMEAParser.parseGSA(message))
+                    }
+                    messageType.endsWith("VTG") -> {
+                        ParsedNMEAData(vtg = NMEAParser.parseVTG(message))
+                    }
+                    messageType.contains("GSV") -> {
+                        val gsv = NMEAParser.parseGSV(message)
+                        ParsedNMEAData(gsv = gsv)
+                    }
+                    else -> null
+                }
+                
+                // Update UI state on main thread
+                parsedData?.let { data ->
+                    withContext(Dispatchers.Main) {
+                        updateParsedDataStates(data)
+                        combineData()
+                    }
+                }
+            } catch (e: Exception) {
+                // Log error but don't crash the app
+                e.printStackTrace()
             }
         }
-        combineData()
+    }
+    
+    /**
+     * Update parsed data states in batch to reduce StateFlow emissions
+     */
+    private fun updateParsedDataStates(data: ParsedNMEAData) {
+        data.gga?.let { 
+            tmpGGA = it
+            _parsedGGA.value = it 
+        }
+        data.rmc?.let { 
+            tmpRMC = it
+            _parsedRMC.value = it 
+        }
+        data.gsa?.let { _parsedGSA.value = it }
+        data.vtg?.let { _parsedVTG.value = it }
+        data.gsv?.let { gsv ->
+            _parsedGSV.value = _parsedGSV.value + (gsv.talker to gsv)
+        }
     }
 
     private fun combineData(){
@@ -135,5 +187,7 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         super.onCleared()
         locationManager.removeNmeaListener(nmeaListener)
+        // Cancel all background parsing operations
+        parsingScope.cancel()
     }
 }

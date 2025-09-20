@@ -12,7 +12,7 @@ composeBom = "2025.08.01"
 appcompat = "1.7.1"
 
 navigation = "2.9.3"
-lifecycle = "2.9.3"
+lifecycle = "2.9.4"
 sceneview = "2.3.0"
 
 [libraries]

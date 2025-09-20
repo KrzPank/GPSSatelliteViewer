@@ -10,14 +10,17 @@ import com.example.gpssatelliteviewer.data.VTG
 
 
 object NMEAParser {
+    // Cache for message type validation to avoid repeated string operations
+    private val messageTypeCache = mutableMapOf<String, String>()
     fun parseGGA(message: String): GGA? {
-        if (message.isBlank()) return null
+        // Quick validation: minimum realistic GGA message is around 40-45 chars
+        if (message.isBlank() || message.length < 40) return null
+        
+        // Early validation before expensive split
+        if (!message.startsWith("$") || !message.contains("GGA")) return null
         
         val parts = message.split(",")
         if (parts.size < 14) return null
-        
-        // Validate message format
-        if (!parts[0].startsWith("$") || !parts[0].contains("GGA")) return null
 
         return try {
             GGA(
@@ -77,13 +80,14 @@ object NMEAParser {
     }
 
     fun parseGSV(message: String): GSV? {
-        if (message.isBlank()) return null
+        // Quick validation: minimum GSV message is around 25-30 chars
+        if (message.isBlank() || message.length < 25) return null
+        
+        // Early validation before expensive split
+        if (!message.startsWith("$") || !message.contains("GSV")) return null
         
         val parts = message.split(",")
-        if (parts.size < 4) return null // minimum required fields
-        
-        // Validate message format
-        if (!parts[0].startsWith("$") || !parts[0].contains("GSV") || parts[0].length < 6) return null
+        if (parts.size < 4 || parts[0].length < 6) return null
 
         return try {
             val talker = parts[0].substring(1, 6)
@@ -128,13 +132,14 @@ object NMEAParser {
     }
 
     fun parseRMC(message: String): RMC? {
-        if (message.isBlank()) return null
+        // Quick validation: minimum RMC message is around 50-60 chars
+        if (message.isBlank() || message.length < 45) return null
+        
+        // Early validation before expensive split
+        if (!message.startsWith("$") || !message.contains("RMC")) return null
         
         val parts = message.split(",")
         if (parts.size < 12) return null
-        
-        // Validate message format
-        if (!parts[0].startsWith("$") || !parts[0].contains("RMC")) return null
 
         return try {
             RMC(
@@ -190,6 +195,28 @@ object NMEAParser {
         }
         
         return parts[0].substring(1)
+    }
+    
+    /**
+     * Optimized message type extraction with caching to avoid repeated string operations
+     * This is more efficient than the original getMessageType for frequent calls
+     */
+    fun getMessageTypeOptimized(message: String): String {
+        if (message.isBlank() || !message.startsWith("$")) return "UNKNOWN"
+        
+        // Use first part of message as cache key (up to first comma or 10 chars)
+        val cacheKey = message.substring(0, minOf(message.indexOf(',').takeIf { it > 0 } ?: 10, message.length))
+        
+        return messageTypeCache.getOrPut(cacheKey) {
+            val firstComma = message.indexOf(',')
+            if (firstComma > 1) {
+                message.substring(1, firstComma)
+            } else if (message.length > 6) {
+                message.substring(1, minOf(10, message.length))
+            } else {
+                "UNKNOWN"
+            }
+        }
     }
 
     @SuppressLint("DefaultLocale")

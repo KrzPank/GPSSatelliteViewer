@@ -86,7 +86,7 @@ fun NMEALocationCard(
             )
             InfoRow(
                 label = "Accuracy",
-                value = CoordinateConversion.getAccuracyEstimate(nmea).toString()
+                value = CoordinateConversion.getAccuracyEstimate(nmea)?.toString() ?: "0"
             )
             val speedkmh = nmea.speedKnots * 1.852
             InfoRow(
