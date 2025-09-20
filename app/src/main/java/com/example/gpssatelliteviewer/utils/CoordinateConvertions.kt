@@ -128,29 +128,26 @@ object CoordinateConversion {
         return decimal
     }
 
-}
+    /**
+     * Gets accuracy estimate based on HDOP and satellite count as a Float value
+     */
+    @SuppressLint("DefaultLocale")
+    fun getAccuracyEstimate(locationNMEA: NMEALocationData): String? {
+        if (locationNMEA.hdop <= 0 || locationNMEA.numSatellites <= 0) return null
 
+        // Rough accuracy estimation based on HDOP
+        val baseAccuracy = 5.0f // meters
+        val hdopFactor = locationNMEA.hdop.toFloat()
 
-fun approximateLocationAccuracy(data: NMEALocationData): String {
-    val fixQuality = data.fixQuality
-    val hdop = data.hdop
-    val numSatellites = data.numSatellites
+        val satelliteFactor = when {
+            locationNMEA.numSatellites >= 12 -> 0.8f
+            locationNMEA.numSatellites >= 8 -> 1.0f
+            locationNMEA.numSatellites >= 6 -> 1.2f
+            locationNMEA.numSatellites >= 4 -> 1.5f
+            else -> 2.0f
+        }
 
-    if (fixQuality == 0) return "No fix"
-
-    val hdopValue = hdop.takeIf { it > 0 } ?: 99.0
-    val satellites = numSatellites.takeIf { it > 0 } ?: 0
-
-    val baselineAccuracy = 5.0
-
-    val satFactor = when {
-        satellites >= 12 -> 0.8
-        satellites >= 8 -> 1.0
-        satellites >= 4 -> 1.2
-        else -> 2.0
+        val accuracy = baseAccuracy * hdopFactor * satelliteFactor
+        return String.format("%.1f", accuracy)
     }
-
-    val accuracyMeters = hdopValue * baselineAccuracy * satFactor
-
-    return "%.1f m".format(accuracyMeters)
 }

@@ -37,7 +37,7 @@ import androidx.navigation.NavController
 import com.example.gpssatelliteviewer.ui.cards.AndroidApiLocation
 import com.example.gpssatelliteviewer.ui.cards.LoadingLocationText
 import com.example.gpssatelliteviewer.ui.cards.NMEALocationCard
-import com.example.gpssatelliteviewer.ui.cards.SatelliteCard
+import com.example.gpssatelliteviewer.ui.cards.GPSStatusCard
 
 
 import androidx.compose.runtime.getValue
@@ -126,7 +126,7 @@ fun LocationInfoPanel(
 
             // --- Summary of satellites ---
             item {
-                SatelliteCard(satellites)
+                GPSStatusCard(satellites)
             }
 
             // --- Satellites grouped by constellation ---

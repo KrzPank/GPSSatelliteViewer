@@ -14,9 +14,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.utils.SNRBar
+import com.example.gpssatelliteviewer.utils.GPSStatusUtils
 
 data class SNRStats(
     val average: Float,
@@ -24,7 +25,7 @@ data class SNRStats(
 )
 
 @Composable
-fun SatelliteCard(
+fun GPSStatusCard(
     satellites: List<GNSSStatusData>,
     modifier: Modifier = Modifier
 ) {
@@ -33,7 +34,7 @@ fun SatelliteCard(
     val groupedSatellites = satellites.groupBy { it.constellation }
     val usedInFixCount = satellites.count { it.usedInFix }
 
-    val averageSNRByConstellation = groupedSatellites.mapValues { (_, sats) ->
+        val averageSNRByConstellation = groupedSatellites.mapValues { (_, sats) ->
         val valid = sats.filter { it.snr != 0f}
         if (valid.isNotEmpty()) {
             val avg = valid.map { it.snr }.average().toFloat()
@@ -47,29 +48,48 @@ fun SatelliteCard(
     val satellitesInFix = satellites.filter { it.usedInFix }
     val averageSNRInFix = if (satellitesInFix.isNotEmpty()) {
         satellitesInFix.map { it.snr }.average().toFloat()
-    } else null
+    } else 0f
+
+    // NEW: Calculate GPS status
+    val gpsStatus = GPSStatusUtils.determineGPSStatus(
+        satellites = satellites,
+        averageSNRInFix,
+        hasLocationNMEA = satellites.isNotEmpty()
+    )
 
     Card(
         shape = RoundedCornerShape(12.dp),
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                "GPS Status",
+                style = MaterialTheme.typography.titleMedium,
+                fontSize = 20.sp
+            )
+            Spacer(Modifier.height(8.dp))
+            
+            // GPS Status Header
+            GPSStatusUtils.GPSStatusHeader(
+                gpsStatus = gpsStatus,
+                )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Existing satellite info
             InfoRow(label = "In view", value = totalSatellites.toString())
             InfoRow(label = "Used in fix", value = usedInFixCount.toString())
             InfoRow(
                 label = "Avg. fix SNR",
-                value = if (averageSNRInFix != null) {
-                    "${"%.1f".format(averageSNRInFix)} dBHz"
-                } else {
-                    "0"
-                }
+                value = if (averageSNRInFix != 0f) "${"%.1f".format(averageSNRInFix)} dBHz"
+                else  "0"
             )
-            Spacer(modifier = modifier.height(8.dp))
-            if (averageSNRInFix == null) SNRBar(value = 0f)
-            else SNRBar(value = averageSNRInFix)
+
+            Spacer(modifier = Modifier.height(8.dp))
+            GPSStatusUtils.SNRBar(value = averageSNRInFix)
 
             Spacer(modifier = Modifier.height(4.dp))
             Text("Constellation  Avg. SNR/sat SNR!=0", style = MaterialTheme.typography.bodyMedium)

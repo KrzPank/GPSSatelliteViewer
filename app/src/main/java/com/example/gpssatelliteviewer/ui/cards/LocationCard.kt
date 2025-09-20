@@ -24,10 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.data.ListenerData
 import com.example.gpssatelliteviewer.data.NMEALocationData
-import com.example.gpssatelliteviewer.data.parsers.NMEAParser
 import com.example.gpssatelliteviewer.utils.CoordinateConversion
+import com.example.gpssatelliteviewer.utils.GPSStatusUtils
 import com.example.gpssatelliteviewer.utils.InfoRow
-import com.example.gpssatelliteviewer.utils.approximateLocationAccuracy
 import com.example.gpssatelliteviewer.utils.mapFixQuality
 import com.example.gpssatelliteviewer.utils.mapFixType
 
@@ -87,7 +86,7 @@ fun NMEALocationCard(
             )
             InfoRow(
                 label = "Accuracy",
-                value = approximateLocationAccuracy(nmea)
+                value = CoordinateConversion.getAccuracyEstimate(nmea).toString()
             )
             val speedkmh = nmea.speedKnots * 1.852
             InfoRow(
