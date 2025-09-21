@@ -67,11 +67,12 @@ class Scene3D(
     // Camera-following light for consistent satellite illumination
     private val mainLight: LightNode = run {
         val lightEntity = engine.entityManager.create()
-
+        val pos = cameraNode.worldPosition
         LightManager.Builder(LightManager.Type.POINT)
-            .intensity(100_00_000.0f)     // stronger, since point light falls off
+            .intensity(10_000_000.0f)     // stronger, since point light falls off
             .color(1.0f, 1.0f, 1.0f)
-            .falloff(100.0f)
+            .falloff(1000.0f)
+            .position(pos.x, pos.y, pos.z)
             .build(engine, lightEntity)
 
         LightNode(engine, lightEntity).apply {
