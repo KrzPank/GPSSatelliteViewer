@@ -3,13 +3,20 @@ package com.example.gpssatelliteviewer.ui.panels
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -20,6 +27,8 @@ import androidx.navigation.NavController
 
 // GOLD NEVER FORGET
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -50,6 +59,8 @@ fun LiveNMEADataPanel(
 
     val nmeaMessageTypes = nmeaMessageMap.keys.toList()
 
+    var dropDownMenuExpanded = remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -57,7 +68,33 @@ fun LiveNMEADataPanel(
                     Text("Live NMEA messages", style = MaterialTheme.typography.titleLarge)
                 },
                 actions = {
-                    Button(onClick = { navController.navigate("LocationInfoPanel") }) { Text("Location panel") }
+                    Box {
+                        IconButton(onClick = { dropDownMenuExpanded.value = true}) {
+                            Icon(
+                                imageVector = Icons.Default.Menu,
+                                contentDescription = "Menu"
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = dropDownMenuExpanded.value,
+                            onDismissRequest = { dropDownMenuExpanded.value = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("3D View") },
+                                onClick = {
+                                    dropDownMenuExpanded.value = false
+                                    navController.navigate("Satellite3DPanel")
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Live NMEA messages") },
+                                onClick = {
+                                    dropDownMenuExpanded.value = false
+                                    navController.navigate("LocationInfoPanel")
+                                }
+                            )
+                        }
+                    }
                 }
             )
         }
