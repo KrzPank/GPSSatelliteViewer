@@ -10,11 +10,11 @@ import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.utils.CoordinateConversion.azElToECEF
 import com.google.android.filament.Engine
 import com.google.android.filament.LightManager
-import com.google.android.filament.LightManager.Type.DIRECTIONAL
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.Scene
 import io.github.sceneview.loaders.EnvironmentLoader
 import io.github.sceneview.loaders.ModelLoader
+import io.github.sceneview.managers.setPosition
 import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.LightNode
 import io.github.sceneview.node.ModelNode
@@ -59,20 +59,32 @@ class Scene3D(
     )
     private val centerNode = Node(engine)
     private val cameraNode = CameraNode(engine).apply {
-        position = Float3(y = 0.5f, z = 3.0f)
+        position = Float3(z = -3.0f)
         lookAt(centerNode)
         centerNode.addChildNode(this)
     }
-    
-    // Camera-following light for consistent satellite illumination
 
+    // Camera-following light for consistent satellite illumination
+    private val mainLight: LightNode = run {
+        val lightEntity = engine.entityManager.create()
+
+        LightManager.Builder(LightManager.Type.POINT)
+            .intensity(100_00_000.0f)     // stronger, since point light falls off
+            .color(1.0f, 1.0f, 1.0f)
+            .falloff(100.0f)
+            .build(engine, lightEntity)
+
+        LightNode(engine, lightEntity).apply {
+            centerNode.addChildNode(this)
+        }
+    }
 
     // Dynamic object pooling for satellite nodes
     private val satelliteNodePool = mutableListOf<ModelNode>() // Reusable nodes from disappeared satellites
     private val activeSatelliteNodes = mutableMapOf<Int, ModelNode>() // PRN -> active ModelNode
     private var earthNode: ModelNode? = null
 
-    private val earthModelPath = "models/newtexture.glb"//"models/Earth_base.glb"
+    private val earthModelPath = "models/material_test_noQuad.glb"
     private val satelliteModelPath = "models/RedCircle.glb"
     private val environmentPath = "envs/8k_stars_milky_way.hdr"//"envs/sky_2k.hdr"//"envs/8k_stars_milky_way.hdr"
 
@@ -91,11 +103,6 @@ class Scene3D(
 
     @Composable
     fun Render() {
-        // Create camera-following light source
-        val mainLightNode = rememberMainLightNode(engine) {
-            intensity = 1_000_000.0f
-        }
-        
         Scene(
             modifier = modifier,
             engine = engine,
@@ -109,15 +116,9 @@ class Scene3D(
             environment = environmentLoader.createHDREnvironment(environmentPath)!!,
             onFrame = { 
                 updateCameraAndSatellites()
-                // Update light to follow camera and illuminate from viewer's perspective
-                mainLightNode?.let { light ->
-                    // Position light AT camera position pointing toward what camera sees
-                    // This makes it appear as if YOU are the light source illuminating Earth
-                    light.position = cameraNode.worldPosition
-                    light.lookAt(centerNode.worldPosition)
-                }
+                updateLight()
             },
-            mainLightNode = mainLightNode,
+            mainLightNode = mainLight,
             onGestureListener = rememberOnGestureListener (
                 onDoubleTap = {_, node ->
                     toggleMenu()
@@ -134,6 +135,50 @@ class Scene3D(
             satellite.lookAt(cameraNode.worldPosition)
         }
     }
+
+    private fun updateLight() {
+        val lightType = engine.lightManager.getType(mainLight.entity)
+
+        // Direction vector: from camera towards the scene center
+        val lightDirection = (centerNode.worldPosition - cameraNode.worldPosition).normalized()
+
+        when (lightType) {
+            LightManager.Type.DIRECTIONAL,
+            LightManager.Type.SUN -> {
+                engine.lightManager.setDirection(
+                    mainLight.entity,
+                    lightDirection.x,
+                    lightDirection.y,
+                    lightDirection.z
+                )
+            }
+
+            LightManager.Type.SPOT -> {
+                engine.lightManager.setDirection(
+                    mainLight.entity,
+                    lightDirection.x,
+                    lightDirection.y,
+                    lightDirection.z
+                )
+                engine.lightManager.setPosition(
+                    mainLight.entity,
+                    cameraNode.worldPosition
+                )
+            }
+
+            LightManager.Type.POINT -> {
+                engine.lightManager.setPosition(
+                    mainLight.entity,
+                    cameraNode.worldPosition
+                )
+            }
+
+            else -> {
+                // Optional: handle other types if needed
+            }
+        }
+    }
+
 
     fun updateSatellites(satelliteList: List<GNSSStatusData>, userLocation: Triple<Float, Float, Float>) {
         val currentSatellitePrns = satelliteList.map { it.prn }.toSet()
@@ -240,6 +285,7 @@ class Scene3D(
     fun cleanup() {
         cleanupSatellites()
         earthNode?.destroy()
+        mainLight.destroy()
         cameraNode.destroy()
         centerNode.destroy()
     }
