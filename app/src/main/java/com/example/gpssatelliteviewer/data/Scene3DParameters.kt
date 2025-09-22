@@ -3,6 +3,7 @@ package com.example.gpssatelliteviewer.data
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import dev.romainguy.kotlin.math.Float3
 
 /**
  * Data class containing all configurable parameters for Scene3D
@@ -10,9 +11,7 @@ import androidx.compose.runtime.setValue
 data class Scene3DParameters(
     // Light Parameters
     var lightIntensity: Float = 10_000_000.0f,
-    var lightColorRed: Float = 1.0f,
-    var lightColorGreen: Float = 1.0f,
-    var lightColorBlue: Float = 1.0f,
+    var lightColor: Float3 = Float3(1.0f, 1.0f, 1.0f), // RGB white
     var lightFalloff: Float = 1000.0f,
     var lightType: LightType = LightType.POINT,
     
@@ -30,14 +29,8 @@ data class Scene3DParameters(
     
     // Camera Parameters
     var cameraDistance: Float = 3.0f,
-    
-    // Scene Parameters
-    var showGrid: Boolean = false,
-    var gridSize: Float = 10.0f,
-    var gridColor: Triple<Float, Float, Float> = Triple(1.0f, 1.0f, 1.0f),
-    
+
     // Performance Parameters
-    var maxVisibleSatellites: Int = 50,
     var enableLevelOfDetail: Boolean = true,
     var enableOcclusion: Boolean = false,
     
@@ -46,11 +39,11 @@ data class Scene3DParameters(
     var dynamicResolutionEnabled: Boolean = true,
     var dynamicResolutionQuality: QualityLevel = QualityLevel.HIGH,
     var msaaEnabled: Boolean = true,
-    var fxaaEnabled: Boolean = true,
+    var fxaaEnabled: Boolean = false,
     var ambientOcclusionEnabled: Boolean = true,
     var bloomEnabled: Boolean = true,
     var screenSpaceReflectionsEnabled: Boolean = true,
-    var temporalAntiAliasingEnabled: Boolean = true
+    var temporalAntiAliasingEnabled: Boolean = false
 ) {
     enum class LightType(val displayName: String) {
         POINT("Point Light"),
@@ -93,12 +86,12 @@ class Scene3DParametersState {
         parameters = parameters.copy(lightIntensity = intensity)
     }
     
+    fun updateLightColor(color: Float3) {
+        parameters = parameters.copy(lightColor = color)
+    }
+    
     fun updateLightColor(red: Float, green: Float, blue: Float) {
-        parameters = parameters.copy(
-            lightColorRed = red,
-            lightColorGreen = green,
-            lightColorBlue = blue
-        )
+        parameters = parameters.copy(lightColor = Float3(red, green, blue))
     }
     
     fun updateLightType(type: Scene3DParameters.LightType) {
@@ -116,15 +109,7 @@ class Scene3DParametersState {
     fun updateSatelliteModel(path: String) {
         parameters = parameters.copy(satelliteModelPath = path)
     }
-    
-    fun toggleLevelOfDetail() {
-        parameters = parameters.copy(enableLevelOfDetail = !parameters.enableLevelOfDetail)
-    }
-    
-    fun toggleOcclusion() {
-        parameters = parameters.copy(enableOcclusion = !parameters.enableOcclusion)
-    }
-    
+
     fun resetToDefaults() {
         parameters = Scene3DParameters()
     }

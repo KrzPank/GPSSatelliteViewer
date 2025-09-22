@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.data.Scene3DParametersState
 import com.example.gpssatelliteviewer.ui.panels.Scene3DParametersMenu
+import com.example.gpssatelliteviewer.utils.CoordinateConversion
 import com.example.gpssatelliteviewer.utils.HideSystemUI
 import com.example.gpssatelliteviewer.utils.Scene3D
 import com.example.gpssatelliteviewer.utils.findActivity
@@ -78,12 +79,17 @@ fun Satellite3DPanel(
     val activity = context.findActivity()
 
     val satelliteList by gnssViewModel.satelliteList.collectAsState()
-    //val locationNMEA by nmeaViewModel.locationNMEA.collectAsState()
 
     val userLocation: Triple<Float, Float, Float> =
         Triple(
-            locationNMEA.latitude.toFloat(),
-            locationNMEA.longitude.toFloat(),
+            CoordinateConversion.nmeaCoordinateToDecimal(
+                locationNMEA.latitude, 
+                locationNMEA.latHemisphere
+            ).toFloat(),
+            CoordinateConversion.nmeaCoordinateToDecimal(
+                locationNMEA.longitude, 
+                locationNMEA.lonHemisphere
+            ).toFloat(),
             locationNMEA.altitude.toFloat()
         )
 

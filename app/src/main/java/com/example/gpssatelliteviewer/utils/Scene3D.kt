@@ -22,6 +22,7 @@ import io.github.sceneview.node.Node
 import io.github.sceneview.rememberCameraManipulator
 import io.github.sceneview.rememberOnGestureListener
 import io.github.sceneview.rememberView
+import kotlinx.coroutines.delay
 import kotlin.math.sqrt
 
 
@@ -61,11 +62,14 @@ class Scene3D(
     // Mutable light node that can be recreated when needed
     private var mainLight: LightNode = createMainLight()
     private var isLightBeingRecreated = false
+    private val lightUpdateLock = Object()
+    private var framesAfterLightRecreation = 0
 
     // Dynamic object pooling for satellite nodes
     private val satelliteNodePool = mutableListOf<ModelNode>() // Reusable nodes from disappeared satellites
     private val activeSatelliteNodes = mutableMapOf<Int, ModelNode>() // PRN -> active ModelNode
     private var earthNode: ModelNode? = null
+    private var locationMarkerNode: ModelNode? = null
 
     var menuVisible: Boolean = true
 
@@ -83,16 +87,47 @@ class Scene3D(
             Scene3DParameters.LightType.SUN -> LightManager.Type.SUN
         }
 
-        LightManager.Builder(lightType)
+        // Calculate direction from camera towards scene center
+        val lightDirection = (centerNode.worldPosition - cameraNode.worldPosition).normalized()
+
+        // Validate light color parameters to prevent fallback to default red
+        val lightColor = parameters.lightColor
+        val red = lightColor.x
+        val green = lightColor.y
+        val blue = lightColor.z
+        
+        Log.d("Scene3D", "Creating light with color RGB($red, $green, $blue), intensity=${parameters.lightIntensity}, type=${parameters.lightType}")
+
+        val builder = LightManager.Builder(lightType)
             .intensity(parameters.lightIntensity)
-            .color(parameters.lightColorRed, parameters.lightColorGreen, parameters.lightColorBlue)
+            .color(red, green, blue)
             .falloff(parameters.lightFalloff)
             .position(pos.x, pos.y, pos.z)
-            .build(engine, lightEntity)
 
-        return LightNode(engine, lightEntity).apply {
+        // Set direction for directional lights during creation
+        when (lightType) {
+            LightManager.Type.DIRECTIONAL,
+            LightManager.Type.SUN -> {
+                builder.direction(lightDirection.x, lightDirection.y, lightDirection.z)
+            }
+            LightManager.Type.SPOT -> {
+                builder.direction(lightDirection.x, lightDirection.y, lightDirection.z)
+                    .spotLightCone(Math.toRadians(30.0).toFloat(), Math.toRadians(45.0).toFloat()) // Inner and outer cone angles
+            }
+            LightManager.Type.POINT -> {
+                // Point lights don't need direction
+            }
+            else -> {}
+        }
+
+        builder.build(engine, lightEntity)
+
+        val lightNode = LightNode(engine, lightEntity).apply {
             centerNode.addChildNode(this)
         }
+        
+        Log.d("Scene3D", "Light node created successfully with entity ID: ${lightEntity}")
+        return lightNode
     }
 
     private fun setupScene() {
@@ -100,14 +135,55 @@ class Scene3D(
             modelInstance = modelLoader.createModelInstance(parameters.earthModelPath),
             scaleToUnits = parameters.earthScale
         ).also { centerNode.addChildNode(it) }
+        
+        // Initialize location marker
+        createLocationMarker()
+    }
+    
+    /**
+     * Create and initialize the location marker
+     */
+    private fun createLocationMarker() {
+        try {
+            // Create location marker node with a distinct model (you can use the same satellite model for now)
+            val markerInstance = modelLoader.createModelInstance(parameters.satelliteModelPath)
+            locationMarkerNode = ModelNode(
+                modelInstance = markerInstance,
+                scaleToUnits = parameters.satelliteScale * 2.0f // Make it slightly larger for visibility
+            ).also {
+                centerNode.addChildNode(it)
+                // Set initial position to origin (will be updated when location is available)
+                it.position = Float3(0f, 0f, 0f)
+            }
+        } catch (e: Exception) {
+            Log.e("Scene3D", "Failed to create location marker: ${e.message}")
+            locationMarkerNode = null
+        }
     }
 
     @Composable
     fun Render() {
-        
         // Apply high preset visual effects when creating the scene
         LaunchedEffect(Unit) {
             applyVisualEffects(view)
+        }
+        
+        // Ensure light is properly initialized with current parameters
+        LaunchedEffect(parameters.lightColor) {
+            // Force light recreation when color parameters change to ensure proper color is applied
+            if (isLightBeingRecreated) return@LaunchedEffect
+            Log.d("Scene3D", "Light color changed - recreating light to ensure proper color")
+            recreateMainLight()
+        }
+        
+        // Additional initialization to ensure light is properly applied after scene setup
+        LaunchedEffect(Unit) {
+            // Small delay to ensure scene is fully initialized
+            delay(100)
+            if (!isLightBeingRecreated) {
+                Log.d("Scene3D", "Post-initialization light check - ensuring correct color")
+                recreateMainLight()
+            }
         }
         
         Scene(
@@ -123,7 +199,7 @@ class Scene3D(
             environment = environmentLoader.createHDREnvironment(parameters.environmentPath)!!,
             view = view,
             onFrame = {
-                updateSatellites()
+                updateLookAt()
                 if (!isLightBeingRecreated) {
                     updateLight()
                 }
@@ -137,9 +213,10 @@ class Scene3D(
         )
     }
 
-    private fun updateSatellites() {
+    private fun updateLookAt() {
         cameraNode.lookAt(centerNode)
-        
+
+        locationMarkerNode?.lookAt(cameraNode.worldPosition)
         // Update orientation for all active satellite nodes
         activeSatelliteNodes.values.forEach { satellite ->
             satellite.lookAt(cameraNode.worldPosition)
@@ -147,55 +224,128 @@ class Scene3D(
     }
 
     private fun updateLight() {
-        try {
-            // Check if the entity is valid before accessing it
-            if (!engine.entityManager.isAlive(mainLight.entity)) {
-                return
+        // Skip update if light is being recreated to avoid race conditions
+        if (isLightBeingRecreated) {
+            return
+        }
+        
+        // Skip a few frames after light recreation to ensure stability
+        if (framesAfterLightRecreation < 3) {
+            framesAfterLightRecreation++
+            return
+        }
+        
+        synchronized(lightUpdateLock) {
+            try {
+                // Double-check if light is being recreated after acquiring lock
+                if (isLightBeingRecreated) {
+                    return
+                }
+                
+                // Check if the entity is valid and alive
+                if (!engine.entityManager.isAlive(mainLight.entity)) {
+                    Log.w("Scene3D", "Light entity is not alive, skipping update")
+                    return
+                }
+                
+                // Verify light entity exists in light manager before accessing its type
+                if (!engine.lightManager.hasComponent(mainLight.entity)) {
+                    Log.w("Scene3D", "Light entity has no light component, skipping update")
+                    return
+                }
+
+                val lightType = engine.lightManager.getType(mainLight.entity)
+
+                // Direction vector: from camera towards the scene center
+                val lightDirection = (centerNode.worldPosition - cameraNode.worldPosition).normalized()
+                val pos = cameraNode.worldPosition
+
+                when (lightType) {
+                    LightManager.Type.DIRECTIONAL,
+                    LightManager.Type.SUN -> {
+                        if (engine.lightManager.hasComponent(mainLight.entity)) {
+                            // For directional/sun lights, direction is where the light is pointing
+                            engine.lightManager.setDirection(
+                                mainLight.entity,
+                                lightDirection.x,
+                                lightDirection.y,
+                                lightDirection.z
+                            )
+                        }
+                    }
+
+                    LightManager.Type.SPOT -> {
+                        if (engine.lightManager.hasComponent(mainLight.entity)) {
+                            // Spot light needs both position and direction
+                            engine.lightManager.setPosition(
+                                mainLight.entity,
+                                pos.x, pos.y, pos.z
+                            )
+                            engine.lightManager.setDirection(
+                                mainLight.entity,
+                                lightDirection.x,
+                                lightDirection.y,
+                                lightDirection.z
+                            )
+                        }
+                    }
+
+                    LightManager.Type.POINT -> {
+                        if (engine.lightManager.hasComponent(mainLight.entity)) {
+                            // Point light only needs position
+                            engine.lightManager.setPosition(
+                                mainLight.entity,
+                                pos.x, pos.y, pos.z
+                            )
+                        }
+                    }
+
+                    else -> {
+                        // Handle unknown types
+                        Log.w("Scene3D", "Unknown light type: $lightType")
+                    }
+                }
+            } catch (e: IndexOutOfBoundsException) {
+                Log.w("Scene3D", "Light entity index out of bounds, likely being recreated: ${e.message}")
+            } catch (e: Exception) {
+                Log.e("Scene3D", "Error updating light: ${e.message}")
             }
+        }
+    }
 
-            val lightType = engine.lightManager.getType(mainLight.entity)
+    private fun recreateMainLight() {
+        synchronized(lightUpdateLock) {
+            try {
+                isLightBeingRecreated = true
+                Log.d("Scene3D", "Starting light recreation")
 
-            // Direction vector: from camera towards the scene center
-            val lightDirection = (centerNode.worldPosition - cameraNode.worldPosition).normalized()
-            val pos = cameraNode.worldPosition
+                // Remove old light
+                centerNode.removeChildNode(mainLight)
 
-            when (lightType) {
-                LightManager.Type.DIRECTIONAL,
-                LightManager.Type.SUN -> {
-                    engine.lightManager.setDirection(
-                        mainLight.entity,
-                        lightDirection.x,
-                        lightDirection.y,
-                        lightDirection.z
-                    )
+                // Give a small delay to ensure any pending operations complete
+                Thread.sleep(10)
+
+                mainLight.destroy()
+
+                // Create new light with current parameters
+                mainLight = createMainLight()
+
+                Log.d("Scene3D", "Main light recreated with type: ${parameters.lightType}")
+            } catch (e: Exception) {
+                Log.e("Scene3D", "Failed to recreate main light: ${e.message}")
+
+                // Try to create a fallback light if recreation failed
+                try {
+                    mainLight = createMainLight()
+                    Log.w("Scene3D", "Fallback light created")
+                } catch (fallbackError: Exception) {
+                    Log.e("Scene3D", "Failed to create fallback light: ${fallbackError.message}")
                 }
-
-                LightManager.Type.SPOT -> {
-                    engine.lightManager.setDirection(
-                        mainLight.entity,
-                        lightDirection.x,
-                        lightDirection.y,
-                        lightDirection.z
-                    )
-                    engine.lightManager.setPosition(
-                        mainLight.entity,
-                        pos.x, pos.y, pos.z
-                    )
-                }
-
-                LightManager.Type.POINT -> {
-                    engine.lightManager.setPosition(
-                        mainLight.entity,
-                        pos.x, pos.y, pos.z
-                    )
-                }
-
-                else -> {
-                    // Handle unknown types
-                }
+            } finally {
+                isLightBeingRecreated = false
+                framesAfterLightRecreation = 0  // Reset frame counter
+                Log.d("Scene3D", "Light recreation completed")
             }
-        } catch (e: Exception) {
-            Log.e("Scene3D", "Error updating light: ${e.message}")
         }
     }
 
@@ -227,7 +377,9 @@ class Scene3D(
                 activeSatelliteNodes[sat.prn] = satelliteNode
             }
         }
-        
+
+        updateLocationMarker(userLocation)
+           
         // Log pool statistics for monitoring
         logPoolStats()
     }
@@ -280,13 +432,38 @@ class Scene3D(
                 userLocation,
                 altitude
             )
-        )
+            )
 
         if (altitude == 0f) {
             Log.e("SatPos", "Constellation:${sat.constellation} PRN:${sat.prn} position: x:${pos.x}, y:${pos.y}, z:${pos.z}")
         }
 
         node.position = pos
+    }
+    
+    /**
+     * Update location marker to show user's current position on Earth surface
+     */
+    private fun updateLocationMarker(userLocation: Triple<Float, Float, Float>) {
+        try {
+            // Create location marker if it doesn't exist yet
+            if (locationMarkerNode == null) {
+                createLocationMarker()
+            }
+            
+            val (lat, lon, alt) = userLocation
+            val ecefPosition = CoordinateConversion.geodeticToECEF(
+                lat.toDouble(), 
+                lon.toDouble(), 
+                (alt + 5000f).toDouble()  // Add 5km above surface to make marker visible
+            )
+            val scenePosition = CoordinateConversion.ecefToScenePos(ecefPosition)
+            
+            locationMarkerNode?.position = scenePosition
+
+        } catch (e: Exception) {
+            Log.e("Scene3D", "Failed to update location marker: ${e.message}")
+        }
     }
 
     private fun toggleMenu() {
@@ -308,19 +485,14 @@ class Scene3D(
         val oldParameters = parameters
         parameters = newParameters
 
-        Log.d("Scene3D", "Updating parameters")
-
         // Update light properties if they changed
         if (oldParameters.lightIntensity != newParameters.lightIntensity ||
-            oldParameters.lightColorRed != newParameters.lightColorRed ||
-            oldParameters.lightColorGreen != newParameters.lightColorGreen ||
-            oldParameters.lightColorBlue != newParameters.lightColorBlue ||
+            oldParameters.lightColor != newParameters.lightColor ||
             oldParameters.lightFalloff != newParameters.lightFalloff ||
             oldParameters.lightType != newParameters.lightType) {
             recreateMainLight()
             Log.d("Scene3D", "Updated light properties")
         }
-
 
         // Handle satellite model path changes
         if (oldParameters.satelliteModelPath != newParameters.satelliteModelPath) {
@@ -334,25 +506,6 @@ class Scene3D(
             Log.d("Scene3D", "Updated earth model")
         }
 
-    }
-
-    private fun recreateMainLight() {
-        try {
-            isLightBeingRecreated = true
-
-            // Remove old light
-            centerNode.removeChildNode(mainLight)
-            mainLight.destroy()
-
-            // Create new light with current parameters
-            mainLight = createMainLight()
-
-            Log.d("Scene3D", "Main light recreated with type: ${parameters.lightType}")
-        } catch (e: Exception) {
-            Log.e("Scene3D", "Failed to recreate main light: ${e.message}")
-        } finally {
-            isLightBeingRecreated = false
-        }
     }
 
     private fun updateEarthModel() {
@@ -388,7 +541,6 @@ class Scene3D(
             }
             satelliteNodePool.clear()
 
-            Log.d("Scene3D", "Satellite models updated - all satellites will be recreated")
         } catch (e: Exception) {
             Log.e("Scene3D", "Failed to update satellite models: ${e.message}")
         }
@@ -399,8 +551,6 @@ class Scene3D(
      */
     private fun applyVisualEffects(view: View) {
         try {
-            Log.d("Scene3D", "Applying visual effects from parameters")
-            
             // HDR Color Buffer Quality
             view.renderQuality = view.renderQuality.apply {
                 hdrColorBuffer = when (parameters.hdrColorBufferQuality) {
@@ -471,6 +621,11 @@ class Scene3D(
     fun cleanup() {
         cleanupSatellites()
         earthNode?.destroy()
+        locationMarkerNode?.let {
+            centerNode.removeChildNode(it)
+            it.destroy()
+        }
+        locationMarkerNode = null
         mainLight.destroy()
         cameraNode.destroy()
         centerNode.destroy()

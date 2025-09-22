@@ -92,9 +92,9 @@ fun Scene3DParametersMenu(
             // Light Color
             ColorParameter(
                 label = "Light Color",
-                red = params.lightColorRed,
-                green = params.lightColorGreen,
-                blue = params.lightColorBlue,
+                red = params.lightColor.x,
+                green = params.lightColor.y,
+                blue = params.lightColor.z,
                 onColorChanged = { r, g, b ->
                     parametersState.updateLightColor(r, g, b)
                     onParametersChanged(parametersState.parameters)
