@@ -149,10 +149,52 @@ class Scene3D(
     private fun updateLookAt() {
         cameraNode.lookAt(centerNode)
 
-        locationMarkerNode?.lookAt(cameraNode.worldPosition)
         // Update orientation for all active satellite nodes
         activeSatelliteNodes.values.forEach { satellite ->
             satellite.lookAt(cameraNode.worldPosition)
+        }
+        locationMarkerNode?.lookAt(cameraNode.worldPosition)
+    }
+    
+    /**
+     * Calculate optimal light position based on light type and camera position
+     */
+    private fun calculateLightPosition(lightType: LightManager.Type): Float3 {
+        return when (lightType) {
+            LightManager.Type.SUN, LightManager.Type.DIRECTIONAL -> 
+                Float3(5.0f, 5.0f, 5.0f) // Far away for directional lighting
+            
+            LightManager.Type.POINT, LightManager.Type.SPOT -> {
+                // Position near Earth with slight camera-based adjustment for good lighting
+                val offset = (cameraNode.worldPosition - centerNode.worldPosition).normalized() * 0.5f
+                Float3(2.0f, 2.0f, 2.0f) + offset
+            }
+            
+            else -> Float3(2.0f, 2.0f, 2.0f)
+        }
+    }
+    
+    /**
+     * Update light position and/or direction based on light type
+     */
+    private fun updateLightProperties(lightType: LightManager.Type, position: Float3, direction: Float3) {
+        when (lightType) {
+            LightManager.Type.DIRECTIONAL, LightManager.Type.SUN -> {
+                engine.lightManager.setDirection(mainLight.entity, direction.x, direction.y, direction.z)
+            }
+            
+            LightManager.Type.SPOT -> {
+                engine.lightManager.setPosition(mainLight.entity, position.x, position.y, position.z)
+                engine.lightManager.setDirection(mainLight.entity, direction.x, direction.y, direction.z)
+            }
+            
+            LightManager.Type.POINT -> {
+                engine.lightManager.setPosition(mainLight.entity, position.x, position.y, position.z)
+            }
+            
+            else -> {
+                Log.w("Scene3D", "Unknown light type: $lightType")
+            }
         }
     }
 
@@ -166,22 +208,8 @@ class Scene3D(
             Scene3DParameters.LightType.SUN -> LightManager.Type.SUN
         }
 
-        // Position light as a proper light source, not following camera
-        val lightPosition = when (lightType) {
-            LightManager.Type.SUN,
-            LightManager.Type.DIRECTIONAL -> {
-                // For sun/directional lights, position doesn't matter much, but set it far away
-                Float3(5.0f, 5.0f, 5.0f)
-            }
-            LightManager.Type.POINT,
-            LightManager.Type.SPOT -> {
-                // Position point/spot lights at a good distance from Earth to illuminate it
-                Float3(2.0f, 2.0f, 2.0f)
-            }
-            else -> Float3(2.0f, 2.0f, 2.0f)
-        }
-
-        // Calculate light direction towards scene center (Earth)
+        // Position light as a proper light source
+        val lightPosition = calculateLightPosition(lightType)
         val lightDirection = (centerNode.worldPosition - lightPosition).normalized()
 
         // Validate light color parameters to prevent fallback to default red
@@ -230,112 +258,42 @@ class Scene3D(
     private fun shouldUpdateLight(): Boolean {
         frameCount++
         
-        // Skip update if light is being recreated
-        if (isLightBeingRecreated) return false
-        
-        // Skip a few frames after light recreation
-        if (framesAfterLightRecreation < 3) {
-            framesAfterLightRecreation++
+        // Skip if light is being recreated or just recreated
+        if (isLightBeingRecreated || framesAfterLightRecreation < 3) {
+            if (framesAfterLightRecreation < 3) framesAfterLightRecreation++
             return false
         }
         
-        // Check if minimum frame interval has passed
-        if (frameCount - lastLightUpdateFrame < lightUpdateInterval) {
-            return false
-        }
+        // Check frame interval and camera movement
+        val frameIntervalMet = frameCount - lastLightUpdateFrame >= lightUpdateInterval
+        val cameraMovement = (cameraNode.worldPosition - lastCameraPosition).length()
         
-        // Check if camera has moved significantly
-        val currentCameraPosition = cameraNode.worldPosition
-        val cameraMovement = (currentCameraPosition - lastCameraPosition).length()
-        
-        return cameraMovement > lightUpdateThreshold
+        return frameIntervalMet && cameraMovement > lightUpdateThreshold
     }
 
     private fun updateLight() {
         synchronized(lightUpdateLock) {
             try {
-                // Check if the entity is valid and alive
-                if (!engine.entityManager.isAlive(mainLight.entity)) {
-                    Log.w("Scene3D", "Light entity is not alive, skipping update")
-                    return
-                }
-                
-                // Verify light entity exists in light manager before accessing its type
-                if (!engine.lightManager.hasComponent(mainLight.entity)) {
-                    Log.w("Scene3D", "Light entity has no light component, skipping update")
+                // Validate light entity
+                if (!engine.entityManager.isAlive(mainLight.entity) || 
+                    !engine.lightManager.hasComponent(mainLight.entity)) {
+                    Log.w("Scene3D", "Light entity invalid, skipping update")
                     return
                 }
 
                 val lightType = engine.lightManager.getType(mainLight.entity)
-                val currentCameraPosition = cameraNode.worldPosition
-
-                // Position light as a fixed light source (not following camera)
-                val lightPosition = when (lightType) {
-                    LightManager.Type.SUN,
-                    LightManager.Type.DIRECTIONAL -> {
-                        // For sun/directional lights, position doesn't affect lighting much
-                        Float3(5.0f, 5.0f, 5.0f)
-                    }
-                    LightManager.Type.POINT,
-                    LightManager.Type.SPOT -> {
-                        // Position point/spot lights at a good distance from Earth
-                        // Adjust position slightly based on camera to maintain good lighting
-                        val offset = (currentCameraPosition - centerNode.worldPosition).normalized() * 0.5f
-                        Float3(2.0f, 2.0f, 2.0f) + offset
-                    }
-                    else -> Float3(2.0f, 2.0f, 2.0f)
-                }
-                
-                // Direction from light towards scene center (Earth)
+                val lightPosition = calculateLightPosition(lightType)
                 val lightDirection = (centerNode.worldPosition - lightPosition).normalized()
-
-                when (lightType) {
-                    LightManager.Type.DIRECTIONAL,
-                    LightManager.Type.SUN -> {
-                        // For directional/sun lights, only direction matters
-                        engine.lightManager.setDirection(
-                            mainLight.entity,
-                            lightDirection.x,
-                            lightDirection.y,
-                            lightDirection.z
-                        )
-                    }
-
-                    LightManager.Type.SPOT -> {
-                        // Spot light needs both position and direction
-                        engine.lightManager.setPosition(
-                            mainLight.entity,
-                            lightPosition.x, lightPosition.y, lightPosition.z
-                        )
-                        engine.lightManager.setDirection(
-                            mainLight.entity,
-                            lightDirection.x,
-                            lightDirection.y,
-                            lightDirection.z
-                        )
-                    }
-
-                    LightManager.Type.POINT -> {
-                        // Point light only needs position
-                        engine.lightManager.setPosition(
-                            mainLight.entity,
-                            lightPosition.x, lightPosition.y, lightPosition.z
-                        )
-                    }
-
-                    else -> {
-                        Log.w("Scene3D", "Unknown light type: $lightType")
-                    }
-                }
+                
+                // Update light properties based on type
+                updateLightProperties(lightType, lightPosition, lightDirection)
                 
                 // Update tracking variables
-                lastCameraPosition = currentCameraPosition
+                lastCameraPosition = cameraNode.worldPosition
                 lastLightUpdateFrame = frameCount
                 
-                Log.d("Scene3D", "Light updated: pos=${lightPosition}, dir=${lightDirection}")
-                
             } catch (e: Exception) {
-                Log.e("Scene3D", "Error updating light: ${e.message}")
+                Log.e("Scene3D", "Light update failed: ${e.message}")
             }
         }
     }
@@ -350,6 +308,7 @@ class Scene3D(
                 centerNode.removeChildNode(mainLight)
 
                 // Give a small delay to ensure any pending operations complete
+                // Possible race condition with light color? what
                 Thread.sleep(10)
 
                 mainLight.destroy()

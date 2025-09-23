@@ -30,6 +30,7 @@ import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Spacer
@@ -47,6 +48,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
@@ -54,6 +56,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.LayoutDirection
 import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.data.Scene3DParametersState
+import com.example.gpssatelliteviewer.ui.components.Scene3DLoadingScreen
 import com.example.gpssatelliteviewer.ui.panels.Scene3DParametersMenu
 import com.example.gpssatelliteviewer.utils.CoordinateConversion
 import com.example.gpssatelliteviewer.utils.HideSystemUI
@@ -63,6 +66,7 @@ import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberView
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 
 
@@ -116,6 +120,31 @@ fun Satellite3DPanel(
     var onlyUsedInFix by remember { mutableStateOf(false) }
     val firstView = remember { mutableStateOf(true) }
     var selectedTab by remember { mutableStateOf(0) }
+    
+    // Loading state for Scene3D
+    var isSceneLoading by remember { mutableStateOf(true) }
+    var loadingProgress by remember { mutableStateOf(0f) }
+    
+    // Simulate loading process
+    LaunchedEffect(scene) {
+        // Simulate progressive loading steps
+        loadingProgress = 0.2f
+        kotlinx.coroutines.delay(200) // Engine initialization
+        
+        loadingProgress = 0.4f 
+        kotlinx.coroutines.delay(300) // Model loading
+        
+        loadingProgress = 0.6f
+        kotlinx.coroutines.delay(200) // Environment loading
+        
+        loadingProgress = 0.8f
+        kotlinx.coroutines.delay(300) // Scene setup
+        
+        loadingProgress = 1.0f
+        kotlinx.coroutines.delay(100) // Final initialization
+        
+        isSceneLoading = false
+    }
 
     if (firstView.value) {
         selectedConstellations.addAll(satelliteList.map { it.constellation }.distinct())
@@ -133,34 +162,52 @@ fun Satellite3DPanel(
 
     val sceneOffsetX by animateDpAsState(
         targetValue = if (scene.menuVisible) totalMenuWidth else 0.dp,
+        animationSpec = tween(300) // Match menu animation timing
     )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color.Black) // Prevent white background during animation
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .offset(x = sceneOffsetX/2)
-        ) {
-            scene.Render()
-            scene.updateSatellites(filteredSatellites, userLocation)
+        if (isSceneLoading) {
+            // Show loading screen
+            Scene3DLoadingScreen(
+                progress = loadingProgress,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            // Show the actual 3D scene
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset(x = sceneOffsetX/2)
+            ) {
+                scene.Render()
+                scene.updateSatellites(filteredSatellites, userLocation)
+            }
         }
 
         val scrollState = rememberScrollState()
-        // Left-side overlay menu with tabs
-        AnimatedVisibility(
-            visible = scene.menuVisible,
-            enter = slideInHorizontally(initialOffsetX = { -it }),
-            exit = slideOutHorizontally(targetOffsetX = { -it })
+        // Left-side overlay menu with tabs - only show when scene is loaded
+        if (!isSceneLoading) {
+            AnimatedVisibility(
+                visible = scene.menuVisible,
+            enter = slideInHorizontally(
+                initialOffsetX = { -it },
+                animationSpec = tween(300)
+            ),
+            exit = slideOutHorizontally(
+                targetOffsetX = { -it },
+                animationSpec = tween(300)
+            )
         ) {
             val safeInsets = WindowInsets.safeDrawing.asPaddingValues()
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
                     .requiredWidth(totalMenuWidth)
-                    .background(Color(0xFF000000)) // semi-transparent black
+                    .background(Color(0xFF000000)) // Solid black background
                     .padding(safeInsets)
             ) {
                 // Tab Row
@@ -282,6 +329,7 @@ fun Satellite3DPanel(
                 }
             }
         }
+        } // Close if (!isSceneLoading) condition
 
         DisposableEffect(Unit) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE

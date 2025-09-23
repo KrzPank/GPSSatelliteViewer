@@ -34,15 +34,15 @@ data class Scene3DParameters(
     var enableLevelOfDetail: Boolean = true,
     var enableOcclusion: Boolean = false,
     
-    // Rendering Quality Parameters - High Quality Preset
+    // Rendering Quality Parameters - Medium Quality Preset
     var hdrColorBufferQuality: QualityLevel = QualityLevel.MEDIUM,
     var dynamicResolutionEnabled: Boolean = true,
     var dynamicResolutionQuality: QualityLevel = QualityLevel.MEDIUM,
-    var msaaEnabled: Boolean = true,
-    var fxaaEnabled: Boolean = false,
-    var ambientOcclusionEnabled: Boolean = true,
+    var msaaEnabled: Boolean = false, // Disabled for better performance
+    var fxaaEnabled: Boolean = true,  // Faster alternative to MSAA
+    var ambientOcclusionEnabled: Boolean = false, // Disabled for medium preset
     var bloomEnabled: Boolean = true,
-    var screenSpaceReflectionsEnabled: Boolean = true,
+    var screenSpaceReflectionsEnabled: Boolean = false, // Disabled for better performance
     var temporalAntiAliasingEnabled: Boolean = false
 ) {
     enum class LightType(val displayName: String) {
