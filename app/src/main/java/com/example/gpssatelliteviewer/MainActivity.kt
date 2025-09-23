@@ -39,7 +39,6 @@ import com.example.gpssatelliteviewer.ui.panels.Satellite3DPanel
 import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 import com.example.gpssatelliteviewer.viewModel.LocationListenerViewModel
 import com.example.gpssatelliteviewer.viewModel.NMEAViewModel
-//import com.example.gpssatelliteviewer.viewModel.NMEAViewModelFactory
 
 
 class MainActivity : ComponentActivity() {
@@ -80,8 +79,8 @@ class MainActivity : ComponentActivity() {
                                 CircularProgressIndicator()
                             }
                         }
-                        true -> AppNavigation(true)
-                        false -> AppNavigation(false)
+                        true -> AppNavigation(hasPermission = true, permissionLauncher = launcher)
+                        false -> AppNavigation(hasPermission = false, permissionLauncher = launcher)
                     }
                 }
             }
@@ -92,7 +91,10 @@ class MainActivity : ComponentActivity() {
 
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
-fun AppNavigation(hasPermission: Boolean) {
+fun AppNavigation(
+    hasPermission: Boolean, 
+    permissionLauncher: androidx.activity.compose.ManagedActivityResultLauncher<String, Boolean>
+) {
     val navController = rememberNavController()
 
     if (hasPermission) {
@@ -134,7 +136,12 @@ fun AppNavigation(hasPermission: Boolean) {
             startDestination = "LocationDeny"
         ) {
             composable("LocationDeny") {
-                LocationDeny(navController)
+                LocationDeny(
+                    navController = navController,
+                    onRequestPermission = {
+                        permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                    }
+                )
             }
         }
     }

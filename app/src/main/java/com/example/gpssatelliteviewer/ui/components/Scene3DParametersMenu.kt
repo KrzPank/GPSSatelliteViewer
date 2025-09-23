@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.ui.panels
+package com.example.gpssatelliteviewer.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -26,7 +26,7 @@ fun Scene3DParametersMenu(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
-    
+
     Column(
         modifier = modifier
             .background(Color(0xDD000000)) // Semi-transparent black background
@@ -43,14 +43,14 @@ fun Scene3DParametersMenu(
         )
 
         Divider(color = Color.Gray, thickness = 1.dp)
-        
+
         // Control buttons
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(
-                onClick = { 
+                onClick = {
                     parametersState.resetToDefaults()
                     onParametersChanged(parametersState.parameters)
                 },
@@ -60,35 +60,35 @@ fun Scene3DParametersMenu(
                 Text("Reset", color = Color.White, fontSize = 12.sp)
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         // Light Parameters Section
         ParameterSection("Light Parameters") {
             val params = parametersState.parameters
-            
+
             // Light Type
             LightTypeSelector(
                 currentType = params.lightType,
-                onTypeChanged = { 
+                onTypeChanged = {
                     parametersState.updateLightType(it)
                     onParametersChanged(parametersState.parameters)
                 }
             )
-            
+
             // Light Intensity (Logarithmic)
             LogarithmicSliderParameter(
                 label = "Light Intensity",
                 value = params.lightIntensity,
                 minValue = 10_000f,
                 maxValue = 50_000_000f,
-                onValueChange = { 
+                onValueChange = {
                     parametersState.updateLightIntensity(it)
                     onParametersChanged(parametersState.parameters)
                 },
                 valueFormatter = { "${(it / 1_000_000f).format(1)}M" }
             )
-            
+
             // Light Color
             ColorParameter(
                 label = "Light Color",
@@ -100,15 +100,15 @@ fun Scene3DParametersMenu(
                     onParametersChanged(parametersState.parameters)
                 }
             )
-            
+
             // Light Falloff (for point/spot lights)
-            if (params.lightType == Scene3DParameters.LightType.POINT || 
+            if (params.lightType == Scene3DParameters.LightType.POINT ||
                 params.lightType == Scene3DParameters.LightType.SPOT) {
                 SliderParameter(
                     label = "Light Falloff",
                     value = params.lightFalloff,
                     valueRange = 10f..5000f,
-                    onValueChange = { 
+                    onValueChange = {
                         parametersState.updateLightFalloff(it)
                         onParametersChanged(parametersState.parameters)
                     },
@@ -116,34 +116,34 @@ fun Scene3DParametersMenu(
                 )
             }
         }
-        
+
         // Earth Model Parameters Section
         ParameterSection("Earth Model") {
             val params = parametersState.parameters
-            
+
             // Earth Model Selection
             ModelSelector(
                 label = "Earth Model",
                 options = Scene3DParameters.EARTH_MODEL_OPTIONS,
                 currentPath = params.earthModelPath,
-                onModelChanged = { 
+                onModelChanged = {
                     parametersState.updateEarthModel(it)
                     onParametersChanged(parametersState.parameters)
                 }
             )
 
         }
-        
+
         // Satellite Parameters Section
         ParameterSection("Satellites") {
             val params = parametersState.parameters
-            
+
             // Satellite Model Selection
             ModelSelector(
                 label = "Satellite Model",
                 options = Scene3DParameters.SATELLITE_MODEL_OPTIONS,
                 currentPath = params.satelliteModelPath,
-                onModelChanged = { 
+                onModelChanged = {
                     parametersState.updateSatelliteModel(it)
                     onParametersChanged(parametersState.parameters)
                 }
@@ -216,7 +216,7 @@ fun ColorParameter(
 ) {
     Column {
         Text(text = label, color = Color.White, fontSize = 14.sp)
-        
+
         // Red component
         SliderParameter(
             label = "Red",
@@ -225,7 +225,7 @@ fun ColorParameter(
             onValueChange = { onColorChanged(it, green, blue) },
             valueFormatter = { "${(it * 255).toInt()}" }
         )
-        
+
         // Green component
         SliderParameter(
             label = "Green",
@@ -234,7 +234,7 @@ fun ColorParameter(
             onValueChange = { onColorChanged(red, it, blue) },
             valueFormatter = { "${(it * 255).toInt()}" }
         )
-        
+
         // Blue component
         SliderParameter(
             label = "Blue",
@@ -243,7 +243,7 @@ fun ColorParameter(
             onValueChange = { onColorChanged(red, green, it) },
             valueFormatter = { "${(it * 255).toInt()}" }
         )
-        
+
         // Color preview
         Box(
             modifier = Modifier
@@ -261,10 +261,10 @@ fun LightTypeSelector(
     onTypeChanged: (Scene3DParameters.LightType) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
+
     Column {
         Text(text = "Light Type", color = Color.White, fontSize = 14.sp)
-        
+
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded }
@@ -284,7 +284,7 @@ fun LightTypeSelector(
                     .fillMaxWidth()
                     .menuAnchor()
             )
-            
+
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
@@ -313,10 +313,10 @@ fun ModelSelector(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val currentDisplayName = options.find { it.first == currentPath }?.second ?: "Unknown"
-    
+
     Column {
         Text(text = label, color = Color.White, fontSize = 14.sp)
-        
+
         ExposedDropdownMenuBox(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded }
@@ -336,7 +336,7 @@ fun ModelSelector(
                     .fillMaxWidth()
                     .menuAnchor()
             )
-            
+
             ExposedDropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
@@ -398,7 +398,7 @@ fun LogarithmicSliderParameter(
     val logMax = log10(maxValue)
     val logValue = log10(value.coerceIn(minValue, maxValue))
     val sliderPosition = ((logValue - logMin) / (logMax - logMin)).coerceIn(0f, 1f)
-    
+
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),

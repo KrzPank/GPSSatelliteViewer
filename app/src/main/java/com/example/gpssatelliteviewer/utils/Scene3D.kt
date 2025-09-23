@@ -23,6 +23,8 @@ import io.github.sceneview.rememberCameraManipulator
 import io.github.sceneview.rememberOnGestureListener
 import io.github.sceneview.rememberView
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlin.math.sqrt
 
 
@@ -77,38 +79,114 @@ class Scene3D(
     private val activeSatelliteNodes = mutableMapOf<Int, ModelNode>() // PRN -> active ModelNode
     private var earthNode: ModelNode? = null
     private var locationMarkerNode: ModelNode? = null
+    
+    // Loading state management
+    private var isSceneReady = false
+    private val _initializationLock = Object()
 
     var menuVisible: Boolean = true
+    
+    fun isReady(): Boolean = synchronized(_initializationLock) { isSceneReady }
+    private var hasInitialized = false
+    private var isInitializing = false
+    
+    /**
+     * Initialize the 3D scene asynchronously on main thread
+     * Uses yielding to allow UI updates between heavy operations
+     */
+    suspend fun initializeScene() {
+        // Check if we should initialize (thread-safe)
+        val shouldInitialize = synchronized(_initializationLock) {
+            if (!hasInitialized && !isInitializing) {
+                isInitializing = true
+                true
+            } else {
+                false
+            }
+        }
+        
+        if (shouldInitialize) {
+            try {
+                // Setup scene outside of synchronized block to allow suspension points
+                setupSceneWithYielding()
+                
+                // Mark as completed (thread-safe)
+                synchronized(_initializationLock) {
+                    hasInitialized = true
+                    isSceneReady = true
+                }
+            } finally {
+                synchronized(_initializationLock) {
+                    isInitializing = false
+                }
+            }
+        }
+    }
+    
+    /**
+     * Setup scene with yield points to maintain UI responsiveness
+     * Breaks heavy operations into chunks with coroutine yields
+     */
+    private suspend fun setupSceneWithYielding() {
+        Log.d("Scene3D", "Starting scene setup with yielding...")
+        
+        // Load Earth model with yield
+        try {
+            earthNode = ModelNode(
+                modelInstance = modelLoader.createModelInstance(parameters.earthModelPath),
+                scaleToUnits = parameters.earthScale
+            ).also { centerNode.addChildNode(it) }
+            
+            // Yield to allow UI updates
+            delay(1)
+        } catch (e: Exception) {
+            Log.e("Scene3D", "Failed to load Earth model: ${e.message}")
+        }
 
-    init {
-        setupScene()
+        // Initialize location marker with yield
+        createLocationMarker()
+        delay(1) // Yield for UI responsiveness
+
+        // Apply visual effects with yield
+        try {
+            applyVisualEffects(view)
+            delay(1) // Yield for UI responsiveness
+        } catch (e: Exception) {
+            Log.e("Scene3D", "Failed to apply visual effects: ${e.message}")
+        }
     }
 
     private fun setupScene() {
-        earthNode = ModelNode(
-            modelInstance = modelLoader.createModelInstance(parameters.earthModelPath),
-            scaleToUnits = parameters.earthScale
-        ).also { centerNode.addChildNode(it) }
+        Log.d("Scene3D", "Starting scene setup...")
         
+        // Load Earth model
+        try {
+            earthNode = ModelNode(
+                modelInstance = modelLoader.createModelInstance(parameters.earthModelPath),
+                scaleToUnits = parameters.earthScale
+            ).also { centerNode.addChildNode(it) }
+        } catch (e: Exception) {
+            Log.e("Scene3D", "Failed to load Earth model: ${e.message}")
+        }
+
         // Initialize location marker
         createLocationMarker()
+
+        // Apply visual effects
+        try {
+            applyVisualEffects(view)
+        } catch (e: Exception) {
+            Log.e("Scene3D", "Failed to apply visual effects: ${e.message}")
+        }
+
+        // Mark scene as ready (thread-safe)
+        synchronized(_initializationLock) {
+            isSceneReady = true
+        }
     }
 
     @Composable
     fun Render() {
-        // Apply high preset visual effects when creating the scene
-        LaunchedEffect(Unit) {
-            applyVisualEffects(view)
-        }
-        
-        // Ensure light is properly initialized with current parameters
-        LaunchedEffect(parameters.lightColor) {
-            // Force light recreation when color parameters change to ensure proper color is applied
-            if (isLightBeingRecreated) return@LaunchedEffect
-            Log.d("Scene3D", "Light color changed - recreating light to ensure proper color")
-            recreateMainLight()
-        }
-        
         // Additional initialization to ensure light is properly applied after scene setup
         LaunchedEffect(Unit) {
             // Small delay to ensure scene is fully initialized
@@ -275,7 +353,7 @@ class Scene3D(
         synchronized(lightUpdateLock) {
             try {
                 // Validate light entity
-                if (!engine.entityManager.isAlive(mainLight.entity) || 
+                if (!engine.entityManager.isAlive(mainLight.entity) ||
                     !engine.lightManager.hasComponent(mainLight.entity)) {
                     Log.w("Scene3D", "Light entity invalid, skipping update")
                     return

@@ -30,7 +30,10 @@ import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Spacer
@@ -57,7 +60,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.data.Scene3DParametersState
 import com.example.gpssatelliteviewer.ui.components.Scene3DLoadingScreen
-import com.example.gpssatelliteviewer.ui.panels.Scene3DParametersMenu
+import com.example.gpssatelliteviewer.ui.components.Scene3DParametersMenu
 import com.example.gpssatelliteviewer.utils.CoordinateConversion
 import com.example.gpssatelliteviewer.utils.HideSystemUI
 import com.example.gpssatelliteviewer.utils.Scene3D
@@ -67,7 +70,6 @@ import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberView
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.StateFlow
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,6 +106,9 @@ fun Satellite3DPanel(
     
     // Scene3D parameters state
     val parametersState = remember { Scene3DParametersState() }
+    
+    // Loading state for Scene3D
+    var isSceneLoading by remember { mutableStateOf(true) }
 
     val scene = remember {
         Scene3D(
@@ -120,29 +125,19 @@ fun Satellite3DPanel(
     var onlyUsedInFix by remember { mutableStateOf(false) }
     val firstView = remember { mutableStateOf(true) }
     var selectedTab by remember { mutableStateOf(0) }
-    
-    // Loading state for Scene3D
-    var isSceneLoading by remember { mutableStateOf(true) }
-    var loadingProgress by remember { mutableStateOf(0f) }
-    
-    // Simulate loading process
+
     LaunchedEffect(scene) {
-        // Simulate progressive loading steps
-        loadingProgress = 0.2f
-        kotlinx.coroutines.delay(200) // Engine initialization
+        // Start scene initialization in background
+        // This launches asynchronously, allowing UI animations to continue
+        scene.initializeScene()
+                
+        // Poll for readiness without blocking the UI thread
+        while (!scene.isReady()) {
+            delay(100) // Check every 100ms instead of 50ms to reduce polling frequency
+        }
         
-        loadingProgress = 0.4f 
-        kotlinx.coroutines.delay(300) // Model loading
-        
-        loadingProgress = 0.6f
-        kotlinx.coroutines.delay(200) // Environment loading
-        
-        loadingProgress = 0.8f
-        kotlinx.coroutines.delay(300) // Scene setup
-        
-        loadingProgress = 1.0f
-        kotlinx.coroutines.delay(100) // Final initialization
-        
+        // Small delay for smooth transition
+        delay(200)
         isSceneLoading = false
     }
 
@@ -170,14 +165,25 @@ fun Satellite3DPanel(
             .fillMaxSize()
             .background(Color.Black) // Prevent white background during animation
     ) {
-        if (isSceneLoading) {
-            // Show loading screen
+        // Loading Screen with fade out animation
+        AnimatedVisibility(
+            visible = isSceneLoading,
+            exit = fadeOut(
+                animationSpec = tween(300) // Smooth fade out over 300ms
+            )
+        ) {
             Scene3DLoadingScreen(
-                progress = loadingProgress,
                 modifier = Modifier.fillMaxSize()
             )
-        } else {
-            // Show the actual 3D scene
+        }
+        
+        // 3D Scene with fade in animation
+        AnimatedVisibility(
+            visible = !isSceneLoading,
+            enter = fadeIn(
+                animationSpec = tween(300) // Smooth fade in over 300ms
+            )
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
