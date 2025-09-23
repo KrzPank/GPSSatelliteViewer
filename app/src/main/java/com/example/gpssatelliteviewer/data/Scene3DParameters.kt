@@ -28,16 +28,16 @@ data class Scene3DParameters(
     var environmentIntensity: Float = 1.0f,
     
     // Camera Parameters
-    var cameraDistance: Float = 3.0f,
+    var startingCameraLocation: Float3 = Float3(0.0f, 0.0f, 3.0f),
 
     // Performance Parameters
     var enableLevelOfDetail: Boolean = true,
     var enableOcclusion: Boolean = false,
     
     // Rendering Quality Parameters - High Quality Preset
-    var hdrColorBufferQuality: QualityLevel = QualityLevel.HIGH,
+    var hdrColorBufferQuality: QualityLevel = QualityLevel.MEDIUM,
     var dynamicResolutionEnabled: Boolean = true,
-    var dynamicResolutionQuality: QualityLevel = QualityLevel.HIGH,
+    var dynamicResolutionQuality: QualityLevel = QualityLevel.MEDIUM,
     var msaaEnabled: Boolean = true,
     var fxaaEnabled: Boolean = false,
     var ambientOcclusionEnabled: Boolean = true,
@@ -85,11 +85,7 @@ class Scene3DParametersState {
     fun updateLightIntensity(intensity: Float) {
         parameters = parameters.copy(lightIntensity = intensity)
     }
-    
-    fun updateLightColor(color: Float3) {
-        parameters = parameters.copy(lightColor = color)
-    }
-    
+
     fun updateLightColor(red: Float, green: Float, blue: Float) {
         parameters = parameters.copy(lightColor = Float3(red, green, blue))
     }
