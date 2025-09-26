@@ -346,22 +346,3 @@ fun Satellite3DPanel(
         }
     }
 }
-
-
-/* *** INFORMATION CHECK WORKS ***
-Text(
-    text = gnssCapabilities.toString(),
-    modifier = Modifier.Companion.padding(8.dp)
-)
-if (navMessage != null) {
-    Text(
-        text = navMessage.toString(),
-        modifier = Modifier.Companion.padding((8.dp))
-    )
-} else {
-    Text(
-        text = "Waiting for navigation messages...",
-        modifier = Modifier.Companion.padding(8.dp)
-    )
-}
-*/

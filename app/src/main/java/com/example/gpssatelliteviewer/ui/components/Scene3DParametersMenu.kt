@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.data.Scene3DParameters
 import com.example.gpssatelliteviewer.data.Scene3DParametersState
+import com.google.android.filament.LightManager
 import kotlin.math.log10
 import kotlin.math.pow
 
@@ -102,8 +103,8 @@ fun Scene3DParametersMenu(
             )
 
             // Light Falloff (for point/spot lights)
-            if (params.lightType == Scene3DParameters.LightType.POINT ||
-                params.lightType == Scene3DParameters.LightType.SPOT) {
+            if (params.lightType == LightManager.Type.POINT ||
+                params.lightType == LightManager.Type.SPOT) {
                 SliderParameter(
                     label = "Light Falloff",
                     value = params.lightFalloff,
@@ -257,10 +258,28 @@ fun ColorParameter(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LightTypeSelector(
-    currentType: Scene3DParameters.LightType,
-    onTypeChanged: (Scene3DParameters.LightType) -> Unit
+    currentType: LightManager.Type,
+    onTypeChanged: (LightManager.Type) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    
+    // Helper function to get display name for light types
+    fun getLightTypeDisplayName(type: LightManager.Type): String {
+        return when (type) {
+            LightManager.Type.DIRECTIONAL -> "Directional Light"
+            LightManager.Type.POINT -> "Point Light"
+            LightManager.Type.SPOT -> "Spot Light"
+            LightManager.Type.SUN -> "Sun Light"
+            else -> "Unknown"
+        }
+    }
+    
+    // Available light types (directional, point, spot as requested)
+    val availableTypes = listOf(
+        LightManager.Type.DIRECTIONAL,
+        LightManager.Type.POINT,
+        LightManager.Type.SPOT
+    )
 
     Column {
         Text(text = "Light Type", color = Color.White, fontSize = 14.sp)
@@ -270,7 +289,7 @@ fun LightTypeSelector(
             onExpandedChange = { expanded = !expanded }
         ) {
             OutlinedTextField(
-                value = currentType.displayName,
+                value = getLightTypeDisplayName(currentType),
                 onValueChange = { },
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
@@ -289,9 +308,9 @@ fun LightTypeSelector(
                 expanded = expanded,
                 onDismissRequest = { expanded = false }
             ) {
-                Scene3DParameters.LightType.entries.forEach { type ->
+                availableTypes.forEach { type ->
                     DropdownMenuItem(
-                        text = { Text(type.displayName) },
+                        text = { Text(getLightTypeDisplayName(type)) },
                         onClick = {
                             onTypeChanged(type)
                             expanded = false

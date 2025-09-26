@@ -3,6 +3,7 @@ package com.example.gpssatelliteviewer.data
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import com.google.android.filament.LightManager
 import dev.romainguy.kotlin.math.Float3
 
 /**
@@ -13,7 +14,7 @@ data class Scene3DParameters(
     var lightIntensity: Float = 10_000_000.0f,
     var lightColor: Float3 = Float3(1.0f, 1.0f, 1.0f), // RGB white
     var lightFalloff: Float = 1000.0f,
-    var lightType: LightType = LightType.POINT,
+    var lightType: LightManager.Type = LightManager.Type.POINT,
     
     // Earth Model Parameters
     var earthModelPath: String = "models/NASA_EARTH.glb",
@@ -45,13 +46,6 @@ data class Scene3DParameters(
     var screenSpaceReflectionsEnabled: Boolean = false, // Disabled for better performance
     var temporalAntiAliasingEnabled: Boolean = false
 ) {
-    enum class LightType(val displayName: String) {
-        POINT("Point Light"),
-        DIRECTIONAL("Directional Light"),
-        SPOT("Spot Light"),
-        SUN("Sun Light")
-    }
-    
     enum class QualityLevel(val displayName: String) {
         LOW("Low"),
         MEDIUM("Medium"),
@@ -90,7 +84,7 @@ class Scene3DParametersState {
         parameters = parameters.copy(lightColor = Float3(red, green, blue))
     }
     
-    fun updateLightType(type: Scene3DParameters.LightType) {
+    fun updateLightType(type: LightManager.Type) {
         parameters = parameters.copy(lightType = type)
     }
     
