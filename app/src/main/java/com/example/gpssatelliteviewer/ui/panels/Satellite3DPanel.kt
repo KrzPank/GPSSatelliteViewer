@@ -62,6 +62,7 @@ import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.data.Scene3DParametersState
 import com.example.gpssatelliteviewer.ui.components.Scene3DLoadingScreen
 import com.example.gpssatelliteviewer.ui.components.Scene3DParametersMenu
+import com.example.gpssatelliteviewer.ui.components.SatelliteFilterMenu
 import com.example.gpssatelliteviewer.utils.CoordinateConversion
 import com.example.gpssatelliteviewer.utils.HideSystemUI
 import com.example.gpssatelliteviewer.scene3d.Scene3D
@@ -168,7 +169,6 @@ fun Satellite3DPanel(
                 animationSpec = tween(500) // Smooth fade out
             )
         ) {
-            scene.initializeScene()
             Scene3DLoadingScreen(
                 modifier = Modifier.fillMaxSize()
             )
@@ -238,86 +238,14 @@ fun Satellite3DPanel(
                     when (selectedTab) {
                         // Satellites Tab Content
                         0 -> {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .absolutePadding(0.dp, 10.dp, 10.dp, 15.dp)
-                                    .verticalScroll(scrollState),
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
-                            ) {
-                                Spacer(Modifier.height(2.dp))
-                                Text("Double tap to open/close menu", color = Color.White)
-                                Button(
-                                    onClick = { navController.navigate("LocationInfoPanel") },
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text("Location Panel")
-                                }
-                                Spacer(Modifier.height(5.dp))
-                                Text("Constellations", color = Color.White)
-
-                                val allConstellations =
-                                    satelliteList.map { it.constellation }.distinct()
-
-                                // Select All / Deselect All row
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Button(
-                                        onClick = {
-                                            selectedConstellations.addAll(allConstellations)
-                                        },
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text("Select All")
-                                    }
-                                    Button(
-                                        onClick = { selectedConstellations.clear() },
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text("Deselect All")
-                                    }
-                                }
-
-                                // Individual constellation checkboxes
-                                allConstellations.forEach { constellation ->
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier
-                                    ) {
-                                        Checkbox(
-                                            checked = selectedConstellations.contains(constellation),
-                                            onCheckedChange = { checked ->
-                                                if (checked) selectedConstellations.add(
-                                                    constellation
-                                                )
-                                                else selectedConstellations.remove(constellation)
-                                            },
-                                            colors = CheckboxDefaults.colors(
-                                                checkmarkColor = Color.White,
-                                                uncheckedColor = Color.White,
-                                                checkedColor = Color.Green
-                                            )
-                                        )
-                                        Text(constellation, color = Color.White)
-                                    }
-                                }
-
-                                // Only show satellites used in fix
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Checkbox(
-                                        checked = onlyUsedInFix,
-                                        onCheckedChange = { onlyUsedInFix = it },
-                                        colors = CheckboxDefaults.colors(
-                                            checkmarkColor = Color.White,
-                                            uncheckedColor = Color.White,
-                                            checkedColor = Color.Green
-                                        )
-                                    )
-                                    Text("Only in fix", color = Color.White)
-                                }
-                            }
+                            SatelliteFilterMenu(
+                                satelliteList = satelliteList,
+                                selectedConstellations = selectedConstellations,
+                                onlyUsedInFix = onlyUsedInFix,
+                                onOnlyUsedInFixChanged = { onlyUsedInFix = it },
+                                navController = navController,
+                                modifier = Modifier.fillMaxSize()
+                            )
                         }
                         // Scene3D Parameters Tab Content
                         1 -> {

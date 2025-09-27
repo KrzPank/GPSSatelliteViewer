@@ -6,6 +6,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +19,7 @@ import com.example.gpssatelliteviewer.data.Scene3DParametersState
 import com.google.android.filament.LightManager
 import kotlin.math.log10
 import kotlin.math.pow
+import com.example.gpssatelliteviewer.utils.ParameterSection
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +45,7 @@ fun Scene3DParametersMenu(
             fontWeight = FontWeight.Bold
         )
 
-        Divider(color = Color.Gray, thickness = 1.dp)
+        HorizontalDivider(thickness = 1.dp, color = Color.Gray)
 
         // Control buttons
         Row(
@@ -56,7 +58,7 @@ fun Scene3DParametersMenu(
                     onParametersChanged(parametersState.parameters)
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBD1A1A)) // Muted dark red
             ) {
                 Text("Reset", color = Color.White, fontSize = 12.sp)
             }
@@ -68,26 +70,17 @@ fun Scene3DParametersMenu(
         ParameterSection("Light Parameters") {
             val params = parametersState.parameters
 
-            // Light Type
-            LightTypeSelector(
-                currentType = params.lightType,
-                onTypeChanged = {
-                    parametersState.updateLightType(it)
-                    onParametersChanged(parametersState.parameters)
-                }
-            )
-
             // Light Intensity (Logarithmic)
             LogarithmicSliderParameter(
                 label = "Light Intensity",
                 value = params.lightIntensity,
                 minValue = 10_000f,
-                maxValue = 50_000_000f,
+                maxValue = 100_000_000f,
                 onValueChange = {
                     parametersState.updateLightIntensity(it)
                     onParametersChanged(parametersState.parameters)
                 },
-                valueFormatter = { "${(it / 1_000_000f).format(1)}M" }
+                valueFormatter = { "${(it / 100_000f).format(1)}e5" }
             )
 
             // Light Color
@@ -101,21 +94,6 @@ fun Scene3DParametersMenu(
                     onParametersChanged(parametersState.parameters)
                 }
             )
-
-            // Light Falloff (for point/spot lights)
-            if (params.lightType == LightManager.Type.POINT ||
-                params.lightType == LightManager.Type.SPOT) {
-                SliderParameter(
-                    label = "Light Falloff",
-                    value = params.lightFalloff,
-                    valueRange = 10f..5000f,
-                    onValueChange = {
-                        parametersState.updateLightFalloff(it)
-                        onParametersChanged(parametersState.parameters)
-                    },
-                    valueFormatter = { "${it.format(0)}m" }
-                )
-            }
         }
 
         // Earth Model Parameters Section
@@ -132,7 +110,6 @@ fun Scene3DParametersMenu(
                     onParametersChanged(parametersState.parameters)
                 }
             )
-
         }
 
         // Satellite Parameters Section
@@ -149,31 +126,6 @@ fun Scene3DParametersMenu(
                     onParametersChanged(parametersState.parameters)
                 }
             )
-        }
-    }
-}
-
-@Composable
-fun ParameterSection(
-    title: String,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0x33FFFFFF))
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = title,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp
-            )
-            content()
         }
     }
 }
@@ -373,36 +325,6 @@ fun ModelSelector(
         }
     }
 }
-
-@Composable
-fun CheckboxParameter(
-    label: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = label,
-            color = Color.White,
-            fontSize = 14.sp,
-            modifier = Modifier.weight(1f)
-        )
-        Checkbox(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = CheckboxDefaults.colors(
-                checkmarkColor = Color.White,
-                uncheckedColor = Color.White,
-                checkedColor = Color.Green
-            )
-        )
-    }
-}
-
 @Composable
 fun LogarithmicSliderParameter(
     label: String,

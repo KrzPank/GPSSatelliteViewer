@@ -221,21 +221,21 @@ class SatelliteManager(
     }
 
     /**
-     * Get current statistics about satellite management
+     * Get current statistics about satellite management temp?
      */
     fun getStats(): SatelliteStats {
         return SatelliteStats(
             activeSatellites = activeSatelliteNodes.size,
             pooledNodes = satelliteNodePool.size,
             totalConstellations = activeSatelliteNodes.values
-                .mapNotNull { node -> 
+                .mapNotNull { node ->
                     // This would require storing constellation info with the node
                     // For now, return approximate count based on typical distributions
                     null
                 }.distinct().size
         )
     }
-    
+
     /**
      * Data class for satellite statistics
      */

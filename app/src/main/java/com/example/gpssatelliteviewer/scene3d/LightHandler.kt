@@ -2,327 +2,194 @@ package com.example.gpssatelliteviewer.scene3d
 
 import android.util.Log
 import com.example.gpssatelliteviewer.data.Scene3DParameters
+import com.example.gpssatelliteviewer.data.LightParameters
 import com.google.android.filament.Engine
 import com.google.android.filament.LightManager
+import com.google.android.filament.EntityManager
 import dev.romainguy.kotlin.math.Float3
-import io.github.sceneview.FilamentEntity
 import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.LightNode
 import io.github.sceneview.node.Node
-import com.google.android.filament.EntityManager
 import kotlin.math.sqrt
 
 class LightHandler(
     private val engine: Engine,
     private val centerNode: Node,
     private val cameraNode: CameraNode,
-    private var parameters: Scene3DParameters
+    initialParameters: Scene3DParameters
 ) {
-    private var mainLight: LightNode = createMainLight()
-
-    // Removed synchronization - now fully synchronous
-    private var isLightBeingRecreated = false
-
+    private var sunLight: LightNode = createSunLight(initialParameters.getLightParameters())
+    
+    // Store only light parameters to avoid unnecessary recreations
+    private var currentLightParameters: LightParameters = initialParameters.getLightParameters()
+    
     // Light update optimization
     private var lastCameraPosition = Float3(0f, 0f, 0f)
-    private var lastLightUpdateFrame = 0
     private var frameCount = 0
-    private val lightUpdateThreshold = 0.1f // Minimum camera movement to trigger light update
-    private val lightUpdateInterval = 5 // Update light every 5 frames minimum
+    private val lightUpdateThreshold = 0.10f
+    private val lightUpdateInterval = 5
+    private var isLightBeingRecreated = false
+    
+    // Light recreation throttling
+    private var lastRecreationTime = 0L
+    private val minRecreationInterval = 16L // Minimum 16ms between recreations /60Hz
 
     /**
-     * Create the main light - supports directional, point, and spot lights
+     * Create a sun light from behind the camera
      */
-    private fun createMainLight(): LightNode {
-        // 1. Create an entity using Filament’s EntityManager
+    private fun createSunLight(lightParams: LightParameters): LightNode {
         val lightEntity = EntityManager.get().create()
 
-        // 2. Attach a Filament light component to it
-        val lightType = parameters.lightType
-        val lightPosition = calculateLightPosition(lightType)
-        val lightDirection = (centerNode.worldPosition - lightPosition).normalized()
-        val (r, g, b) = parameters.lightColor
-        val intensity = parameters.lightIntensity
-        val falloff = parameters.lightFalloff
+        // Sun light direction: from camera towards center (behind camera illuminating forward)
+        //val cameraToCenter = (centerNode.worldPosition - cameraNode.worldPosition).normalized()
+        //val lightDirection = cameraToCenter
 
-        val builder = LightManager.Builder(lightType)
-            .intensity(intensity)
-            .color(r, g, b)
-            .falloff(falloff)
+        // Calculate optimal light direction for good sphere shading
+        val lightDirection = calculateOptimalLightDirection()
 
-        when (lightType) {
-            LightManager.Type.DIRECTIONAL, LightManager.Type.SUN -> {
-                builder.direction(lightDirection.x, lightDirection.y, lightDirection.z)
-            }
-            LightManager.Type.POINT -> {
-                builder.position(lightPosition.x, lightPosition.y, lightPosition.z)
-            }
-            LightManager.Type.SPOT, LightManager.Type.FOCUSED_SPOT -> {
-                builder.position(lightPosition.x, lightPosition.y, lightPosition.z)
-                    .direction(lightDirection.x, lightDirection.y, lightDirection.z)
-                    .spotLightCone(
-                        Math.toRadians(30.0).toFloat(),
-                        Math.toRadians(45.0).toFloat()
-                    )
-            }
-        }
+        val builder = LightManager.Builder(lightParams.type)
+            .intensity(lightParams.intensity)
+            .color(lightParams.color.x, lightParams.color.y, lightParams.color.z)
+            .direction(lightDirection.x, lightDirection.y, lightDirection.z)
 
         builder.build(engine, lightEntity)
 
-        // 3. Create the LightNode with *the same entity*
         val lightNode = LightNode(engine, lightEntity).apply {
             centerNode.addChildNode(this)
         }
 
-        Log.d("Scene3D", "Light created entity=$lightEntity")
-
+        Log.d("Scene3D", "Sun light created from behind camera - color: ${lightParams.color.x}, ${lightParams.color.y}, ${lightParams.color.z}, direction: ${lightDirection.x}, ${lightDirection.y}, ${lightDirection.z}")
+        isLightBeingRecreated = false
         return lightNode
     }
 
     /**
-     * Recreate light with new parameters - fully synchronous approach
+     * Recreate sun light with new parameters
      */
-    private fun recreateLight() {
-        try {
-            isLightBeingRecreated = true
-            Log.d("Scene3D", "Starting light recreation for parameter update")
-
-            // Properly remove and destroy old light
-            centerNode.removeChildNode(mainLight)
-
-            try {
-                val oldEntityId = mainLight.entity
-                if (engine.entityManager.isAlive(oldEntityId)) {
-                    // Check if entity has light component before destroying
-                    val hasComponent = try {
-                        engine.lightManager.hasComponent(oldEntityId)
-                    } catch (e: IndexOutOfBoundsException) {
-                        Log.w("Scene3D", "Bounds error checking hasComponent during cleanup: ${e.message}")
-                        false
-                    }
-
-                    if (hasComponent) {
-                        try {
-                            engine.lightManager.destroy(oldEntityId)
-                            Log.d("Scene3D", "Successfully destroyed old light entity: $oldEntityId")
-                        } catch (e: IndexOutOfBoundsException) {
-                            Log.w("Scene3D", "Bounds error destroying light: ${e.message}")
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Log.w("Scene3D", "Error during old light cleanup: ${e.message}")
-            }
-
-            mainLight.destroy()
-
-            // Create new light
-            mainLight = createMainLight()
-            Log.d("Scene3D", "Light recreation completed successfully")
-
-        } catch (e: Exception) {
-            Log.e("Scene3D", "Failed to recreate light: ${e.message}")
-
-            // Simple fallback - create light with default parameters
-            try {
-                val originalParams = parameters
-                parameters = Scene3DParameters()
-                mainLight = createMainLight()
-                parameters = originalParams
-                Log.w("Scene3D", "Created fallback light with default parameters")
-            } catch (fallbackError: Exception) {
-                Log.e("Scene3D", "Failed to create fallback light: ${fallbackError.message}")
-            }
-        } finally {
-            isLightBeingRecreated = false
-        }
-    }
-
-    /**
-     * Check if light should be updated based on camera movement and frame count
-     */
-    private fun shouldUpdateLight(): Boolean {
-        frameCount++
-
-        // Skip if light is being recreated
+    private fun recreateSunLight(lightParams: LightParameters = currentLightParameters) {
         if (isLightBeingRecreated) {
-            return false
-        }
-
-        // Check frame interval and camera movement
-        val frameIntervalMet = frameCount - lastLightUpdateFrame >= lightUpdateInterval
-        val cameraMovement = (cameraNode.worldPosition - lastCameraPosition).length()
-
-        return frameIntervalMet && cameraMovement > lightUpdateThreshold
-    }
-
-    /**
-     * Calculate optimal light position - kept for consistency but not used for SUN light
-     */
-    private fun calculateLightPosition(lightType: LightManager.Type): Float3 {
-        return when (lightType) {
-            LightManager.Type.POINT,
-            LightManager.Type.SPOT,
-            LightManager.Type.FOCUSED_SPOT -> cameraNode.worldPosition + Float3(1.0f, 1.0f, 1.0f)
-            else -> Float3(0.0f, 1.0f, 0.0f)
-        }
-    }
-
-    /**
-     * Update light to follow camera and illuminate what user is looking at
-     */
-    private fun updateLight() {
-        if (isLightBeingRecreated) {
+            Log.w("Scene3D", "Light recreation already in progress, skipping")
             return
         }
-        try {
-            val entityId = mainLight.entity
+        isLightBeingRecreated = true
 
-            if (!engine.entityManager.isAlive(entityId)) {
-                Log.w("Scene3D", "updateLight skipped: entity $entityId not alive")
-                return
-            }
-            if (!engine.lightManager.hasComponent(entityId)) {
-                Log.w("Scene3D", "updateLight skipped: entity $entityId has no light component")
-                return
-            }
-                // Safely get light type with validation
-                val lightType = try {
-                    val retrievedType = engine.lightManager.getType(entityId)
-                    // Validate that the light type is one of the expected enum values
-                    when (retrievedType) {
-                        LightManager.Type.DIRECTIONAL,
-                        LightManager.Type.POINT,
-                        LightManager.Type.SPOT,
-                        LightManager.Type.FOCUSED_SPOT,
-                        LightManager.Type.SUN -> retrievedType
-                    }
-                } catch (e: IndexOutOfBoundsException) {
-                    Log.e("Scene3D", "Light manager index out of bounds: ${e.message}")
-                    // Fallback to parameters lightType
-                    parameters.lightType
-                } catch (e: Exception) {
-                    Log.e("Scene3D", "Failed to get light type: ${e.message}")
-                    return
-                }
+        // Remove and destroy old light
+        centerNode.removeChildNode(sunLight)
+        val oldEntityId = sunLight.entity
 
-            when (lightType) {
-                LightManager.Type.DIRECTIONAL, LightManager.Type.SUN -> {
-                    // For directional lights, update direction to always illuminate from behind camera
-                    val lightDirection =
-                        (centerNode.worldPosition - cameraNode.worldPosition).normalized()
-                    try {
-                        engine.lightManager.setDirection(
-                            entityId,
-                            lightDirection.x,
-                            lightDirection.y,
-                            lightDirection.z
-                        )
-                    } catch (e: IndexOutOfBoundsException) {
-                        Log.e(
-                            "Scene3D", "Light manager setDirection index out of bounds: ${e.message}"
-                        )
-                        return
-                    }
-                }
-
-                LightManager.Type.POINT -> {
-                    // For point lights, position behind camera
-                    val lightPosition = calculateLightPosition(lightType)
-                    try {
-                        engine.lightManager.setPosition(
-                            entityId,
-                            lightPosition.x,
-                            lightPosition.y,
-                            lightPosition.z
-                        )
-                    } catch (e: IndexOutOfBoundsException) {
-                        Log.e(
-                            "Scene3D", "Light manager setPosition index out of bounds: ${e.message}"
-                        )
-                        return
-                    }
-                }
-
-                LightManager.Type.SPOT, LightManager.Type.FOCUSED_SPOT -> {
-                    // For spot lights, position behind camera and point toward center
-                    val lightPosition = calculateLightPosition(lightType)
-                    val lightDirection = (centerNode.worldPosition - lightPosition).normalized()
-                    try {
-                        engine.lightManager.setPosition(
-                            entityId,
-                            lightPosition.x,
-                            lightPosition.y,
-                            lightPosition.z
-                        )
-                        engine.lightManager.setDirection(
-                            entityId,
-                            lightDirection.x,
-                            lightDirection.y,
-                            lightDirection.z
-                        )
-                    } catch (e: IndexOutOfBoundsException) {
-                        Log.e(
-                            "Scene3D",
-                            "Light manager setPosition/setDirection index out of bounds: ${e.message}"
-                        )
-                        return
-                    }
-                }
-            }
-
-            // Update tracking variables
-            lastCameraPosition = cameraNode.worldPosition
-            lastLightUpdateFrame = frameCount
-
-        } catch (e: Exception) {
-            Log.e("Scene3D", "Light update failed: ${e.message}")
+        if (engine.entityManager.isAlive(oldEntityId) &&
+            engine.lightManager.hasComponent(oldEntityId)
+        ) {
+            engine.lightManager.destroy(oldEntityId)
         }
+        sunLight.destroy()
+
+        // Create new sun light
+        sunLight = createSunLight(lightParams)
     }
 
     /**
-     * Update the light parameters when they change
+     * Update sun light direction to follow camera
      */
-    fun updateParameters(newParameters: Scene3DParameters) {
-        Log.d("Scene3D", "updateParameters called - intensity: ${newParameters.lightIntensity}, color: ${newParameters.lightColor}")
+    private fun updateSunLight() {
+        frameCount++
 
-        val oldParameters = parameters
-        parameters = newParameters
+        // Early exit if light is being recreated
+        if (isLightBeingRecreated) return
 
-        // Light is always initialized in constructor
+        // Check if enough frames have passed and camera moved
+        val frameIntervalMet = frameCount>= lightUpdateInterval
+        val cameraMovement = (cameraNode.worldPosition - lastCameraPosition).length()
+        val shouldUpdate = frameIntervalMet && cameraMovement > lightUpdateThreshold
 
-        // Check if any light properties changed
-        if (oldParameters.lightIntensity != newParameters.lightIntensity ||
-            oldParameters.lightColor != newParameters.lightColor ||
-            oldParameters.lightFalloff != newParameters.lightFalloff ||
-            oldParameters.lightType != newParameters.lightType) {
-            Log.d("Scene3D", "Light properties changed - recreating light")
-            //recreateLight()
-        } else {
-            Log.d("Scene3D", "No light property changes detected")
+        if (shouldUpdate) {
+            // Update tracking variables before recreation
+            lastCameraPosition = cameraNode.worldPosition
+            frameCount = 0
+
+            recreateSunLight()
+
+            Log.d("Scene3D", "Updated sun light direction due to camera movement, frameCount $frameCount")
         }
     }
 
+    fun updateParameters(newParameters: Scene3DParameters) {
+        val newLightParameters = newParameters.getLightParameters()
+
+        // Check if light parameters have actually changed
+        if (currentLightParameters == newLightParameters) {
+            Log.d("Scene3D", "Light parameters unchanged, skipping recreation")
+            return
+        }
+
+        // Prevent rapid recreation while already recreating
+        if (isLightBeingRecreated) {
+            Log.d("Scene3D", "Skipping updateParameters - light already being recreated")
+            return
+        }
+
+        // Time-based throttling to prevent too frequent recreations
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastRecreationTime < minRecreationInterval) {
+            Log.d("Scene3D", "Skipping updateParameters - too soon (${currentTime - lastRecreationTime}ms < ${minRecreationInterval}ms)")
+            return
+        }
+
+        Log.d("Scene3D", "Light parameters changed - recreating light with intensity: ${newLightParameters.intensity}, color: ${newLightParameters.color}")
+        lastRecreationTime = currentTime
+        currentLightParameters = newLightParameters
+
+        recreateSunLight(currentLightParameters)
+    }
+
     /**
-     * Called each frame to update light if needed
+     * Called each frame - update sun light direction when camera moves
      */
     fun onFrame() {
-        if (shouldUpdateLight()) {
-            updateLight()
-        }
+        updateSunLight()
     }
 
     /**
-     * Get the main light node for scene rendering
+     * Calculate optimal light direction for sphere shading
+     * Creates a light that illuminates from the upper-right relative to camera view,
+     * leaving shadows on the left side of spheres for better 3D depth perception
      */
-    fun getMainLightNode(): LightNode = mainLight
+    private fun calculateOptimalLightDirection(): Float3 {
+        val cameraPos = cameraNode.worldPosition
+        val centerPos = centerNode.worldPosition
+
+        val cameraForward = (centerPos - cameraPos).normalized()
+
+        val worldUp = Float3(0f, 1f, 0f)
+        val cameraRight = cross(cameraForward, worldUp).normalized()
+
+        val cameraUp = cross(cameraRight, cameraForward).normalized()
+
+        val lightDirection = (
+                cameraForward * 0.7f +      // Mostly forward
+                cameraRight * -0.5f +        // Some from the right
+                cameraUp * -0.3f             // A bit from above
+                ).normalized()
+
+        //Log.d("LightHandler", "Camera forward: $cameraForward")
+        //Log.d("LightHandler", "Camera right: $cameraRight")
+        //Log.d("LightHandler", "Camera up: $cameraUp")
+        //Log.d("LightHandler", "Calculated optimal light direction: $lightDirection")
+
+        return lightDirection
+    }
+
+    /**
+     * Get the sun light node for scene rendering
+     */
+    fun getSunLightNode(): LightNode = sunLight
 
     /**
      * Cleanup resources
      */
     fun cleanup() {
-        centerNode.removeChildNode(mainLight)
-        mainLight.destroy()
+        centerNode.removeChildNode(sunLight)
+        sunLight.destroy()
     }
 
     // Extension functions for Float3 vector operations
@@ -345,5 +212,13 @@ class LightHandler(
 
     private fun Float3.length(): Float {
         return sqrt(x * x + y * y + z * z)
+    }
+
+    private fun cross(a: Float3, b: Float3): Float3 {
+        return Float3(
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x
+        )
     }
 }

@@ -3,6 +3,9 @@ package com.example.gpssatelliteviewer.scene3d
 import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.data.Scene3DParameters
@@ -25,37 +28,39 @@ class Scene3D(
     private val view: View,
     private var parameters: Scene3DParameters = Scene3DParameters()
 ) {
+    // Management systems
+    private lateinit var mainLight: LightHandler
+    private lateinit var satellites: SatelliteManager
+    private lateinit var locationMarker: LocationMarkerManager
+
     private val centerNode = Node(engine)
     private val cameraNode = CameraNode(engine).apply {
         position = parameters.startingCameraLocation
         lookAt(centerNode)
         centerNode.addChildNode(this)
     }
-
-    // Management systems
-    private lateinit var mainLight: LightHandler
-    private lateinit var satellites: SatelliteManager
-    private lateinit var locationMarker: LocationMarkerManager
     private var earthNode: ModelNode? = null
 
-    // Loading state management - now fully synchronous
-    private var isSceneReady = false
+    private var _menuVisible by mutableStateOf(true)
+    
+    private var isSceneReady by mutableStateOf(false)
 
-    private var menuVisible: Boolean = true
-    fun isMenuVisible(): Boolean = menuVisible
+    private var hasInitialized = false
+    private var isInitializing = false
+
+    fun isMenuVisible(): Boolean = _menuVisible
+
     private fun toggleMenu() {
-        menuVisible = !menuVisible
+        _menuVisible = !_menuVisible
     }
 
     fun isReady(): Boolean = isSceneReady
-    private var hasInitialized = false
-    private var isInitializing = false
 
     /**
      * Initialize the 3D scene synchronously
      */
     fun initializeScene() {
-        // Simple synchronous initialization check
+        // Synchronous initialization check
         if (!hasInitialized && !isInitializing) {
             isInitializing = true
             try {
@@ -69,12 +74,6 @@ class Scene3D(
     }
 
     private fun setupScene() {
-        Log.d("Scene3D", "Starting scene setup...")
-        mainLight = LightHandler(engine, centerNode, cameraNode, parameters)
-        satellites = SatelliteManager(modelLoader, centerNode, parameters)
-        locationMarker = LocationMarkerManager(modelLoader, centerNode, parameters)
-
-        // Load Earth model
         try {
             earthNode = ModelNode(
                 modelInstance = modelLoader.createModelInstance(parameters.earthModelPath),
@@ -84,6 +83,10 @@ class Scene3D(
             Log.e("Scene3D", "Failed to load Earth model: ${e.message}")
         }
 
+        satellites = SatelliteManager(modelLoader, centerNode, parameters)
+        locationMarker = LocationMarkerManager(modelLoader, centerNode, parameters)
+        mainLight = LightHandler(engine, centerNode, cameraNode, parameters)
+
         // Apply visual effects
         try {
             applyVisualEffects(view)
@@ -91,7 +94,6 @@ class Scene3D(
             Log.e("Scene3D", "Failed to apply visual effects: ${e.message}")
         }
 
-        // Mark scene as ready
         isSceneReady = true
     }
 
@@ -111,11 +113,9 @@ class Scene3D(
             view = view,
             onFrame = {
                 updateLookAt()
-                // Don't update lights here - let them be managed by scene graph
                 mainLight.onFrame()
             },
-            // Don't provide mainLightNode to avoid conflicts with SceneView's lighting
-            mainLightNode = mainLight.getMainLightNode(),
+            mainLightNode = mainLight.getSunLightNode(),
             onGestureListener = rememberOnGestureListener(
                 onDoubleTap = { _, _ ->
                     toggleMenu()

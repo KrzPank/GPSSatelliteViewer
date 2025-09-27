@@ -7,19 +7,29 @@ import com.google.android.filament.LightManager
 import dev.romainguy.kotlin.math.Float3
 
 /**
+ * Light-specific parameters extracted for LightHandler
+ */
+data class LightParameters(
+    val intensity: Float,
+    val color: Float3,
+    val falloff: Float,
+    val type: LightManager.Type
+)
+
+/**
  * Data class containing all configurable parameters for Scene3D
  */
 data class Scene3DParameters(
     // Light Parameters
-    var lightIntensity: Float = 700_000.0f,
+    var lightIntensity: Float = 250_000.0f,
     var lightColor: Float3 = Float3(1.0f, 1.0f, 1.0f), // RGB white
     var lightFalloff: Float = 1000.0f,
-    var lightType: LightManager.Type = LightManager.Type.DIRECTIONAL,
-    
+    val lightType: LightManager.Type = LightManager.Type.DIRECTIONAL,
+
     // Earth Model Parameters
     var earthModelPath: String = "models/NASA_EARTH.glb",
     var earthScale: Float = 1.0f,
-    
+
     // Satellite Parameters
     var satelliteModelPath: String = "models/RedCircle.glb",
     var satelliteScale: Float = 0.05f,
@@ -27,18 +37,18 @@ data class Scene3DParameters(
     // Location marker Parameters
     var locationMarkerModelPath: String = "models/RedCircle.glb",
     var locationMarkerScale: Float = 0.1f,
-    
+
     // Environment Parameters
     var environmentPath: String = "envs/8k_stars_milky_way.hdr",
     var environmentIntensity: Float = 1.0f,
-    
-    // Camera Parameters
-    var startingCameraLocation: Float3 = Float3(0.0f, 0.0f, 3.0f),
+
+    // Camera Parameters - positioned for better Earth view
+    var startingCameraLocation: Float3 = Float3(0.0f, 1.5f, 4.0f),
 
     // Performance Parameters
     var enableLevelOfDetail: Boolean = true,
     var enableOcclusion: Boolean = false,
-    
+
     // Rendering Quality Parameters - Medium Quality Preset
     var hdrColorBufferQuality: QualityLevel = QualityLevel.MEDIUM,
     var dynamicResolutionEnabled: Boolean = true,
@@ -50,13 +60,25 @@ data class Scene3DParameters(
     var screenSpaceReflectionsEnabled: Boolean = false, // Disabled for better performance
     var temporalAntiAliasingEnabled: Boolean = false
 ) {
+    /**
+     * Extract light parameters for LightHandler
+     */
+    fun getLightParameters(): LightParameters {
+        return LightParameters(
+            intensity = lightIntensity,
+            color = lightColor,
+            falloff = lightFalloff,
+            type = lightType
+        )
+    }
+    
     enum class QualityLevel(val displayName: String) {
         LOW("Low"),
         MEDIUM("Medium"),
         HIGH("High"),
         ULTRA("Ultra")
     }
-    
+
     companion object {
         // Predefined earth model options
         val EARTH_MODEL_OPTIONS = listOf(
@@ -87,19 +109,19 @@ class Scene3DParametersState {
     fun updateLightColor(red: Float, green: Float, blue: Float) {
         parameters = parameters.copy(lightColor = Float3(red, green, blue))
     }
-    
+
     fun updateLightType(type: LightManager.Type) {
         parameters = parameters.copy(lightType = type)
     }
-    
+
     fun updateLightFalloff(falloff: Float) {
         parameters = parameters.copy(lightFalloff = falloff)
     }
-    
+
     fun updateEarthModel(path: String) {
         parameters = parameters.copy(earthModelPath = path)
     }
-    
+
     fun updateSatelliteModel(path: String) {
         parameters = parameters.copy(satelliteModelPath = path)
     }
