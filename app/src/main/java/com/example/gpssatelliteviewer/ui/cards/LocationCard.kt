@@ -16,7 +16,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+// Removed LaunchedEffect import
 import androidx.compose.runtime.remember
 
 import androidx.compose.ui.Modifier
@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.data.ListenerData
 import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.utils.CoordinateConversion
-import com.example.gpssatelliteviewer.utils.GPSStatusUtils
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.mapFixQuality
 import com.example.gpssatelliteviewer.utils.mapFixType
@@ -112,7 +111,7 @@ fun NMEALocationCard(
 
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
-fun AndroidApiLocation(
+fun AndroidApiLocationCard(
     locationAndroidApi: ListenerData,
     modifier: Modifier = Modifier
 ) {
@@ -147,22 +146,10 @@ fun AndroidApiLocation(
 }
 
 @Composable
-fun LoadingLocationText(baseText: String = "Waiting for location") {
-    val dotCount = remember { Animatable(0f) }
-
-    LaunchedEffect(Unit) {
-        while (true) {
-            dotCount.animateTo(
-                targetValue = (dotCount.value + 1) % 4,
-                animationSpec = tween(durationMillis = 500, easing = LinearEasing)
-            )
-        }
-    }
-
-    val dots = ".".repeat(dotCount.value.toInt())
+fun LoadingLocationTextCard(baseText: String = "Waiting for location") {
     Card {
         InfoRow(
-            label = "$baseText$dots",
+            label = "$baseText...",
             value = ""
         )
     }

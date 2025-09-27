@@ -141,7 +141,7 @@ object GPSStatusUtils {
             is GPSStatus.Good -> Color(0xFF8BC34A)       // Light Green
             is GPSStatus.Fair -> Color(0xFFFF9800)       // Orange
             is GPSStatus.Poor -> Color(0xFFFF5722)       // Red Orange
-            is GPSStatus.NoFix -> Color(0xFFF44336)      // Red             // Red (matches SNR 0-10)
+            is GPSStatus.NoFix -> Color(0xFFF44336)      // Red
             is GPSStatus.Searching -> Color(0xFF2196F3)  // Blue
             is GPSStatus.Disabled -> Color(0xFF9E9E9E)   // Gray
         }

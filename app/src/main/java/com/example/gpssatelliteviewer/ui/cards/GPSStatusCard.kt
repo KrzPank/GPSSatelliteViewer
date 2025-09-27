@@ -73,9 +73,7 @@ fun GPSStatusCard(
             Spacer(Modifier.height(8.dp))
             
             // GPS Status Header
-            GPSStatusUtils.GPSStatusHeader(
-                gpsStatus = gpsStatus,
-                )
+            GPSStatusUtils.GPSStatusHeader(gpsStatus = gpsStatus)
             
             Spacer(modifier = Modifier.height(16.dp))
 

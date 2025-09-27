@@ -35,34 +35,12 @@ fun Scene3DLoadingScreen(
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "loading")
     
-    // Pulsing animation for the title
-    val titleAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.6f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "titlePulse"
-    )
-    
-    // Floating animation for satellite dots
-    val satelliteOffset by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 20f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "satelliteFloat"
-    )
-    
     // Rotation animation for orbital rings
     val orbitalRotation by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(8000, easing = LinearEasing)
+            animation = tween(5000, easing = LinearEasing)
         ),
         label = "orbitalRotation"
     )
@@ -82,8 +60,7 @@ fun Scene3DLoadingScreen(
                 text = "GNSS Monitor",
                 color = Color.White,
                 fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.graphicsLayer(alpha = titleAlpha)
+                fontWeight = FontWeight.Bold
             )
             
             Spacer(modifier = Modifier.height(32.dp))
@@ -112,24 +89,7 @@ fun Scene3DLoadingScreen(
                         progress = 0.75f
                     )
                 }
-                
-                // Floating satellite dots
-                repeat(4) { index ->
-                    val angle = (index * 90f) + orbitalRotation
-                    val radius = 45f
-                    val x = radius * kotlin.math.cos(Math.toRadians(angle.toDouble())).toFloat()
-                    val y = radius * kotlin.math.sin(Math.toRadians(angle.toDouble())).toFloat() + satelliteOffset * kotlin.math.sin(Math.toRadians((index * 45f).toDouble())).toFloat()
-                    
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .graphicsLayer {
-                                translationX = x
-                                translationY = y
-                            }
-                            .background(Color.Green, CircleShape)
-                    )
-                }
+
             }
             
             Spacer(modifier = Modifier.height(24.dp))
@@ -149,43 +109,13 @@ fun Scene3DLoadingScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Initializing 3D Scene",
+                    text = "Initializing 3D Scene...",
                     color = Color.White,
                     fontSize = 18.sp
                 )
-                
-                repeat(3) { index ->
-                    val dotAlpha by infiniteTransition.animateFloat(
-                        initialValue = 0.3f,
-                        targetValue = 1f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(600),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "dot$index"
-                    )
-                    
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = ".",
-                        color = Color.White.copy(alpha = dotAlpha),
-                        fontSize = 18.sp,
-                        modifier = Modifier.graphicsLayer {
-                            // Stagger the animation timing for each dot
-                            val delay = index * 200L
-                        }
-                    )
-                }
             }
             
             Spacer(modifier = Modifier.height(32.dp))
-            
-            // Subtitle with helpful info
-            Text(
-                text = "Loading satellites and Earth models...",
-                color = Color.White.copy(alpha = 0.7f),
-                fontSize = 14.sp
-            )
         }
     }
 }

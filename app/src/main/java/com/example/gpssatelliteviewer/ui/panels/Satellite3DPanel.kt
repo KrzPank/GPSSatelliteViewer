@@ -30,7 +30,6 @@ import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -52,6 +51,8 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.LaunchedEffect
+// Removed LaunchedEffect import
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
@@ -63,7 +64,7 @@ import com.example.gpssatelliteviewer.ui.components.Scene3DLoadingScreen
 import com.example.gpssatelliteviewer.ui.components.Scene3DParametersMenu
 import com.example.gpssatelliteviewer.utils.CoordinateConversion
 import com.example.gpssatelliteviewer.utils.HideSystemUI
-import com.example.gpssatelliteviewer.utils.Scene3D
+import com.example.gpssatelliteviewer.scene3d.Scene3D
 import com.example.gpssatelliteviewer.utils.findActivity
 import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberEnvironmentLoader
@@ -108,8 +109,8 @@ fun Satellite3DPanel(
     val parametersState = remember { Scene3DParametersState() }
     
     // Loading state for Scene3D
-    var isSceneLoading by remember { mutableStateOf(true) }
-
+    var isSceneReady by remember { mutableStateOf(false) }
+    
     val scene = remember {
         Scene3D(
             modifier = Modifier.fillMaxSize(),
@@ -124,22 +125,7 @@ fun Satellite3DPanel(
     val selectedConstellations = remember { mutableStateListOf<String>() }
     var onlyUsedInFix by remember { mutableStateOf(false) }
     val firstView = remember { mutableStateOf(true) }
-    var selectedTab by remember { mutableStateOf(0) }
-
-    LaunchedEffect(scene) {
-        // Start scene initialization in background
-        // This launches asynchronously, allowing UI animations to continue
-        scene.initializeScene()
-                
-        // Poll for readiness without blocking the UI thread
-        while (!scene.isReady()) {
-            delay(100) // Check every 100ms instead of 50ms to reduce polling frequency
-        }
-        
-        // Small delay for smooth transition
-        delay(200)
-        isSceneLoading = false
-    }
+    var selectedTab by remember { mutableIntStateOf(0) }
 
     if (firstView.value) {
         selectedConstellations.addAll(satelliteList.map { it.constellation }.distinct())
@@ -156,30 +142,41 @@ fun Satellite3DPanel(
     val totalMenuWidth = menuWidth + safeInsets.calculateLeftPadding(LayoutDirection.Ltr)
 
     val sceneOffsetX by animateDpAsState(
-        targetValue = if (scene.menuVisible) totalMenuWidth else 0.dp,
+        targetValue = if (scene.isMenuVisible()) totalMenuWidth else 0.dp,
         animationSpec = tween(300) // Match menu animation timing
     )
+
+    LaunchedEffect(scene) {
+        scene.initializeScene()
+
+        while (!scene.isReady()) {
+            delay(100)
+        }
+
+        delay(200)
+        isSceneReady = true
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black) // Prevent white background during animation
     ) {
-        // Loading Screen with fade out animation
         AnimatedVisibility(
-            visible = isSceneLoading,
+            visible = !isSceneReady,
             exit = fadeOut(
-                animationSpec = tween(300) // Smooth fade out over 300ms
+                animationSpec = tween(500) // Smooth fade out
             )
         ) {
+            scene.initializeScene()
             Scene3DLoadingScreen(
                 modifier = Modifier.fillMaxSize()
             )
         }
-        
+
         // 3D Scene with fade in animation
         AnimatedVisibility(
-            visible = !isSceneLoading,
+            visible = isSceneReady,
             enter = fadeIn(
                 animationSpec = tween(300) // Smooth fade in over 300ms
             )
@@ -190,152 +187,152 @@ fun Satellite3DPanel(
                     .offset(x = sceneOffsetX/2)
             ) {
                 scene.Render()
-                scene.updateSatellites(filteredSatellites, userLocation)
+                scene.updateScene(filteredSatellites, userLocation)
             }
         }
 
         val scrollState = rememberScrollState()
         // Left-side overlay menu with tabs - only show when scene is loaded
-        if (!isSceneLoading) {
+        if (isSceneReady) {
             AnimatedVisibility(
-                visible = scene.menuVisible,
-            enter = slideInHorizontally(
-                initialOffsetX = { -it },
-                animationSpec = tween(300)
-            ),
-            exit = slideOutHorizontally(
-                targetOffsetX = { -it },
-                animationSpec = tween(300)
-            )
-        ) {
-            val safeInsets = WindowInsets.safeDrawing.asPaddingValues()
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .requiredWidth(totalMenuWidth)
-                    .background(Color(0xFF000000)) // Solid black background
-                    .padding(safeInsets)
+                visible = scene.isMenuVisible(),
+                enter = slideInHorizontally(
+                    initialOffsetX = { -it },
+                    animationSpec = tween(300)
+                ),
+                exit = slideOutHorizontally(
+                    targetOffsetX = { -it },
+                    animationSpec = tween(300)
+                )
             ) {
-                // Tab Row
-                TabRow(
-                    selectedTabIndex = selectedTab,
-                    containerColor = Color.Transparent,
-                    contentColor = Color.White,
-                    indicator = { tabPositions ->
-                        TabRowDefaults.Indicator(
-                            Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                            color = Color.Green
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .requiredWidth(totalMenuWidth)
+                        .background(Color(0xFF000000)) // Solid black background
+                        .padding(safeInsets)
+                ) {
+                    TabRow(
+                        selectedTabIndex = selectedTab,
+                        containerColor = Color.Transparent,
+                        contentColor = Color.White,
+                        indicator = { tabPositions ->
+                            TabRowDefaults.Indicator(
+                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
+                                color = Color.Green
+                            )
+                        }
+                    ) {
+                        Tab(
+                            selected = selectedTab == 0,
+                            onClick = { selectedTab = 0 },
+                            text = { Text("Satellites", color = Color.White) }
+                        )
+                        Tab(
+                            selected = selectedTab == 1,
+                            onClick = { selectedTab = 1 },
+                            text = { Text("Scene 3D", color = Color.White) }
                         )
                     }
-                ) {
-                    Tab(
-                        selected = selectedTab == 0,
-                        onClick = { selectedTab = 0 },
-                        text = { Text("Satellites", color = Color.White) }
-                    )
-                    Tab(
-                        selected = selectedTab == 1,
-                        onClick = { selectedTab = 1 },
-                        text = { Text("Scene 3D", color = Color.White) }
-                    )
-                }
-                
-                // Tab Content
-                when (selectedTab) {
-                    0 -> {
+
+                    when (selectedTab) {
                         // Satellites Tab Content
-                        Column(
-                            modifier = Modifier
-                                .fillMaxHeight()
-                                .absolutePadding(0.dp, 10.dp, 10.dp, 15.dp)
-                                .verticalScroll(scrollState),
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            Spacer(Modifier.height(2.dp))
-                            Text("Double tap to open/close menu", color = Color.White)
-                            Button(
-                                onClick = { navController.navigate("LocationInfoPanel") },
-                                modifier = Modifier.fillMaxWidth()
+                        0 -> {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .absolutePadding(0.dp, 10.dp, 10.dp, 15.dp)
+                                    .verticalScroll(scrollState),
+                                verticalArrangement = Arrangement.spacedBy(2.dp)
                             ) {
-                                Text("Location Panel")
-                            }
-                            Spacer(Modifier.height(5.dp))
-                            Text("Constellations", color = Color.White)
-
-                            val allConstellations = satelliteList.map { it.constellation }.distinct()
-
-                            // Select All / Deselect All row
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
+                                Spacer(Modifier.height(2.dp))
+                                Text("Double tap to open/close menu", color = Color.White)
                                 Button(
-                                    onClick = {
-                                        selectedConstellations.addAll(allConstellations)
-                                    },
-                                    modifier = Modifier.weight(1f)
+                                    onClick = { navController.navigate("LocationInfoPanel") },
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text("Select All")
+                                    Text("Location Panel")
                                 }
-                                Button(
-                                    onClick = { selectedConstellations.clear() },
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text("Deselect All")
-                                }
-                            }
+                                Spacer(Modifier.height(5.dp))
+                                Text("Constellations", color = Color.White)
 
-                            // Individual constellation checkboxes
-                            allConstellations.forEach { constellation ->
+                                val allConstellations =
+                                    satelliteList.map { it.constellation }.distinct()
+
+                                // Select All / Deselect All row
                                 Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Checkbox(
-                                        checked = selectedConstellations.contains(constellation),
-                                        onCheckedChange = { checked ->
-                                            if (checked) selectedConstellations.add(constellation)
-                                            else selectedConstellations.remove(constellation)
+                                    Button(
+                                        onClick = {
+                                            selectedConstellations.addAll(allConstellations)
                                         },
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text("Select All")
+                                    }
+                                    Button(
+                                        onClick = { selectedConstellations.clear() },
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text("Deselect All")
+                                    }
+                                }
+
+                                // Individual constellation checkboxes
+                                allConstellations.forEach { constellation ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier
+                                    ) {
+                                        Checkbox(
+                                            checked = selectedConstellations.contains(constellation),
+                                            onCheckedChange = { checked ->
+                                                if (checked) selectedConstellations.add(
+                                                    constellation
+                                                )
+                                                else selectedConstellations.remove(constellation)
+                                            },
+                                            colors = CheckboxDefaults.colors(
+                                                checkmarkColor = Color.White,
+                                                uncheckedColor = Color.White,
+                                                checkedColor = Color.Green
+                                            )
+                                        )
+                                        Text(constellation, color = Color.White)
+                                    }
+                                }
+
+                                // Only show satellites used in fix
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Checkbox(
+                                        checked = onlyUsedInFix,
+                                        onCheckedChange = { onlyUsedInFix = it },
                                         colors = CheckboxDefaults.colors(
                                             checkmarkColor = Color.White,
                                             uncheckedColor = Color.White,
                                             checkedColor = Color.Green
                                         )
                                     )
-                                    Text(constellation, color = Color.White)
+                                    Text("Only in fix", color = Color.White)
                                 }
                             }
-
-                            // Only show satellites used in fix
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Checkbox(
-                                    checked = onlyUsedInFix,
-                                    onCheckedChange = { onlyUsedInFix = it },
-                                    colors = CheckboxDefaults.colors(
-                                        checkmarkColor = Color.White,
-                                        uncheckedColor = Color.White,
-                                        checkedColor = Color.Green
-                                    )
-                                )
-                                Text("Only in fix", color = Color.White)
-                            }
                         }
-                    }
-                    1 -> {
                         // Scene3D Parameters Tab Content
-                        Scene3DParametersMenu(
-                            parametersState = parametersState,
-                            onParametersChanged = { newParams ->
-                                scene.updateParameters(newParams)
-                            },
-                            modifier = Modifier.fillMaxSize()
-                        )
+                        1 -> {
+                            Scene3DParametersMenu(
+                                parametersState = parametersState,
+                                onParametersChanged = { newParams ->
+                                    scene.updateParameters(newParams)
+                                },
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
                     }
                 }
             }
         }
-        } // Close if (!isSceneLoading) condition
 
         DisposableEffect(Unit) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE

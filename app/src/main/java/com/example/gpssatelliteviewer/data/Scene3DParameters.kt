@@ -11,10 +11,10 @@ import dev.romainguy.kotlin.math.Float3
  */
 data class Scene3DParameters(
     // Light Parameters
-    var lightIntensity: Float = 10_000_000.0f,
+    var lightIntensity: Float = 700_000.0f,
     var lightColor: Float3 = Float3(1.0f, 1.0f, 1.0f), // RGB white
     var lightFalloff: Float = 1000.0f,
-    var lightType: LightManager.Type = LightManager.Type.POINT,
+    var lightType: LightManager.Type = LightManager.Type.DIRECTIONAL,
     
     // Earth Model Parameters
     var earthModelPath: String = "models/NASA_EARTH.glb",
@@ -23,6 +23,10 @@ data class Scene3DParameters(
     // Satellite Parameters
     var satelliteModelPath: String = "models/RedCircle.glb",
     var satelliteScale: Float = 0.05f,
+
+    // Location marker Parameters
+    var locationMarkerModelPath: String = "models/RedCircle.glb",
+    var locationMarkerScale: Float = 0.1f,
     
     // Environment Parameters
     var environmentPath: String = "envs/8k_stars_milky_way.hdr",

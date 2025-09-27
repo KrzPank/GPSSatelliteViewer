@@ -18,7 +18,6 @@ import io.github.sceneview.node.Node
 class SatelliteManager(
     private val modelLoader: ModelLoader,
     private val centerNode: Node,
-    private val cameraNode: CameraNode,
     private var parameters: Scene3DParameters
 ) {
     /*
@@ -82,7 +81,7 @@ class SatelliteManager(
     /**
      * Update satellite look-at behavior to always face camera
      */
-    fun updateLookAt() {
+    fun updateLookAt(cameraNode: CameraNode) {
         // Update orientation for all active satellite nodes
         activeSatelliteNodes.values.forEach { satellite ->
             satellite.lookAt(cameraNode.worldPosition)

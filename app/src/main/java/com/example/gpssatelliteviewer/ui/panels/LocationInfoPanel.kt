@@ -34,8 +34,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.gpssatelliteviewer.ui.cards.AndroidApiLocation
-import com.example.gpssatelliteviewer.ui.cards.LoadingLocationText
+import com.example.gpssatelliteviewer.ui.cards.AndroidApiLocationCard
+import com.example.gpssatelliteviewer.ui.cards.LoadingLocationTextCard
 import com.example.gpssatelliteviewer.ui.cards.NMEALocationCard
 import com.example.gpssatelliteviewer.ui.cards.GPSStatusCard
 
@@ -119,8 +119,8 @@ fun LocationInfoPanel(
             item {
                 when {
                     hasLocationNMEA -> NMEALocationCard(locationNMEA)
-                    hasLocationAndroidApi -> AndroidApiLocation(locationAndroidApi)
-                    else -> LoadingLocationText()
+                    hasLocationAndroidApi -> AndroidApiLocationCard(locationAndroidApi)
+                    else -> LoadingLocationTextCard()
                 }
             }
 
