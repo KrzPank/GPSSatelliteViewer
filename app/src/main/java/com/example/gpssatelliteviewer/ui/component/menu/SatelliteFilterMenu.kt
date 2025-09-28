@@ -34,6 +34,8 @@ fun SatelliteFilterMenu(
     selectedConstellations: MutableList<String>,
     onlyUsedInFix: Boolean,
     onOnlyUsedInFixChanged: (Boolean) -> Unit,
+    showLocationMarker: Boolean,
+    onShowLocationMarkerChanged: (Boolean) -> Unit,
     navController: NavController,
     modifier: Modifier = Modifier.Companion
 ) {
@@ -133,6 +135,13 @@ fun SatelliteFilterMenu(
                 checked = onlyUsedInFix,
                 onCheckedChange = onOnlyUsedInFixChanged,
                 description = "Show only satellites that contribute to position calculation"
+            )
+            
+            CustomCheckbox(
+                label = "Show location marker",
+                checked = showLocationMarker,
+                onCheckedChange = onShowLocationMarkerChanged,
+                description = "Display your current location marker in the 3D scene"
             )
         }
 

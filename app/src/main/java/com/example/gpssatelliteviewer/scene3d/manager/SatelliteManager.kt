@@ -2,7 +2,7 @@ package com.example.gpssatelliteviewer.scene3d.manager
 
 import android.util.Log
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.data.Scene3DParameters
+import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.loaders.ModelLoader

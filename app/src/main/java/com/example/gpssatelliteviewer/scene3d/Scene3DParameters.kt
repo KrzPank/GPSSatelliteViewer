@@ -1,7 +1,7 @@
-package com.example.gpssatelliteviewer.data
+package com.example.gpssatelliteviewer.scene3d
 
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.google.android.filament.LightManager
 import dev.romainguy.kotlin.math.Float3
@@ -71,7 +71,7 @@ data class Scene3DParameters(
             type = lightType
         )
     }
-    
+
     enum class QualityLevel(val displayName: String) {
         LOW("Low"),
         MEDIUM("Medium"),
@@ -86,7 +86,7 @@ data class Scene3DParameters(
             "models/Earth_base.glb" to "Base Earth",
             "models/NASA_EARTH.glb" to "NASA Earth"
         )
-        
+
         // Predefined satellite model options
         val SATELLITE_MODEL_OPTIONS = listOf(
             "models/RedCircle.glb" to "Red Circle",
@@ -108,14 +108,6 @@ class Scene3DParametersState {
 
     fun updateLightColor(red: Float, green: Float, blue: Float) {
         parameters = parameters.copy(lightColor = Float3(red, green, blue))
-    }
-
-    fun updateLightType(type: LightManager.Type) {
-        parameters = parameters.copy(lightType = type)
-    }
-
-    fun updateLightFalloff(falloff: Float) {
-        parameters = parameters.copy(lightFalloff = falloff)
     }
 
     fun updateEarthModel(path: String) {

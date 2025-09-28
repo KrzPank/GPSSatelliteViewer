@@ -1,6 +1,6 @@
 package com.example.gpssatelliteviewer.scene3d.manager
 
-import com.example.gpssatelliteviewer.data.Scene3DParameters
+import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.loaders.ModelLoader
@@ -14,6 +14,7 @@ class LocationMarkerManager(
     private var parameters: Scene3DParameters
 ) {
     private var locationMarkerNode: ModelNode = createLocationMarker()
+    private var isVisible: Boolean = true
 
     fun createLocationMarker(): ModelNode {
         val markerInstance = modelLoader.createModelInstance(parameters.locationMarkerModelPath)
@@ -39,9 +40,22 @@ class LocationMarkerManager(
 
         locationMarkerNode.position = scenePosition
     }
+    
+    fun setVisible(visible: Boolean) {
+        isVisible = visible
+        if (visible) {
+            if (locationMarkerNode.parent == null) centerNode.addChildNode(locationMarkerNode)
+        } else {
+            if (locationMarkerNode.parent != null) centerNode.removeChildNode(locationMarkerNode)
+        }
+    }
+    
+    fun isLocationMarkerVisible(): Boolean = isVisible
 
     fun updateLookAt(cameraNode: CameraNode) {
-        locationMarkerNode.lookAt(cameraNode.worldPosition)
+        if (isVisible && locationMarkerNode.parent != null) {
+            locationMarkerNode.lookAt(cameraNode.worldPosition)
+        }
     }
 
     fun cleanup() {

@@ -8,7 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.data.Scene3DParameters
+import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.manager.LightHandler
 import com.example.gpssatelliteviewer.scene3d.manager.LocationMarkerManager
 import com.example.gpssatelliteviewer.scene3d.manager.SatelliteManager
@@ -46,7 +46,7 @@ class Scene3D(
 
     private var _menuVisible by mutableStateOf(true)
     
-    private var isSceneReady by mutableStateOf(false)
+    private var _isSceneReady by mutableStateOf(false)
 
     private var hasInitialized = false
     private var isInitializing = false
@@ -57,7 +57,7 @@ class Scene3D(
         _menuVisible = !_menuVisible
     }
 
-    fun isReady(): Boolean = isSceneReady
+    fun isReady(): Boolean = _isSceneReady
 
     /**
      * Initialize the 3D scene synchronously
@@ -69,7 +69,7 @@ class Scene3D(
             try {
                 setupScene()
                 hasInitialized = true
-                isSceneReady = true
+                _isSceneReady = true
             } finally {
                 isInitializing = false
             }
@@ -97,7 +97,7 @@ class Scene3D(
             Log.e("Scene3D", "Failed to apply visual effects: ${e.message}")
         }
 
-        isSceneReady = true
+        _isSceneReady = true
     }
 
     @Composable
@@ -131,13 +131,20 @@ class Scene3D(
         cameraNode.lookAt(centerNode)
 
         satellites.updateLookAt(cameraNode)
-
         locationMarker.updateLookAt(cameraNode)
     }
 
     fun updateScene(satelliteList: List<GNSSStatusData>, userLocation: Triple<Float, Float, Float>) {
         satellites.updateSatellites(satelliteList, userLocation)
         locationMarker.updateLocationMarker(userLocation)
+    }
+    
+    fun setLocationMarkerVisible(visible: Boolean) {
+        locationMarker.setVisible(visible)
+    }
+    
+    fun isLocationMarkerVisible(): Boolean {
+        return locationMarker.isLocationMarkerVisible()
     }
 
     /**

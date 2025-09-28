@@ -3,6 +3,7 @@ package com.example.gpssatelliteviewer.utils
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
@@ -33,6 +34,18 @@ fun HideSystemUI() {
                 controller.show(WindowInsetsCompat.Type.systemBars())
                 WindowCompat.setDecorFitsSystemWindows(window, true)
             }
+        }
+    }
+}
+
+@Composable
+fun LockOrientationLandscape() {
+    val activity = LocalActivity.current as? ComponentActivity
+
+    DisposableEffect(Unit) {
+        activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        onDispose {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
         }
     }
 }

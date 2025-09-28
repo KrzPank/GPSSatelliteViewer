@@ -45,14 +45,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.LayoutDirection
 import com.example.gpssatelliteviewer.data.NMEALocationData
-import com.example.gpssatelliteviewer.data.Scene3DParametersState
+import com.example.gpssatelliteviewer.scene3d.Scene3DParametersState
 import com.example.gpssatelliteviewer.ui.component.Scene3DLoadingScreen
 import com.example.gpssatelliteviewer.ui.component.menu.Scene3DParametersMenu
 import com.example.gpssatelliteviewer.ui.component.menu.SatelliteFilterMenu
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
-import com.example.gpssatelliteviewer.utils.HideSystemUI
 import com.example.gpssatelliteviewer.scene3d.Scene3D
-import com.example.gpssatelliteviewer.utils.findActivity
+import com.example.gpssatelliteviewer.utils.HideSystemUI
+import com.example.gpssatelliteviewer.utils.LockOrientationLandscape
 import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberModelLoader
@@ -69,8 +69,7 @@ fun Satellite3DScreen(
     locationNMEA: NMEALocationData
 ) {
     HideSystemUI()
-    val context = LocalContext.current
-    val activity = context.findActivity()
+    LockOrientationLandscape()
 
     val satelliteList by gnssViewModel.satelliteList.collectAsState()
 
@@ -108,6 +107,7 @@ fun Satellite3DScreen(
 
     val selectedConstellations = remember { mutableStateListOf<String>() }
     var onlyUsedInFix by remember { mutableStateOf(false) }
+    var showLocationMarker by remember { mutableStateOf(true) }
     val firstView = remember { mutableStateOf(true) }
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -128,19 +128,25 @@ fun Satellite3DScreen(
     val menuAnimationDuration = 300
     val sceneOffsetX by animateDpAsState(
         targetValue = if (scene.isMenuVisible()) totalMenuWidth else 0.dp,
-        //animationSpec = tween(menuAnimationDuration) // Match menu animation timing
     )
 
     LaunchedEffect(scene) {
         scene.initializeScene()
 
         while (!scene.isReady()) {
-            delay(100)
+            delay(50)
         }
 
         // Smooth transition not wanted but i don't know other way
         delay(200)
         isSceneReady = true
+    }
+    
+    // Handle location marker visibility changes
+    LaunchedEffect(showLocationMarker) {
+        if (isSceneReady) {
+            scene.setLocationMarkerVisible(showLocationMarker)
+        }
     }
 
     Box(
@@ -163,7 +169,7 @@ fun Satellite3DScreen(
         AnimatedVisibility(
             visible = isSceneReady,
             enter = fadeIn(
-                animationSpec = tween(menuAnimationDuration) // Match menu animation timing
+                animationSpec = tween(menuAnimationDuration)
             )
         ) {
             Box(
@@ -182,11 +188,11 @@ fun Satellite3DScreen(
                 visible = scene.isMenuVisible(),
                 enter = slideInHorizontally(
                     initialOffsetX = { -it },
-                    animationSpec = tween(menuAnimationDuration) // Match menu animation timing
+                    animationSpec = tween(menuAnimationDuration)
                 ),
                 exit = slideOutHorizontally(
                     targetOffsetX = { -it },
-                    animationSpec = tween(menuAnimationDuration) // Match menu animation timing
+                    animationSpec = tween(menuAnimationDuration)
                 )
             ) {
                 Column(
@@ -194,7 +200,12 @@ fun Satellite3DScreen(
                         .fillMaxHeight()
                         .requiredWidth(totalMenuWidth)
                         .background(Color(0xFF000000)) // Solid black background
-                        .padding(safeInsets)
+                        .padding(
+                            start = safeInsets.calculateLeftPadding(LayoutDirection.Ltr),
+                            top = 0.dp,
+                            end = 0.dp,
+                            bottom = 0.dp
+                        )
                 ) {
                     TabRow(
                         selectedTabIndex = selectedTab,
@@ -213,7 +224,7 @@ fun Satellite3DScreen(
                         Tab(
                             selected = selectedTab == 1,
                             onClick = { selectedTab = 1 },
-                            text = { Text("Scene 3D", color = Color.White) }
+                            text = { Text("Scene Settings", color = Color.White) }
                         )
                     }
 
@@ -225,6 +236,8 @@ fun Satellite3DScreen(
                                 selectedConstellations = selectedConstellations,
                                 onlyUsedInFix = onlyUsedInFix,
                                 onOnlyUsedInFixChanged = { onlyUsedInFix = it },
+                                showLocationMarker = showLocationMarker,
+                                onShowLocationMarkerChanged = { showLocationMarker = it },
                                 navController = navController,
                                 modifier = Modifier.fillMaxSize()
                             )
@@ -245,10 +258,8 @@ fun Satellite3DScreen(
         }
 
         DisposableEffect(Unit) {
-            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             onDispose {
                 scene.cleanup()
-                activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR
             }
         }
     }

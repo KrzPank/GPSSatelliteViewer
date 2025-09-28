@@ -29,8 +29,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.gpssatelliteviewer.data.Scene3DParameters
-import com.example.gpssatelliteviewer.data.Scene3DParametersState
+import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
+import com.example.gpssatelliteviewer.scene3d.Scene3DParametersState
 import com.example.gpssatelliteviewer.utils.ParameterSection
 import com.google.android.filament.LightManager
 import kotlin.math.log10
@@ -221,73 +221,6 @@ fun ColorParameter(
                 .height(30.dp)
                 .background(Color(red, green, blue), RoundedCornerShape(4.dp))
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun LightTypeSelector(
-    currentType: LightManager.Type,
-    onTypeChanged: (LightManager.Type) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-
-    // Helper function to get display name for light types
-    fun getLightTypeDisplayName(type: LightManager.Type): String {
-        return when (type) {
-            LightManager.Type.DIRECTIONAL -> "Directional Light"
-            LightManager.Type.POINT -> "Point Light"
-            LightManager.Type.SPOT -> "Spot Light"
-            LightManager.Type.SUN -> "Sun Light"
-            else -> "Unknown"
-        }
-    }
-
-    // Available light types (directional, point, spot as requested)
-    val availableTypes = listOf(
-        LightManager.Type.DIRECTIONAL,
-        LightManager.Type.POINT,
-        LightManager.Type.SPOT
-    )
-
-    Column {
-        Text(text = "Light Type", color = Color.Companion.White, fontSize = 14.sp)
-
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
-        ) {
-            OutlinedTextField(
-                value = getLightTypeDisplayName(currentType),
-                onValueChange = { },
-                readOnly = true,
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.Companion.White,
-                    unfocusedTextColor = Color.Companion.White,
-                    focusedBorderColor = Color.Companion.Green,
-                    unfocusedBorderColor = Color.Companion.Gray
-                ),
-                modifier = Modifier.Companion
-                    .fillMaxWidth()
-                    .menuAnchor()
-            )
-
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                availableTypes.forEach { type ->
-                    DropdownMenuItem(
-                        text = { Text(getLightTypeDisplayName(type)) },
-                        onClick = {
-                            onTypeChanged(type)
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
     }
 }
 

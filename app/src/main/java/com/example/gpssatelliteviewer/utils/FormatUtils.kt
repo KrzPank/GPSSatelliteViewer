@@ -126,7 +126,7 @@ fun CustomCheckbox(
                 text = it,
                 color = Color(0xFFCCCCCC),
                 fontSize = 12.sp,
-                modifier = Modifier.padding(start = 40.dp)
+                modifier = Modifier.padding(start = 15.dp)
             )
         }
     }

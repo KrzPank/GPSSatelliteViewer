@@ -88,7 +88,8 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
         // Heavy parsing operations in background
         parsingScope.launch {
             try {
-                val messageType = NMEAParser.getMessageTypeOptimized(message)
+                //val messageType = NMEAParser.getMessageTypeOptimized(message)
+                val messageType = NMEAParser.getMessageType(message)
 
                 withContext(Dispatchers.Main) {
                     val updatedMap = _nmeaMessageMap.value.toMutableMap()

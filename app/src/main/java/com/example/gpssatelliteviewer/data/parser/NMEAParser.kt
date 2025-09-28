@@ -10,8 +10,6 @@ import com.example.gpssatelliteviewer.data.VTG
 
 
 object NMEAParser {
-    // Cache for message type validation to avoid repeated string operations
-    private val messageTypeCache = mutableMapOf<String, String>()
     fun parseGGA(message: String): GGA? {
         // Quick validation: minimum realistic GGA message is around 40-45 chars
         if (message.isBlank() || message.length < 40) return null
@@ -187,7 +185,7 @@ object NMEAParser {
 
 
     fun getMessageType(message: String): String {
-        if (message.isBlank()) return "UNKNOWN"
+        if (message.isBlank() || !message.startsWith("$")) return "UNKNOWN"
         
         val parts = message.split(",")
         if (parts.isEmpty() || !parts[0].startsWith("$") || parts[0].length <= 1) {
@@ -195,28 +193,6 @@ object NMEAParser {
         }
         
         return parts[0].substring(1)
-    }
-    
-    /**
-     * Optimized message type extraction with caching to avoid repeated string operations
-     * This is more efficient than the original getMessageType for frequent calls
-     */
-    fun getMessageTypeOptimized(message: String): String {
-        if (message.isBlank() || !message.startsWith("$")) return "UNKNOWN"
-        
-        // Use first part of message as cache key (up to first comma or 10 chars)
-        val cacheKey = message.substring(0, minOf(message.indexOf(',').takeIf { it > 0 } ?: 10, message.length))
-        
-        return messageTypeCache.getOrPut(cacheKey) {
-            val firstComma = message.indexOf(',')
-            if (firstComma > 1) {
-                message.substring(1, firstComma)
-            } else if (message.length > 6) {
-                message.substring(1, minOf(10, message.length))
-            } else {
-                "UNKNOWN"
-            }
-        }
     }
 
     @SuppressLint("DefaultLocale")
