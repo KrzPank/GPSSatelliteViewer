@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.viewModel
+package com.example.gpssatelliteviewer.data.viewmodel
 
 import android.app.Application
 import android.location.LocationManager
@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.StateFlow
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.annotation.RequiresApi
-import com.example.gpssatelliteviewer.data.parsers.NMEAParser
+import com.example.gpssatelliteviewer.data.parser.NMEAParser
 import java.util.concurrent.Executors
 import kotlinx.coroutines.*
-import androidx.lifecycle.viewModelScope
 
 import com.example.gpssatelliteviewer.data.GGA
 import com.example.gpssatelliteviewer.data.GSA
@@ -85,18 +85,17 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
         if (message.isBlank() || !message.startsWith("$")) return
         
         // Parse in background thread to avoid blocking UI
+        // Heavy parsing operations in background
         parsingScope.launch {
             try {
                 val messageType = NMEAParser.getMessageTypeOptimized(message)
-                
-                // Update message map on main thread (quick operation)
+
                 withContext(Dispatchers.Main) {
                     val updatedMap = _nmeaMessageMap.value.toMutableMap()
                     updatedMap[messageType] = message
                     _nmeaMessageMap.value = updatedMap
                 }
-                
-                // Heavy parsing operations in background
+
                 val parsedData = when {
                     messageType.endsWith("GGA") -> {
                         ParsedNMEAData(gga = NMEAParser.parseGGA(message))
@@ -125,8 +124,7 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
                     }
                 }
             } catch (e: Exception) {
-                // Log error but don't crash the app
-                e.printStackTrace()
+                Log.e("NMEAViewModel", "Failed to parse NMEA message: ${e.message}")
             }
         }
     }

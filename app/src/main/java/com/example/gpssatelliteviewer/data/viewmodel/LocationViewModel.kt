@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.viewModel
+package com.example.gpssatelliteviewer.data.viewmodel
 
 import android.app.Application
 import android.icu.text.SimpleDateFormat
@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import java.util.Date
 import java.util.Locale
 
-class LocationListenerViewModel(application: Application) : AndroidViewModel(application) {
+class LocationViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
     private val updateInterval = 1000L // in milis
     private val timeoutPeriod: Long = 15 * 1000 // 15 sec

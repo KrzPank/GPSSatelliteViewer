@@ -1,7 +1,7 @@
-package com.example.gpssatelliteviewer.scene3d
+package com.example.gpssatelliteviewer.scene3d.manager
 
 import com.example.gpssatelliteviewer.data.Scene3DParameters
-import com.example.gpssatelliteviewer.utils.CoordinateConversion
+import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.loaders.ModelLoader
 import io.github.sceneview.node.CameraNode
@@ -30,12 +30,12 @@ class LocationMarkerManager(
 
     fun updateLocationMarker(userLocation: Triple<Float, Float, Float>) {
         val (lat, lon, alt) = userLocation
-        val ecefPosition = CoordinateConversion.geodeticToECEF(
+        val ecefPosition = CoordinateConverter.geodeticToECEF(
             lat.toDouble(),
             lon.toDouble(),
             (alt + 5000f).toDouble()  // Add 5km above surface to make marker visible
         )
-        val scenePosition = CoordinateConversion.ecefToScenePos(ecefPosition)
+        val scenePosition = CoordinateConverter.ecefToScenePos(ecefPosition)
 
         locationMarkerNode.position = scenePosition
     }

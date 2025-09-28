@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer
+package com.example.gpssatelliteviewer.app
 
 import android.Manifest
 import android.app.Application
@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,15 +32,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.gpssatelliteviewer.ui.panels.LiveNMEADataPanel
-
-import com.example.gpssatelliteviewer.ui.panels.LocationDeny
-import com.example.gpssatelliteviewer.ui.panels.LocationInfoPanel
-import com.example.gpssatelliteviewer.ui.panels.Satellite3DPanel
-import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
-import com.example.gpssatelliteviewer.viewModel.LocationListenerViewModel
-import com.example.gpssatelliteviewer.viewModel.NMEAViewModel
-
+import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
+import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
+import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
+import com.example.gpssatelliteviewer.ui.screen.LiveNMEADataScreen
+import com.example.gpssatelliteviewer.ui.screen.LocationDenyScreen
+import com.example.gpssatelliteviewer.ui.screen.LocationInfoScreen
+import com.example.gpssatelliteviewer.ui.screen.Satellite3DScreen
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.R)
@@ -73,12 +72,13 @@ class MainActivity : ComponentActivity() {
                     when (hasPermission) {
                         null -> {
                             Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
+                                modifier = Modifier.Companion.fillMaxSize(),
+                                contentAlignment = Alignment.Companion.Center
                             ) {
                                 CircularProgressIndicator()
                             }
                         }
+
                         true -> AppNavigation(hasPermission = true, permissionLauncher = launcher)
                         false -> AppNavigation(hasPermission = false, permissionLauncher = launcher)
                     }
@@ -92,8 +92,8 @@ class MainActivity : ComponentActivity() {
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun AppNavigation(
-    hasPermission: Boolean, 
-    permissionLauncher: androidx.activity.compose.ManagedActivityResultLauncher<String, Boolean>
+    hasPermission: Boolean,
+    permissionLauncher: ManagedActivityResultLauncher<String, Boolean>
 ) {
     val navController = rememberNavController()
 
@@ -107,36 +107,36 @@ fun AppNavigation(
         val nmeaViewModel: NMEAViewModel = viewModel(
             factory = ViewModelProvider.AndroidViewModelFactory.getInstance(app)
         )
-        val locationListenerViewModel: LocationListenerViewModel = viewModel(
+        val locationViewModel: LocationViewModel = viewModel(
             factory = ViewModelProvider.AndroidViewModelFactory.getInstance(app)
         )
 
         gnssViewModel.startLocationInfo()
         nmeaViewModel.startNMEAInfo()
-        locationListenerViewModel.startLocationListenerInfo()
+        locationViewModel.startLocationListenerInfo()
 
         NavHost(
             navController = navController,
-            startDestination = "LocationInfoPanel"
+            startDestination = "LocationInfoScreen"
         ) {
-            composable("LocationInfoPanel") {
-                LocationInfoPanel(navController, gnssViewModel, nmeaViewModel, locationListenerViewModel)
+            composable("LocationInfoScreen") {
+                LocationInfoScreen(navController, gnssViewModel, nmeaViewModel, locationViewModel)
             }
-            composable("Satellite3DPanel") {
+            composable("Satellite3DScreen") {
                 val locationNMEA by nmeaViewModel.locationNMEA.collectAsState()
-                Satellite3DPanel(navController, gnssViewModel, locationNMEA)
+                Satellite3DScreen(navController, gnssViewModel, locationNMEA)
             }
-            composable("LiveNMEADataPanel") {
-                LiveNMEADataPanel(navController, nmeaViewModel)
+            composable("LiveNMEADataScreen") {
+                LiveNMEADataScreen(navController, nmeaViewModel)
             }
         }
     } else {
         NavHost(
             navController = navController,
-            startDestination = "LocationDeny"
+            startDestination = "LocationDenyScreen"
         ) {
-            composable("LocationDeny") {
-                LocationDeny(
+            composable("LocationDenyScreen") {
+                LocationDenyScreen(
                     navController = navController,
                     onRequestPermission = {
                         permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)

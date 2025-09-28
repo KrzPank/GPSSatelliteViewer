@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.viewModel
+package com.example.gpssatelliteviewer.data.viewmodel
 
 import android.app.Application
 import android.location.GnssStatus

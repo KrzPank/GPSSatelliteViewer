@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.ui.cards
+package com.example.gpssatelliteviewer.ui.component.card
 
 
 import androidx.compose.foundation.layout.Column

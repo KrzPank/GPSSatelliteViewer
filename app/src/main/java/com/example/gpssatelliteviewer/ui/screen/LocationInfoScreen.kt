@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.ui.panels
+package com.example.gpssatelliteviewer.ui.screen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -34,10 +34,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.gpssatelliteviewer.ui.cards.AndroidApiLocationCard
-import com.example.gpssatelliteviewer.ui.cards.LoadingLocationTextCard
-import com.example.gpssatelliteviewer.ui.cards.NMEALocationCard
-import com.example.gpssatelliteviewer.ui.cards.GPSStatusCard
+import com.example.gpssatelliteviewer.ui.component.card.AndroidApiLocationCard
+import com.example.gpssatelliteviewer.ui.component.card.LoadingLocationTextCard
+import com.example.gpssatelliteviewer.ui.component.card.NMEALocationCard
+import com.example.gpssatelliteviewer.ui.component.card.GPSStatusCard
 
 
 import androidx.compose.runtime.getValue
@@ -45,28 +45,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.font.FontWeight
 import com.example.gpssatelliteviewer.utils.InfoRow
-import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
-import com.example.gpssatelliteviewer.viewModel.LocationListenerViewModel
-import com.example.gpssatelliteviewer.viewModel.NMEAViewModel
+import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
+import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
+import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
 
 //*
 @RequiresApi(Build.VERSION_CODES.R)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationInfoPanel(
+fun LocationInfoScreen(
     navController: NavController,
     gnssStatusViewModel: GNSSViewModel,
     nmeaViewModel: NMEAViewModel,
-    locationListenerViewModel: LocationListenerViewModel
+    locationViewModel: LocationViewModel
 ) {
     val satellites by gnssStatusViewModel.satelliteList.collectAsState()
     val groupedSatellites = satellites.groupBy { it.constellation }
 
     val locationNMEA by nmeaViewModel.locationNMEA.collectAsState()
-    val locationAndroidApi by locationListenerViewModel.locationAndroidApi.collectAsState()
+    val locationAndroidApi by locationViewModel.locationAndroidApi.collectAsState()
 
     val hasLocationNMEA by nmeaViewModel.hasLocationNMEA.collectAsState()
-    val hasLocationAndroidApi by locationListenerViewModel.hasLocationAndroidApi.collectAsState()
+    val hasLocationAndroidApi by locationViewModel.hasLocationAndroidApi.collectAsState()
 
     val expandedMap = remember { mutableStateMapOf<String, Boolean>() }
 
@@ -89,17 +89,17 @@ fun LocationInfoPanel(
                             onDismissRequest = { dropDownMenuExpanded.value = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("3D View") },
+                                text = { Text("Satellite 3D View") },
                                 onClick = {
                                     dropDownMenuExpanded.value = false
-                                    navController.navigate("Satellite3DPanel")
+                                    navController.navigate("Satellite3DScreen")
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("NMEA messaegs") },
+                                text = { Text("Live NMEA Messages") },
                                 onClick = {
                                     dropDownMenuExpanded.value = false
-                                    navController.navigate("LiveNMEADataPanel")
+                                    navController.navigate("LiveNMEADataScreen")
                                 }
                             )
                         }

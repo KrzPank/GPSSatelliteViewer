@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.ui.cards
+package com.example.gpssatelliteviewer.ui.component.card
 
 import androidx.compose.runtime.Composable
 import com.example.gpssatelliteviewer.data.GGA
@@ -18,8 +18,8 @@ import com.example.gpssatelliteviewer.data.RMC
 import com.example.gpssatelliteviewer.data.VTG
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.gpssatelliteviewer.data.parsers.NMEAParser
-import com.example.gpssatelliteviewer.utils.CoordinateConversion
+import com.example.gpssatelliteviewer.data.parser.NMEAParser
+import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.mapFixQuality
 import com.example.gpssatelliteviewer.utils.mapFixType
@@ -55,11 +55,11 @@ fun DefaultNMEATypeCard(
                     InfoRow("Time (UTC)", gga.time)
                     InfoRow(
                         "Latitude",
-                        CoordinateConversion.geodeticToDMS(gga.latitude, gga.latDirection)
+                        CoordinateConverter.geodeticToDMS(gga.latitude, gga.latDirection)
                     )
                     InfoRow(
                         "Longitude",
-                        CoordinateConversion.geodeticToDMS(gga.longitude, gga.lonDirection)
+                        CoordinateConverter.geodeticToDMS(gga.longitude, gga.lonDirection)
                     )
                     InfoRow("Fix Quality", mapFixQuality(gga.fixQuality))
                     InfoRow("Satellites", gga.numSatellites.toString())
@@ -76,11 +76,11 @@ fun DefaultNMEATypeCard(
                     InfoRow("Date", rmc.date)
                     InfoRow(
                         "Latitude",
-                        CoordinateConversion.geodeticToDMS(rmc.latitude, rmc.latDirection)
+                        CoordinateConverter.geodeticToDMS(rmc.latitude, rmc.latDirection)
                     )
                     InfoRow(
                         "Longitude",
-                        CoordinateConversion.geodeticToDMS(rmc.longitude, rmc.lonDirection)
+                        CoordinateConverter.geodeticToDMS(rmc.longitude, rmc.lonDirection)
                     )
                     InfoRow("Speed (knots)", rmc.speedOverGround.toString())
                     InfoRow("Course", rmc.courseOverGround.toString())

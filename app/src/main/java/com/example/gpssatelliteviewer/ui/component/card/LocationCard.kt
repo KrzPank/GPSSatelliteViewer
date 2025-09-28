@@ -1,10 +1,7 @@
-package com.example.gpssatelliteviewer.ui.cards
+package com.example.gpssatelliteviewer.ui.component.card
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,14 +14,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 // Removed LaunchedEffect import
-import androidx.compose.runtime.remember
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.data.ListenerData
 import com.example.gpssatelliteviewer.data.NMEALocationData
-import com.example.gpssatelliteviewer.utils.CoordinateConversion
+import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.mapFixQuality
 import com.example.gpssatelliteviewer.utils.mapFixType
@@ -72,12 +68,12 @@ fun NMEALocationCard(
             InfoRow(
                 label = "Latitude",
                 value = if (nmea.latitude == 0.0) "No data"
-                else CoordinateConversion.geodeticToDMS(nmea.latitude, nmea.latHemisphere)
+                else CoordinateConverter.geodeticToDMS(nmea.latitude, nmea.latHemisphere)
             )
             InfoRow(
                 label = "Longitude",
                 value = if (nmea.longitude == 0.0) "No data"
-                else CoordinateConversion.geodeticToDMS(nmea.longitude, nmea.lonHemisphere)
+                else CoordinateConverter.geodeticToDMS(nmea.longitude, nmea.lonHemisphere)
             )
             InfoRow(
                 label = "Altitude MSL",
@@ -85,7 +81,7 @@ fun NMEALocationCard(
             )
             InfoRow(
                 label = "Accuracy",
-                value = CoordinateConversion.getAccuracyEstimate(nmea)?.toString() ?: "0"
+                value = CoordinateConverter.getAccuracyEstimate(nmea)?.toString() ?: "0"
             )
             val speedkmh = nmea.speedKnots * 1.852
             InfoRow(

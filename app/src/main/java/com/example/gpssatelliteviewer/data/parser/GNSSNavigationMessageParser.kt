@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.data.parsers
+package com.example.gpssatelliteviewer.data.parser
 
 /**     *** TO DO ***
  *

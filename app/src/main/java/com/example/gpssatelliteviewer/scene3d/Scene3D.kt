@@ -9,6 +9,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.data.Scene3DParameters
+import com.example.gpssatelliteviewer.scene3d.manager.LightHandler
+import com.example.gpssatelliteviewer.scene3d.manager.LocationMarkerManager
+import com.example.gpssatelliteviewer.scene3d.manager.SatelliteManager
 import com.google.android.filament.Engine
 import com.google.android.filament.View
 import io.github.sceneview.Scene
@@ -127,10 +130,8 @@ class Scene3D(
     private fun updateLookAt() {
         cameraNode.lookAt(centerNode)
 
-        // Update satellite orientations
         satellites.updateLookAt(cameraNode)
 
-        // Update location marker orientation
         locationMarker.updateLookAt(cameraNode)
     }
 

@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.data.parsers
+package com.example.gpssatelliteviewer.data.parser
 
 import android.annotation.SuppressLint
 import com.example.gpssatelliteviewer.data.GGA

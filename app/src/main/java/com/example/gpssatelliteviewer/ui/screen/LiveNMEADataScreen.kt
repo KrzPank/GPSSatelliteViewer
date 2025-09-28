@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.ui.panels
+package com.example.gpssatelliteviewer.ui.screen
 
 
 import android.os.Build
@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,8 +31,8 @@ import androidx.compose.runtime.remember
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.gpssatelliteviewer.ui.cards.DefaultNMEATypeCard
-import com.example.gpssatelliteviewer.viewModel.NMEAViewModel
+import com.example.gpssatelliteviewer.ui.component.card.DefaultNMEATypeCard
+import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
 
 private val gsvMessages: List<String> = listOf(
     "GLGSV",
@@ -45,7 +44,7 @@ private val gsvMessages: List<String> = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
-fun LiveNMEADataPanel(
+fun LiveNMEADataScreen(
     navController: NavController,
     viewModel: NMEAViewModel
 ) {
@@ -80,17 +79,17 @@ fun LiveNMEADataPanel(
                             onDismissRequest = { dropDownMenuExpanded.value = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("3D View") },
+                                text = { Text("Satellite 3D View") },
                                 onClick = {
                                     dropDownMenuExpanded.value = false
-                                    navController.navigate("Satellite3DPanel")
+                                    navController.navigate("Satellite3DScreen")
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Live NMEA messages") },
+                                text = { Text("Location Info") },
                                 onClick = {
                                     dropDownMenuExpanded.value = false
-                                    navController.navigate("LocationInfoPanel")
+                                    navController.navigate("LocationInfoScreen")
                                 }
                             )
                         }

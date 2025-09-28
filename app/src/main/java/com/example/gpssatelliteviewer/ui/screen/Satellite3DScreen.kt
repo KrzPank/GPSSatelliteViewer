@@ -1,19 +1,15 @@
-package com.example.gpssatelliteviewer.ui.panels
+package com.example.gpssatelliteviewer.ui.screen
 
 import android.content.pm.ActivityInfo
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,8 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
-import com.example.gpssatelliteviewer.viewModel.GNSSViewModel
-
+import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -35,35 +30,26 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.absolutePadding
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.LaunchedEffect
-// Removed LaunchedEffect import
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.LayoutDirection
 import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.data.Scene3DParametersState
-import com.example.gpssatelliteviewer.ui.components.Scene3DLoadingScreen
-import com.example.gpssatelliteviewer.ui.components.Scene3DParametersMenu
-import com.example.gpssatelliteviewer.ui.components.SatelliteFilterMenu
-import com.example.gpssatelliteviewer.utils.CoordinateConversion
+import com.example.gpssatelliteviewer.ui.component.Scene3DLoadingScreen
+import com.example.gpssatelliteviewer.ui.component.menu.Scene3DParametersMenu
+import com.example.gpssatelliteviewer.ui.component.menu.SatelliteFilterMenu
+import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.HideSystemUI
 import com.example.gpssatelliteviewer.scene3d.Scene3D
 import com.example.gpssatelliteviewer.utils.findActivity
@@ -77,7 +63,7 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
-fun Satellite3DPanel(
+fun Satellite3DScreen(
     navController: NavController,
     gnssViewModel: GNSSViewModel,
     locationNMEA: NMEALocationData
@@ -90,11 +76,11 @@ fun Satellite3DPanel(
 
     val userLocation: Triple<Float, Float, Float> =
         Triple(
-            CoordinateConversion.nmeaCoordinateToDecimal(
+            CoordinateConverter.nmeaCoordinateToDecimal(
                 locationNMEA.latitude, 
                 locationNMEA.latHemisphere
             ).toFloat(),
-            CoordinateConversion.nmeaCoordinateToDecimal(
+            CoordinateConverter.nmeaCoordinateToDecimal(
                 locationNMEA.longitude, 
                 locationNMEA.lonHemisphere
             ).toFloat(),
@@ -105,11 +91,8 @@ fun Satellite3DPanel(
     val modelLoader = rememberModelLoader(engine)
     val environmentLoader = rememberEnvironmentLoader(engine)
     val view = rememberView(engine)
-    
-    // Scene3D parameters state
     val parametersState = remember { Scene3DParametersState() }
-    
-    // Loading state for Scene3D
+
     var isSceneReady by remember { mutableStateOf(false) }
     
     val scene = remember {
@@ -142,9 +125,10 @@ fun Satellite3DPanel(
     val safeInsets = WindowInsets.safeDrawing.asPaddingValues()
     val totalMenuWidth = menuWidth + safeInsets.calculateLeftPadding(LayoutDirection.Ltr)
 
+    val menuAnimationDuration = 300
     val sceneOffsetX by animateDpAsState(
         targetValue = if (scene.isMenuVisible()) totalMenuWidth else 0.dp,
-        animationSpec = tween(300) // Match menu animation timing
+        //animationSpec = tween(menuAnimationDuration) // Match menu animation timing
     )
 
     LaunchedEffect(scene) {
@@ -154,6 +138,7 @@ fun Satellite3DPanel(
             delay(100)
         }
 
+        // Smooth transition not wanted but i don't know other way
         delay(200)
         isSceneReady = true
     }
@@ -178,7 +163,7 @@ fun Satellite3DPanel(
         AnimatedVisibility(
             visible = isSceneReady,
             enter = fadeIn(
-                animationSpec = tween(300) // Smooth fade in over 300ms
+                animationSpec = tween(menuAnimationDuration) // Match menu animation timing
             )
         ) {
             Box(
@@ -191,18 +176,17 @@ fun Satellite3DPanel(
             }
         }
 
-        val scrollState = rememberScrollState()
         // Left-side overlay menu with tabs - only show when scene is loaded
         if (isSceneReady) {
             AnimatedVisibility(
                 visible = scene.isMenuVisible(),
                 enter = slideInHorizontally(
                     initialOffsetX = { -it },
-                    animationSpec = tween(300)
+                    animationSpec = tween(menuAnimationDuration) // Match menu animation timing
                 ),
                 exit = slideOutHorizontally(
                     targetOffsetX = { -it },
-                    animationSpec = tween(300)
+                    animationSpec = tween(menuAnimationDuration) // Match menu animation timing
                 )
             ) {
                 Column(
@@ -217,10 +201,8 @@ fun Satellite3DPanel(
                         containerColor = Color.Transparent,
                         contentColor = Color.White,
                         indicator = { tabPositions ->
-                            TabRowDefaults.Indicator(
-                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]),
-                                color = Color.Green
-                            )
+                            TabRowDefaults.SecondaryIndicator(
+                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]), color = Color.Green)
                         }
                     ) {
                         Tab(

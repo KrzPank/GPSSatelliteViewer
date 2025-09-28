@@ -1,14 +1,29 @@
-package com.example.gpssatelliteviewer.ui.components
+package com.example.gpssatelliteviewer.ui.component.menu
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -16,17 +31,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.data.Scene3DParameters
 import com.example.gpssatelliteviewer.data.Scene3DParametersState
+import com.example.gpssatelliteviewer.utils.ParameterSection
 import com.google.android.filament.LightManager
 import kotlin.math.log10
 import kotlin.math.pow
-import com.example.gpssatelliteviewer.utils.ParameterSection
+import androidx.compose.runtime.*
+import com.example.gpssatelliteviewer.utils.format
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Scene3DParametersMenu(
     parametersState: Scene3DParametersState,
     onParametersChanged: (Scene3DParameters) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     val scrollState = rememberScrollState()
 
@@ -40,16 +57,16 @@ fun Scene3DParametersMenu(
         // Header
         Text(
             text = "Scene3D Parameters",
-            color = Color.White,
+            color = Color.Companion.White,
             fontSize = 20.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Companion.Bold
         )
 
-        HorizontalDivider(thickness = 1.dp, color = Color.Gray)
+        HorizontalDivider(thickness = 1.dp, color = Color.Companion.Gray)
 
         // Control buttons
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.Companion.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(
@@ -57,14 +74,14 @@ fun Scene3DParametersMenu(
                     parametersState.resetToDefaults()
                     onParametersChanged(parametersState.parameters)
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.Companion.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBD1A1A)) // Muted dark red
             ) {
-                Text("Reset", color = Color.White, fontSize = 12.sp)
+                Text("Reset", color = Color.Companion.White, fontSize = 12.sp)
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.Companion.height(8.dp))
 
         // Light Parameters Section
         ParameterSection("Light Parameters") {
@@ -103,7 +120,7 @@ fun Scene3DParametersMenu(
             // Earth Model Selection
             ModelSelector(
                 label = "Earth Model",
-                options = Scene3DParameters.EARTH_MODEL_OPTIONS,
+                options = Scene3DParameters.Companion.EARTH_MODEL_OPTIONS,
                 currentPath = params.earthModelPath,
                 onModelChanged = {
                     parametersState.updateEarthModel(it)
@@ -119,7 +136,7 @@ fun Scene3DParametersMenu(
             // Satellite Model Selection
             ModelSelector(
                 label = "Satellite Model",
-                options = Scene3DParameters.SATELLITE_MODEL_OPTIONS,
+                options = Scene3DParameters.Companion.SATELLITE_MODEL_OPTIONS,
                 currentPath = params.satelliteModelPath,
                 onModelChanged = {
                     parametersState.updateSatelliteModel(it)
@@ -140,20 +157,20 @@ fun SliderParameter(
 ) {
     Column {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.Companion.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = label, color = Color.White, fontSize = 14.sp)
-            Text(text = valueFormatter(value), color = Color.White, fontSize = 12.sp)
+            Text(text = label, color = Color.Companion.White, fontSize = 14.sp)
+            Text(text = valueFormatter(value), color = Color.Companion.White, fontSize = 12.sp)
         }
         Slider(
             value = value,
             onValueChange = onValueChange,
             valueRange = valueRange,
             colors = SliderDefaults.colors(
-                thumbColor = Color.White,
-                activeTrackColor = Color.Green,
-                inactiveTrackColor = Color.Gray
+                thumbColor = Color.Companion.White,
+                activeTrackColor = Color.Companion.Green,
+                inactiveTrackColor = Color.Companion.Gray
             )
         )
     }
@@ -168,7 +185,7 @@ fun ColorParameter(
     onColorChanged: (Float, Float, Float) -> Unit
 ) {
     Column {
-        Text(text = label, color = Color.White, fontSize = 14.sp)
+        Text(text = label, color = Color.Companion.White, fontSize = 14.sp)
 
         // Red component
         SliderParameter(
@@ -199,7 +216,7 @@ fun ColorParameter(
 
         // Color preview
         Box(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .fillMaxWidth()
                 .height(30.dp)
                 .background(Color(red, green, blue), RoundedCornerShape(4.dp))
@@ -214,7 +231,7 @@ fun LightTypeSelector(
     onTypeChanged: (LightManager.Type) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
+
     // Helper function to get display name for light types
     fun getLightTypeDisplayName(type: LightManager.Type): String {
         return when (type) {
@@ -225,7 +242,7 @@ fun LightTypeSelector(
             else -> "Unknown"
         }
     }
-    
+
     // Available light types (directional, point, spot as requested)
     val availableTypes = listOf(
         LightManager.Type.DIRECTIONAL,
@@ -234,7 +251,7 @@ fun LightTypeSelector(
     )
 
     Column {
-        Text(text = "Light Type", color = Color.White, fontSize = 14.sp)
+        Text(text = "Light Type", color = Color.Companion.White, fontSize = 14.sp)
 
         ExposedDropdownMenuBox(
             expanded = expanded,
@@ -246,12 +263,12 @@ fun LightTypeSelector(
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = Color.Green,
-                    unfocusedBorderColor = Color.Gray
+                    focusedTextColor = Color.Companion.White,
+                    unfocusedTextColor = Color.Companion.White,
+                    focusedBorderColor = Color.Companion.Green,
+                    unfocusedBorderColor = Color.Companion.Gray
                 ),
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .fillMaxWidth()
                     .menuAnchor()
             )
@@ -286,7 +303,7 @@ fun ModelSelector(
     val currentDisplayName = options.find { it.first == currentPath }?.second ?: "Unknown"
 
     Column {
-        Text(text = label, color = Color.White, fontSize = 14.sp)
+        Text(text = label, color = Color.Companion.White, fontSize = 14.sp)
 
         ExposedDropdownMenuBox(
             expanded = expanded,
@@ -298,12 +315,12 @@ fun ModelSelector(
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White,
-                    focusedBorderColor = Color.Green,
-                    unfocusedBorderColor = Color.Gray
+                    focusedTextColor = Color.Companion.White,
+                    unfocusedTextColor = Color.Companion.White,
+                    focusedBorderColor = Color.Companion.Green,
+                    unfocusedBorderColor = Color.Companion.Gray
                 ),
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .fillMaxWidth()
                     .menuAnchor()
             )
@@ -325,6 +342,7 @@ fun ModelSelector(
         }
     }
 }
+
 @Composable
 fun LogarithmicSliderParameter(
     label: String,
@@ -342,11 +360,11 @@ fun LogarithmicSliderParameter(
 
     Column {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.Companion.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = label, color = Color.White, fontSize = 14.sp)
-            Text(text = valueFormatter(value), color = Color.White, fontSize = 12.sp)
+            Text(text = label, color = Color.Companion.White, fontSize = 14.sp)
+            Text(text = valueFormatter(value), color = Color.Companion.White, fontSize = 12.sp)
         }
         Slider(
             value = sliderPosition,
@@ -358,13 +376,10 @@ fun LogarithmicSliderParameter(
             },
             valueRange = 0f..1f,
             colors = SliderDefaults.colors(
-                thumbColor = Color.White,
-                activeTrackColor = Color.Green,
-                inactiveTrackColor = Color.Gray
+                thumbColor = Color.Companion.White,
+                activeTrackColor = Color.Companion.Green,
+                inactiveTrackColor = Color.Companion.Gray
             )
         )
     }
 }
-
-// Extension function for number formatting
-fun Float.format(digits: Int) = "%.${digits}f".format(this)

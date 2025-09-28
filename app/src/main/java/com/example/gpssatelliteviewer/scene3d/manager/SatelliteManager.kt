@@ -1,10 +1,9 @@
-package com.example.gpssatelliteviewer.scene3d
+package com.example.gpssatelliteviewer.scene3d.manager
 
 import android.util.Log
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.data.Scene3DParameters
-import com.example.gpssatelliteviewer.utils.CoordinateConversion
-import com.example.gpssatelliteviewer.utils.CoordinateConversion.azElToECEF
+import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.loaders.ModelLoader
 import io.github.sceneview.node.CameraNode
@@ -74,8 +73,7 @@ class SatelliteManager(
             }
         }
 
-        // Log pool statistics for monitoring
-        logPoolStats()
+        //Log.d("SatelliteManager", "Active satellites: ${activeSatelliteNodes.size}, Pooled nodes: ${satelliteNodePool.size}")
     }
 
     /**
@@ -94,12 +92,12 @@ class SatelliteManager(
     fun updateParameters(newParameters: Scene3DParameters) {
         val oldParameters = parameters
         parameters = newParameters
-        
+
         // Handle satellite model path changes
         if (oldParameters.satelliteModelPath != newParameters.satelliteModelPath ||
             oldParameters.satelliteScale != newParameters.satelliteScale) {
             updateSatelliteModels()
-            Log.d("SatelliteManager", "Updated satellite models")
+            //Log.d("SatelliteManager", "Updated satellite models")
         }
     }
 
@@ -144,8 +142,8 @@ class SatelliteManager(
      */
     private fun updateSatellitePosition(node: ModelNode, sat: GNSSStatusData, userLocation: Triple<Float, Float, Float>) {
         val altitude = calculateSatelliteAltitude(sat)
-        val pos = CoordinateConversion.ecefToScenePos(
-            azElToECEF(
+        val pos = CoordinateConverter.ecefToScenePos(
+            CoordinateConverter.azElToECEF(
                 sat.azimuth,
                 sat.elevation,
                 userLocation,
@@ -203,21 +201,14 @@ class SatelliteManager(
             node.destroy()
         }
         activeSatelliteNodes.clear()
-        
+
         // Destroy all pooled satellite nodes
         satelliteNodePool.forEach { node ->
             node.destroy()
         }
         satelliteNodePool.clear()
-        
-        Log.d("SatelliteManager", "Satellite cleanup completed")
-    }
 
-    /**
-     * Log pool statistics for debugging and performance monitoring
-     */
-    private fun logPoolStats() {
-        Log.d("SatelliteManager", "Active satellites: ${activeSatelliteNodes.size}, Pooled nodes: ${satelliteNodePool.size}")
+        //Log.d("SatelliteManager", "Satellite cleanup completed")
     }
 
     /**

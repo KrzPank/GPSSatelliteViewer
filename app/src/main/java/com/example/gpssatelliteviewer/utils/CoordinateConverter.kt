@@ -1,7 +1,6 @@
 package com.example.gpssatelliteviewer.utils
 
 import android.annotation.SuppressLint
-import android.util.Log
 import com.example.gpssatelliteviewer.data.NMEALocationData
 import dev.romainguy.kotlin.math.Float3
 import kotlin.math.cos
@@ -12,7 +11,7 @@ private const val EARTH_RADIUS_METERS = 6378137f
 private const val EARTH_RADIUS_WORLD_UNIT = 0.5f
 private const val E2 = 6.69437999014e-3
 
-object CoordinateConversion {
+object CoordinateConverter {
 
     fun dmsToGeodetic(degrees: Int, minutes: Int, seconds: Double, direction: Char): Double {
         var decimal = degrees + minutes / 60.0 + seconds / 3600.0

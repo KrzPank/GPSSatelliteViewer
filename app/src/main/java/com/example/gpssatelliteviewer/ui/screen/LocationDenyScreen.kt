@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.ui.panels
+package com.example.gpssatelliteviewer.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
 @Composable
-fun LocationDeny(
+fun LocationDenyScreen(
     navController: NavController,
     onRequestPermission: () -> Unit = {}
 ) {

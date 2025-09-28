@@ -1,7 +1,6 @@
-package com.example.gpssatelliteviewer.ui.components
+package com.example.gpssatelliteviewer.ui.component
 
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -89,7 +87,6 @@ fun Scene3DLoadingScreen(
                         progress = 0.75f
                     )
                 }
-
             }
             
             Spacer(modifier = Modifier.height(24.dp))

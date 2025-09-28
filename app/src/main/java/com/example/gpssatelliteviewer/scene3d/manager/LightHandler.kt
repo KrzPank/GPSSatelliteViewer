@@ -1,11 +1,11 @@
-package com.example.gpssatelliteviewer.scene3d
+package com.example.gpssatelliteviewer.scene3d.manager
 
 import android.util.Log
-import com.example.gpssatelliteviewer.data.Scene3DParameters
 import com.example.gpssatelliteviewer.data.LightParameters
+import com.example.gpssatelliteviewer.data.Scene3DParameters
 import com.google.android.filament.Engine
-import com.google.android.filament.LightManager
 import com.google.android.filament.EntityManager
+import com.google.android.filament.LightManager
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.LightNode
@@ -19,20 +19,19 @@ class LightHandler(
     initialParameters: Scene3DParameters
 ) {
     private var sunLight: LightNode = createSunLight(initialParameters.getLightParameters())
-    
-    // Store only light parameters to avoid unnecessary recreations
+
     private var currentLightParameters: LightParameters = initialParameters.getLightParameters()
-    
+
     // Light update optimization
     private var lastCameraPosition = Float3(0f, 0f, 0f)
-    private var frameCount = 0
-    private val lightUpdateThreshold = 0.10f
-    private val lightUpdateInterval = 5
     private var isLightBeingRecreated = false
-    
+
     // Light recreation throttling
     private var lastRecreationTime = 0L
     private val minRecreationInterval = 16L // Minimum 16ms between recreations /60Hz
+    private var frameCount = 0
+    private val lightUpdateInterval = 2
+    private val lightUpdateThreshold = 0.08f
 
     /**
      * Create a sun light from behind the camera
@@ -68,7 +67,7 @@ class LightHandler(
      */
     private fun recreateSunLight(lightParams: LightParameters = currentLightParameters) {
         if (isLightBeingRecreated) {
-            Log.w("Scene3D", "Light recreation already in progress, skipping")
+            Log.d("Scene3D", "Light recreation already in progress, skipping")
             return
         }
         isLightBeingRecreated = true
@@ -166,9 +165,9 @@ class LightHandler(
         val cameraUp = cross(cameraRight, cameraForward).normalized()
 
         val lightDirection = (
-                cameraForward * 0.7f +      // Mostly forward
-                cameraRight * -0.5f +        // Some from the right
-                cameraUp * -0.3f             // A bit from above
+                cameraForward * 0.75f +      // Mostly forward
+                cameraRight * -0.55f +        // Some from the right
+                cameraUp * -0.25f             // A bit from above
                 ).normalized()
 
         //Log.d("LightHandler", "Camera forward: $cameraForward")
