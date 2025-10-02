@@ -1,34 +1,37 @@
 package com.example.gpssatelliteviewer.data.parser
 
 import android.annotation.SuppressLint
-import com.example.gpssatelliteviewer.data.GGA
-import com.example.gpssatelliteviewer.data.GSA
-import com.example.gpssatelliteviewer.data.GSV
-import com.example.gpssatelliteviewer.data.RMC
+import com.example.gpssatelliteviewer.data.NMEAMessage
 import com.example.gpssatelliteviewer.data.SatInfo
-import com.example.gpssatelliteviewer.data.VTG
 
 
 object NMEAParser {
-    fun parseGGA(message: String): GGA? {
-        // Quick validation: minimum realistic GGA message is around 40-45 chars
-        if (message.isBlank() || message.length < 40) return null
+    fun parseMessage(message: String): NMEAMessage? {
+        val messageType = getMessageType(message)
         
-        // Early validation before expensive split
-        if (!message.startsWith("$") || !message.contains("GGA")) return null
-        
+        return when {
+            messageType.endsWith("GGA") -> parseGGA(message)
+            messageType.endsWith("RMC") -> parseRMC(message)
+            messageType.endsWith("GSA") -> parseGSA(message)
+            messageType.endsWith("VTG") -> parseVTG(message)
+            messageType.contains("GSV") -> parseGSV(message)
+            else -> NMEAMessage.Unknown(message, messageType)
+        }
+    }
+
+    private fun parseGGA(message: String): NMEAMessage.GGA? {
         val parts = message.split(",")
         if (parts.size < 14) return null
 
         return try {
-            GGA(
+            NMEAMessage.GGA(
                 time = formatNmeaTime(parts.getOrNull(1) ?: ""),
                 latitude = parts.getOrNull(2)?.toDoubleOrNull() ?: 0.0,
                 latDirection = parts.getOrNull(3)?.firstOrNull() ?: 'N',
                 longitude = parts.getOrNull(4)?.toDoubleOrNull() ?: 0.0,
                 lonDirection = parts.getOrNull(5)?.firstOrNull() ?: 'E',
                 fixQuality = parts.getOrNull(6)?.toIntOrNull() ?: 0,
-                numSatellites = parts.getOrNull(7)?.toIntOrNull() ?: 0,
+                satelliteCount = parts.getOrNull(7)?.toIntOrNull() ?: 0,
                 horizontalDilution = parts.getOrNull(8)?.toDoubleOrNull() ?: 0.0,
                 altitude = parts.getOrNull(9)?.toDoubleOrNull() ?: 0.0,
                 altitudeUnits = parts.getOrNull(10)?.firstOrNull() ?: 'M',
@@ -43,7 +46,7 @@ object NMEAParser {
         }
     }
 
-    fun parseGSA(message: String) : GSA? {
+    private fun parseGSA(message: String) : NMEAMessage.GSA? {
         val parts = message.split(",")
         if (parts.size < 15) return null
 
@@ -62,7 +65,7 @@ object NMEAParser {
             // NMEA 4.10 extension: System ID may exist at field 18
             val systemId = parts.getOrNull(18)?.substringBefore("*")?.toIntOrNull()
 
-            GSA(
+            NMEAMessage.GSA(
                 mode = mode,
                 fixType = fixType,
                 satelliteIds = satelliteIds,
@@ -77,13 +80,7 @@ object NMEAParser {
         }
     }
 
-    fun parseGSV(message: String): GSV? {
-        // Quick validation: minimum GSV message is around 25-30 chars
-        if (message.isBlank() || message.length < 25) return null
-        
-        // Early validation before expensive split
-        if (!message.startsWith("$") || !message.contains("GSV")) return null
-        
+    private fun parseGSV(message: String): NMEAMessage.GSV? {
         val parts = message.split(",")
         if (parts.size < 4 || parts[0].length < 6) return null
 
@@ -116,7 +113,7 @@ object NMEAParser {
                 index += 4
             }
 
-            GSV(
+            NMEAMessage.GSV(
                 totalMessages = totalMessages,
                 messageNumber = messageNumber,
                 satellitesInView = satellitesInView,
@@ -129,18 +126,12 @@ object NMEAParser {
         }
     }
 
-    fun parseRMC(message: String): RMC? {
-        // Quick validation: minimum RMC message is around 50-60 chars
-        if (message.isBlank() || message.length < 45) return null
-        
-        // Early validation before expensive split
-        if (!message.startsWith("$") || !message.contains("RMC")) return null
-        
+    private fun parseRMC(message: String): NMEAMessage.RMC? {
         val parts = message.split(",")
         if (parts.size < 12) return null
 
         return try {
-            RMC(
+            NMEAMessage.RMC(
                 time = formatNmeaTime(parts.getOrNull(1) ?: ""),
                 status = parts.getOrNull(2)?.firstOrNull() ?: 'V',
                 latitude = parts.getOrNull(3)?.toDoubleOrNull() ?: 0.0,
@@ -159,12 +150,12 @@ object NMEAParser {
         }
     }
 
-    fun parseVTG(message: String): VTG? {
+    private fun parseVTG(message: String): NMEAMessage.VTG? {
         val parts = message.trim().split(",")
         if (parts.size < 9) return null
 
         return try {
-            VTG(
+            NMEAMessage.VTG(
                 courseTrue = parts[1].toDoubleOrNull() ?: 0.0,
                 courseMagnetic = parts[3].toDoubleOrNull(),
                 speedKnots = parts[5].toDoubleOrNull() ?: 0.0,

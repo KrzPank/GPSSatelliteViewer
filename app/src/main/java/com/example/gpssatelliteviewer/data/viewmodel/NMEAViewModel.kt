@@ -16,20 +16,7 @@ import com.example.gpssatelliteviewer.data.parser.NMEAParser
 import java.util.concurrent.Executors
 import kotlinx.coroutines.*
 
-import com.example.gpssatelliteviewer.data.GGA
-import com.example.gpssatelliteviewer.data.GSA
-import com.example.gpssatelliteviewer.data.GSV
-import com.example.gpssatelliteviewer.data.RMC
-import com.example.gpssatelliteviewer.data.VTG
-
-// Data class to hold parsed NMEA data for batch updates
-private data class ParsedNMEAData(
-    val gga: GGA? = null,
-    val rmc: RMC? = null,
-    val gsa: GSA? = null,
-    val vtg: VTG? = null,
-    val gsv: GSV? = null
-)
+import com.example.gpssatelliteviewer.data.NMEAMessage
 
 @RequiresApi(Build.VERSION_CODES.R)
 class NMEAViewModel(application: Application) : AndroidViewModel(application) {
@@ -45,38 +32,23 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
     private val _hasLocationNMEA = MutableStateFlow<Boolean>(false)
     val hasLocationNMEA: StateFlow<Boolean> = _hasLocationNMEA
 
-    private val _nmeaMessageMap = MutableStateFlow<Map<String, String>>(mapOf())
+    // Raw NMEA message strings by type
+    private val _nmeaMessageMap = MutableStateFlow<Map<String, String>>(emptyMap())
     val nmeaMessageMap: StateFlow<Map<String, String>> = _nmeaMessageMap
 
-    private val _parsedGGA = MutableStateFlow<GGA?>(null)
-    val parsedGGA: StateFlow<GGA?> = _parsedGGA
-
-    private val _parsedRMC = MutableStateFlow<RMC?>(null)
-    val parsedRMC: StateFlow<RMC?> = _parsedRMC
-
-    private val _parsedGSA = MutableStateFlow<GSA?>(null)
-    val parsedGSA: StateFlow<GSA?> = _parsedGSA
-
-    private val _parsedVTG = MutableStateFlow<VTG?>(null)
-    val parsedVTG: StateFlow<VTG?> = _parsedVTG
-
-    private val _parsedGSV = MutableStateFlow<Map<String, GSV>>(emptyMap())
-    val parsedGSV: StateFlow<Map<String, GSV>> = _parsedGSV
-
-    private var tmpGGA: GGA? = null
-    private var tmpRMC: RMC? = null
+    // Unified StateFlow for all parsed messages by type
+    private val _latestMessages = MutableStateFlow<Map<String, NMEAMessage>>(emptyMap())
+    val latestMessages: StateFlow<Map<String, NMEAMessage>> = _latestMessages
 
     private val handler = Handler(Looper.getMainLooper())
-    private val noNMEAMessageTimeout  = Runnable {
+    private val noNMEAMessageTimeout = Runnable {
         _hasLocationNMEA.value = false
     }
 
     private val nmeaListener = OnNmeaMessageListener { message, _ ->
-
         _hasLocationNMEA.value = true
         handler.removeCallbacks(noNMEAMessageTimeout)
         handler.postDelayed(noNMEAMessageTimeout, timeoutPeriod)
-
         handleNMEAMessage(message)
     }
 
@@ -85,43 +57,28 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
         if (message.isBlank() || !message.startsWith("$")) return
         
         // Parse in background thread to avoid blocking UI
-        // Heavy parsing operations in background
         parsingScope.launch {
             try {
-                //val messageType = NMEAParser.getMessageTypeOptimized(message)
                 val messageType = NMEAParser.getMessageType(message)
+                val parsedMessage = NMEAParser.parseMessage(message)
 
-                withContext(Dispatchers.Main) {
-                    val updatedMap = _nmeaMessageMap.value.toMutableMap()
-                    updatedMap[messageType] = message
-                    _nmeaMessageMap.value = updatedMap
-                }
-
-                val parsedData = when {
-                    messageType.endsWith("GGA") -> {
-                        ParsedNMEAData(gga = NMEAParser.parseGGA(message))
-                    }
-                    messageType.endsWith("RMC") -> {
-                        ParsedNMEAData(rmc = NMEAParser.parseRMC(message))
-                    }
-                    messageType.endsWith("GSA") -> {
-                        ParsedNMEAData(gsa = NMEAParser.parseGSA(message))
-                    }
-                    messageType.endsWith("VTG") -> {
-                        ParsedNMEAData(vtg = NMEAParser.parseVTG(message))
-                    }
-                    messageType.contains("GSV") -> {
-                        val gsv = NMEAParser.parseGSV(message)
-                        ParsedNMEAData(gsv = gsv)
-                    }
-                    else -> null
-                }
-                
                 // Update UI state on main thread
-                parsedData?.let { data ->
-                    withContext(Dispatchers.Main) {
-                        updateParsedDataStates(data)
-                        combineData()
+                withContext(Dispatchers.Main) {
+                    // Determine consistent key for both raw and parsed messages
+                    val key = parsedMessage?.let { parsed ->
+                        when (parsed) {
+                            is NMEAMessage.GSV -> parsed.talker  // Use talker for GSV messages
+                            else -> parsed.messageType
+                        }
+                    } ?: messageType
+                    
+                    // Update raw message map with consistent key
+                    _nmeaMessageMap.value = _nmeaMessageMap.value + (key to message)
+                    
+                    // Update parsed messages if parsing was successful
+                    parsedMessage?.let { parsed ->
+                        _latestMessages.value = _latestMessages.value + (key to parsed)
+                        updateLocationData()
                     }
                 }
             } catch (e: Exception) {
@@ -131,44 +88,31 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     /**
-     * Update parsed data states in batch to reduce StateFlow emissions
+     * Update combined location data from latest parsed messages
      */
-    private fun updateParsedDataStates(data: ParsedNMEAData) {
-        data.gga?.let { 
-            tmpGGA = it
-            _parsedGGA.value = it 
-        }
-        data.rmc?.let { 
-            tmpRMC = it
-            _parsedRMC.value = it 
-        }
-        data.gsa?.let { _parsedGSA.value = it }
-        data.vtg?.let { _parsedVTG.value = it }
-        data.gsv?.let { gsv ->
-            _parsedGSV.value = _parsedGSV.value + (gsv.talker to gsv)
-        }
-    }
-
-    private fun combineData(){
+    private fun updateLocationData() {
+        val messages = _latestMessages.value
+        val gga = messages["GGA"] as? NMEAMessage.GGA
+        val rmc = messages["RMC"] as? NMEAMessage.RMC
+        val gsa = messages["GSA"] as? NMEAMessage.GSA
+        
         val combined = NMEALocationData(
-            time = tmpRMC?.time ?: tmpGGA?.time ?: "",
-            date = tmpRMC?.date ?: "",
-            latitude = tmpGGA?.latitude?.takeIf { it != 0.0 } ?: (tmpRMC?.latitude ?: 0.0),
-            latHemisphere = tmpGGA?.latDirection ?: tmpRMC?.latDirection ?: 'N',
-            longitude = tmpGGA?.longitude?.takeIf { it != 0.0 } ?: (tmpRMC?.longitude ?: 0.0),
-            lonHemisphere = tmpGGA?.lonDirection ?: tmpRMC?.lonDirection ?: 'E',
-            fixQuality = tmpGGA?.fixQuality ?: 0,
-            fixType = _parsedGSA.value?.fixType ?: 0,
-            numSatellites = tmpGGA?.numSatellites ?: 0,
-            hdop = tmpGGA?.horizontalDilution ?: 0.0,
-            altitude = tmpGGA?.altitude ?: 0.0,
-            geoidHeight = tmpGGA?.geoidSeparation ?: 0.0,
-            mslAltitude = tmpGGA?.let { gga ->
-                gga.altitude + (gga.geoidSeparation ?: 0.0)
-            } ?: 0.0,
-            speedKnots = tmpRMC?.speedOverGround ?: 0.0,
-            course = tmpRMC?.courseOverGround ?: 0.0,
-            magneticVariation = tmpRMC?.magneticVariation ?: 0.0
+            time = rmc?.time ?: gga?.time ?: "",
+            date = rmc?.date ?: "",
+            latitude = gga?.latitude?.takeIf { it != 0.0 } ?: (rmc?.latitude ?: 0.0),
+            latHemisphere = gga?.latDirection ?: rmc?.latDirection ?: 'N',
+            longitude = gga?.longitude?.takeIf { it != 0.0 } ?: (rmc?.longitude ?: 0.0),
+            lonHemisphere = gga?.lonDirection ?: rmc?.lonDirection ?: 'E',
+            fixQuality = gga?.fixQuality ?: 0,
+            fixType = gsa?.fixType ?: 0,
+            numSatellites = gga?.satelliteCount ?: 0,
+            hdop = gga?.horizontalDilution ?: 0.0,
+            altitude = gga?.altitude ?: 0.0,
+            geoidHeight = gga?.geoidSeparation ?: 0.0,
+            mslAltitude = gga?.let { it.altitude + (it.geoidSeparation ?: 0.0) } ?: 0.0,
+            speedKnots = rmc?.speedOverGround ?: 0.0,
+            course = rmc?.courseOverGround ?: 0.0,
+            magneticVariation = rmc?.magneticVariation ?: 0.0
         )
         _locationNMEA.value = combined
     }

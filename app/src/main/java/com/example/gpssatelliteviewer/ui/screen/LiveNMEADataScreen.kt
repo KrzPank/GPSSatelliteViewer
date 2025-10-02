@@ -3,14 +3,20 @@ package com.example.gpssatelliteviewer.ui.screen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,16 +37,13 @@ import androidx.compose.runtime.remember
 
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.gpssatelliteviewer.ui.component.card.DefaultNMEATypeCard
+import com.example.gpssatelliteviewer.ui.component.card.NMEAMessageCard
 import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
+import com.example.gpssatelliteviewer.data.NMEAMessage
+import com.example.gpssatelliteviewer.ui.component.card.RenderGSVInfo
 
-private val gsvMessages: List<String> = listOf(
-    "GLGSV",
-    "GPGSV",
-    "GBGSV",
-    "GAGSV"
-)
 
+// New version using sealed classes - cleaner and more type-safe
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
@@ -48,15 +51,8 @@ fun LiveNMEADataScreen(
     navController: NavController,
     viewModel: NMEAViewModel
 ) {
-    val gga by viewModel.parsedGGA.collectAsState()
-    val rmc by viewModel.parsedRMC.collectAsState()
-    val gsa by viewModel.parsedGSA.collectAsState()
-    val gsv by viewModel.parsedGSV.collectAsState()
-    val vtg by viewModel.parsedVTG.collectAsState()
-
+    val latestMessages by viewModel.latestMessages.collectAsState()
     val nmeaMessageMap by viewModel.nmeaMessageMap.collectAsState()
-
-    val nmeaMessageTypes = nmeaMessageMap.keys.toList()
 
     var dropDownMenuExpanded = remember { mutableStateOf(false) }
 
@@ -64,7 +60,7 @@ fun LiveNMEADataScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Live NMEA messages", style = MaterialTheme.typography.titleLarge)
+                    Text("Live NMEA Messages", style = MaterialTheme.typography.titleLarge)
                 },
                 actions = {
                     Box {
@@ -107,34 +103,41 @@ fun LiveNMEADataScreen(
                 modifier = Modifier
                     .padding(vertical = 8.dp, horizontal = 12.dp)
             ) {
-                var seenGSV = false
-
+                // Define the order for standard NMEA messages
+                val standardOrder = listOf("GGA", "RMC", "GSA", "VTG")
+                val gsvMessages = latestMessages.filter { it.key.contains("GSV") }
+                val standardMessages = latestMessages.filter { it.key in standardOrder }
+                val vendorMessages = latestMessages.filter { it.key !in standardOrder && !it.key.contains("GSV") }
+                
+                // Show standard NMEA messages in defined order
                 items(
-                    items = nmeaMessageTypes,
-                ) { type ->
-                    if (type.contains("GSV") && !seenGSV) {
-                        DefaultNMEATypeCard(
-                            "GSV",
-                            gga,
-                            rmc,
-                            gsa,
-                            vtg,
-                            gsv,
-                            nmeaMessageMap[type].toString()
-                        )
-                        seenGSV = true
+                    items = standardOrder.mapNotNull { key -> 
+                        standardMessages[key]?.let { message -> key to message }
+                    },
+                    key = { it.first }
+                ) { (type, message) ->
+                    NMEAMessageCard(
+                        message = message,
+                        rawMessage = nmeaMessageMap[type] ?: ""
+                    )
+                }
+                
+                // Show GSV messages as a group if any exist
+                if (gsvMessages.isNotEmpty()) {
+                    item {
+                        RenderGSVInfo(gsvMessages = gsvMessages)
                     }
-                    else if (type !in gsvMessages){
-                        DefaultNMEATypeCard(
-                            type,
-                            gga,
-                            rmc,
-                            gsa,
-                            vtg,
-                            gsv,
-                            nmeaMessageMap[type].toString()
-                        )
-                    }
+                }
+                
+                // Show vendor/unknown messages last
+                items(
+                    items = vendorMessages.entries.toList(),
+                    key = { it.key }
+                ) { (type, message) ->
+                    NMEAMessageCard(
+                        message = message,
+                        rawMessage = nmeaMessageMap[type] ?: ""
+                    )
                 }
             }
         }

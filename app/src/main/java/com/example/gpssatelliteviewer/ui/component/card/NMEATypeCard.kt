@@ -1,7 +1,7 @@
 package com.example.gpssatelliteviewer.ui.component.card
 
 import androidx.compose.runtime.Composable
-import com.example.gpssatelliteviewer.data.GGA
+import com.example.gpssatelliteviewer.data.NMEAMessage
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,10 +12,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import com.example.gpssatelliteviewer.data.GSA
-import com.example.gpssatelliteviewer.data.GSV
-import com.example.gpssatelliteviewer.data.RMC
-import com.example.gpssatelliteviewer.data.VTG
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.data.parser.NMEAParser
@@ -26,13 +22,8 @@ import com.example.gpssatelliteviewer.utils.mapFixType
 import com.example.gpssatelliteviewer.utils.mapTalker
 
 @Composable
-fun DefaultNMEATypeCard(
-    type: String,
-    gga: GGA?,
-    rmc: RMC?,
-    gsa: GSA?,
-    vtg: VTG?,
-    gsv: Map<String, GSV>,
+fun NMEAMessageCard(
+    message: NMEAMessage,
     rawMessage: String
 ) {
     Card(
@@ -44,80 +35,30 @@ fun DefaultNMEATypeCard(
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
-                text = type,
+                text = message.messageType,
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(6.dp))
             InfoRow("Raw message", rawMessage)
 
-            when {
-                type.contains("GGA", ignoreCase = true) && gga != null -> {
-                    InfoRow("Time (UTC)", gga.time)
-                    InfoRow(
-                        "Latitude",
-                        CoordinateConverter.geodeticToDMS(gga.latitude, gga.latDirection)
-                    )
-                    InfoRow(
-                        "Longitude",
-                        CoordinateConverter.geodeticToDMS(gga.longitude, gga.lonDirection)
-                    )
-                    InfoRow("Fix Quality", mapFixQuality(gga.fixQuality))
-                    InfoRow("Satellites", gga.numSatellites.toString())
-                    InfoRow("HDOP", gga.horizontalDilution.toString())
-                    InfoRow("Altitude", "${gga.altitude} ${gga.altitudeUnits}")
-                    InfoRow(
-                        "Geoid Separation",
-                        "${gga.geoidSeparation} ${gga.geoidSeparationUnits}"
-                    )
+            // Pattern matching with sealed classes
+            when (message) {
+                is NMEAMessage.GGA -> {
+                    RenderGGAInfo(message)
                 }
-
-                type.contains("RMC", ignoreCase = true) && rmc != null -> {
-                    InfoRow("Time (UTC)", rmc.time)
-                    InfoRow("Date", rmc.date)
-                    InfoRow(
-                        "Latitude",
-                        CoordinateConverter.geodeticToDMS(rmc.latitude, rmc.latDirection)
-                    )
-                    InfoRow(
-                        "Longitude",
-                        CoordinateConverter.geodeticToDMS(rmc.longitude, rmc.lonDirection)
-                    )
-                    InfoRow("Speed (knots)", rmc.speedOverGround.toString())
-                    InfoRow("Course", rmc.courseOverGround.toString())
-                    InfoRow(
-                        "Magnetic Variation",
-                        rmc.magneticVariation?.toString() ?: "-"
-                    )
+                is NMEAMessage.RMC -> {
+                    RenderRMCInfo(message)
                 }
-
-                type.contains("GSA", ignoreCase = true) && gsa != null -> {
-                    InfoRow("Mode", gsa.mode.toString())
-                    InfoRow("Fix Type", mapFixType(gsa.fixType))
-                    InfoRow("PDOP", gsa.pdop.toString())
-                    InfoRow("HDOP", gsa.hdop.toString())
-                    InfoRow("VDOP", gsa.vdop.toString())
-                    InfoRow("Satellites IDs", gsa.satelliteIds.joinToString(", "))
+                is NMEAMessage.GSA -> {
+                    RenderGSAInfo(message)
                 }
-
-                type.contains("VTG", ignoreCase = true) && vtg != null -> {
-                    InfoRow("Course True", vtg.courseTrue.toString())
-                    InfoRow("Course Magnetic", vtg.courseMagnetic?.toString() ?: "N/A")
-                    InfoRow("Speed Knots", vtg.speedKnots.toString())
-                    InfoRow("Speed Km/h", vtg.speedKmph.toString())
+                is NMEAMessage.GSV -> {
+                    RenderGSVInfo(message)
                 }
-                type.contains("GSV", ignoreCase = true) -> {
-                    if (gsv.isEmpty()) InfoRow("Info", "No satellites")
-                    else gsv.forEach { (system, msg) ->
-                        InfoRow("Constellation", "${system}/${mapTalker(msg.talker)}")
-                        InfoRow("Msg #${msg.messageNumber}/${msg.totalMessages}", "")
-                        InfoRow("SV in view", msg.satellitesInView.toString())
-                        msg.satellitesInfo.forEach { sat ->
-                            InfoRow("PRN ${sat.prn}", "E:${sat.elevation}° Az:${sat.azimuth}° SNR:${sat.snr}")
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
+                is NMEAMessage.VTG -> {
+                    RenderVTGInfo(message)
                 }
-                else -> {
+                is NMEAMessage.Unknown -> {
                     InfoRow("Info", "Vendor defined message")
                     val parsed = NMEAParser.parseVendorMessage(rawMessage)
                     parsed.forEach { part ->
@@ -127,4 +68,87 @@ fun DefaultNMEATypeCard(
             }
         }
     }
+}
+
+@Composable
+private fun RenderGGAInfo(gga: NMEAMessage.GGA) {
+    InfoRow("Time (UTC)", gga.time)
+    InfoRow("Latitude", CoordinateConverter.geodeticToDMS(gga.latitude, gga.latDirection))
+    InfoRow("Longitude", CoordinateConverter.geodeticToDMS(gga.longitude, gga.lonDirection))
+    InfoRow("Fix Quality", mapFixQuality(gga.fixQuality))
+    InfoRow("Satellites", gga.satelliteCount.toString())
+    InfoRow("HDOP", gga.horizontalDilution.toString())
+    InfoRow("Altitude", "${gga.altitude} ${gga.altitudeUnits}")
+    InfoRow("Geoid Separation", "${gga.geoidSeparation} ${gga.geoidSeparationUnits}")
+}
+
+@Composable
+private fun RenderRMCInfo(rmc: NMEAMessage.RMC) {
+    InfoRow("Time (UTC)", rmc.time)
+    InfoRow("Date", rmc.date)
+    InfoRow("Latitude", CoordinateConverter.geodeticToDMS(rmc.latitude, rmc.latDirection))
+    InfoRow("Longitude", CoordinateConverter.geodeticToDMS(rmc.longitude, rmc.lonDirection))
+    InfoRow("Speed (knots)", rmc.speedOverGround.toString())
+    InfoRow("Course", rmc.courseOverGround.toString())
+    InfoRow("Magnetic Variation", rmc.magneticVariation?.toString() ?: "-")
+}
+
+@Composable
+private fun RenderGSAInfo(gsa: NMEAMessage.GSA) {
+    InfoRow("Mode", gsa.mode.toString())
+    InfoRow("Fix Type", mapFixType(gsa.fixType))
+    InfoRow("PDOP", gsa.pdop.toString())
+    InfoRow("HDOP", gsa.hdop.toString())
+    InfoRow("VDOP", gsa.vdop.toString())
+    InfoRow("Satellites IDs", gsa.satelliteIds.joinToString(", "))
+}
+
+@Composable
+private fun RenderGSVInfo(gsv: NMEAMessage.GSV) {
+    InfoRow("Constellation", "${gsv.talker}/${mapTalker(gsv.talker)}")
+    InfoRow("Msg #${gsv.messageNumber}/${gsv.totalMessages}", "")
+    InfoRow("SV in view", gsv.satellitesInView.toString())
+    gsv.satellitesInfo.forEach { sat ->
+        InfoRow("PRN ${sat.prn}", "E:${sat.elevation}° Az:${sat.azimuth}° SNR:${sat.snr}")
+    }
+    Spacer(modifier = Modifier.height(8.dp))
+}
+
+@Composable
+fun RenderGSVInfo(gsvMessages: Map<String, NMEAMessage>) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .animateContentSize(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text(
+                text = "GSV - Satellites in View",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+
+            gsvMessages.forEach { (_, message) ->
+                if (message is NMEAMessage.GSV) {
+                    InfoRow("Constellation", "${message.talker}/${mapTalker(message.talker)}")
+                    InfoRow("Message", "${message.messageNumber}/${message.totalMessages}")
+                    InfoRow("SV in view", message.satellitesInView.toString())
+                    message.satellitesInfo.forEach { sat ->
+                        InfoRow("PRN ${sat.prn}", "E:${sat.elevation}° Az:${sat.azimuth}° SNR:${sat.snr}")
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RenderVTGInfo(vtg: NMEAMessage.VTG) {
+    InfoRow("Course True", vtg.courseTrue.toString())
+    InfoRow("Course Magnetic", vtg.courseMagnetic?.toString() ?: "N/A")
+    InfoRow("Speed Knots", vtg.speedKnots.toString())
+    InfoRow("Speed Km/h", vtg.speedKmph.toString())
 }

@@ -43,33 +43,6 @@ data class NMEALocationData(
     val magneticVariation: Double = 0.0
 )
 
-data class GGA(
-    val time: String,
-    val latitude: Double,
-    val latDirection: Char,
-    val longitude: Double,
-    val lonDirection: Char,
-    val fixQuality: Int,
-    val numSatellites: Int,
-    val horizontalDilution: Double,
-    val altitude: Double,
-    val altitudeUnits: Char,
-    val geoidSeparation: Double?,
-    val geoidSeparationUnits: Char?,
-    val dgpsAge: Double?,
-    val dgpsStationId: String?
-)
-
-data class GSA(
-    val mode: Char,
-    val fixType: Int,
-    val satelliteIds: List<Int>,
-    val pdop: Double,
-    val hdop: Double,
-    val vdop: Double,
-    val systemId: Int?
-)
-
 data class SatInfo(
     val prn: Int,
     val elevation: Int?,
@@ -77,32 +50,80 @@ data class SatInfo(
     val snr: Int?
 )
 
-data class GSV(
-    val totalMessages: Int,
-    val messageNumber: Int,
-    val satellitesInView: Int,
-    val satellitesInfo: List<SatInfo>,
-    val talker: String
-)
-
-data class RMC(
-    val time: String,
-    val status: Char,            // A=active, V=void
-    val latitude: Double,
-    val latDirection: Char,
-    val longitude: Double,
-    val lonDirection: Char,
-    val speedOverGround: Double,
-    val courseOverGround: Double,
-    val date: String,            // ddmmyy
-    val magneticVariation: Double?,
-    val variationDirection: Char?
-)
-
-data class VTG(
-    val courseTrue: Double,
-    val courseMagnetic: Double?,
-    val speedKnots: Double,
-    val speedKmph: Double
-)
-
+// Sealed class hierarchy for NMEA messages
+sealed class NMEAMessage {
+    abstract val messageType: String
+    
+    data class GGA(
+        val time: String,
+        val latitude: Double,
+        val latDirection: Char,
+        val longitude: Double,
+        val lonDirection: Char,
+        val fixQuality: Int,
+        val satelliteCount: Int,  // renamed to avoid conflict
+        val horizontalDilution: Double,
+        val altitude: Double,
+        val altitudeUnits: Char,
+        val geoidSeparation: Double?,
+        val geoidSeparationUnits: Char?,
+        val dgpsAge: Double?,
+        val dgpsStationId: String?
+    ) : NMEAMessage() {
+        override val messageType = "GGA"
+    }
+    
+    data class RMC(
+        val time: String,
+        val status: Char,            // A=active, V=void
+        val latitude: Double,
+        val latDirection: Char,
+        val longitude: Double,
+        val lonDirection: Char,
+        val speedOverGround: Double,
+        val courseOverGround: Double,
+        val date: String,            // ddmmyy
+        val magneticVariation: Double?,
+        val variationDirection: Char?
+    ) : NMEAMessage() {
+        override val messageType = "RMC"
+    }
+    
+    data class GSA(
+        val mode: Char,
+        val fixType: Int,
+        val satelliteIds: List<Int>,
+        val pdop: Double,
+        val hdop: Double,
+        val vdop: Double,
+        val systemId: Int?
+    ) : NMEAMessage() {
+        override val messageType = "GSA"
+    }
+    
+    data class GSV(
+        val totalMessages: Int,
+        val messageNumber: Int,
+        val satellitesInView: Int,
+        val satellitesInfo: List<SatInfo>,
+        val talker: String
+    ) : NMEAMessage() {
+        override val messageType = "GSV"
+    }
+    
+    data class VTG(
+        val courseTrue: Double,
+        val courseMagnetic: Double?,
+        val speedKnots: Double,
+        val speedKmph: Double
+    ) : NMEAMessage() {
+        override val messageType = "VTG"
+    }
+    
+    data class Unknown(
+        val rawMessage: String,
+        val type: String
+    ) : NMEAMessage() {
+        override val messageType = type
+    }
+}
