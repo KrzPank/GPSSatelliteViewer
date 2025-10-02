@@ -55,24 +55,21 @@ sealed class GPSStatus {
     object Disabled : GPSStatus()       // GPS is turned off
 }
 
-/**
- * Utility functions for determining GPS status
- */
+data class SNRStats(
+    val average: Float,
+    val count: Float
+)
+
 object GPSStatusUtils {
-    /**
-     * Determines the current GPS status based on satellite and location data
-     */
     fun determineGPSStatus(
         satellites: List<GNSSStatusData>,
         averageSnr: Float,
         hasLocationNMEA: Boolean,
     ): GPSStatus {
-        // Check if GPS is completely disabled or no data
         if (!hasLocationNMEA && satellites.isEmpty()) {
             return GPSStatus.Searching
         }
-        
-        // No satellites visible
+
         if (satellites.isEmpty()) {
             return GPSStatus.NoFix
         }
@@ -81,15 +78,15 @@ object GPSStatusUtils {
         
         return when {
             // Excellent: Many satellites, good SNR, many used in fix
-            satellitesUsedInFix >= 10 && averageSnr >= 35f -> {
+            satellitesUsedInFix >= 20 && averageSnr >= 32f -> {
                 GPSStatus.Excellent
             }
             // Good: Adequate satellites, decent SNR
-            satellitesUsedInFix >= 6 && averageSnr >= 28f -> {
+            satellitesUsedInFix >= 10 && averageSnr >= 25f -> {
                 GPSStatus.Good
             }
             // Fair: Some satellites, moderate SNR
-            satellitesUsedInFix >= 4 && averageSnr >= 20f -> {
+            satellitesUsedInFix >= 6 && averageSnr >= 17f -> {
                 GPSStatus.Fair
             }
             // Poor: Few satellites or weak signal
@@ -100,15 +97,33 @@ object GPSStatusUtils {
         }
     }
 
-    /**
-     * Calculates signal strength as a percentage (0.0 to 1.0)
-     */
-    fun calculateSignalStrength(satellites: List<GNSSStatusData>): Float {
-        if (satellites.isEmpty()) return 0f
-        
-        val averageSnr = satellites.map { it.snr }.average().toFloat()
-        // Normalize SNR to 0-1 range (assuming 50 dBHz is excellent)
-        return (averageSnr / 50f).coerceIn(0f, 1f)
+    fun calculateAverageSNRByConstellation(satellites: List<GNSSStatusData>): Map<String, SNRStats> {
+        val groupedSatellites = satellites.groupBy { it.constellation }
+        return groupedSatellites.mapValues { (_, sats) ->
+            val valid = sats.filter { it.snr != 0f }
+            if (valid.isNotEmpty()) {
+                val avg = valid.map { it.snr }.average().toFloat()
+                val count = valid.size.toFloat()
+                SNRStats(avg, count)
+            } else {
+                SNRStats(0f, 0f)
+            }
+        }
+    }
+
+    fun calculateAverageSNRInFix(satellites: List<GNSSStatusData>): Float {
+        val satellitesInFix = satellites.filter { it.usedInFix }
+        return if (satellitesInFix.isNotEmpty()) {
+            satellitesInFix.map { it.snr }.average().toFloat()
+        } else 0f
+    }
+
+    fun getUsedInFixCount(satellites: List<GNSSStatusData>): Int {
+        return satellites.count { it.usedInFix }
+    }
+
+    fun getTotalSatelliteCount(satellites: List<GNSSStatusData>): Int {
+        return satellites.size
     }
 
     // Helper functions for GPS status display

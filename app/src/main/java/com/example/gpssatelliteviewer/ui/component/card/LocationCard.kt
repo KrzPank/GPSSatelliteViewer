@@ -53,8 +53,6 @@ fun NMEALocationCard(
                 ).joinToString(" / ")
             )
 
-            //Spacer(Modifier.height(6.dp))
-
             InfoRow(
                 label = "Last update (UTC)",
                 value = if (nmea.time == "") "No data"

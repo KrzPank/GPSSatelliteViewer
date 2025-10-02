@@ -4,6 +4,7 @@ package com.example.gpssatelliteviewer.ui.screen
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -38,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.ui.component.card.NMEAMessageCard
+import com.example.gpssatelliteviewer.ui.component.card.MessageStatisticsCard
 import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
 import com.example.gpssatelliteviewer.data.NMEAMessage
 import com.example.gpssatelliteviewer.ui.component.card.RenderGSVInfo
@@ -53,8 +56,10 @@ fun LiveNMEADataScreen(
 ) {
     val latestMessages by viewModel.latestMessages.collectAsState()
     val nmeaMessageMap by viewModel.nmeaMessageMap.collectAsState()
+    val messageStatistics by viewModel.messageStatistics.collectAsState()
 
     var dropDownMenuExpanded = remember { mutableStateOf(false) }
+    var statisticsExpanded = remember { mutableStateOf(true) }
 
     Scaffold(
         topBar = {
@@ -103,6 +108,17 @@ fun LiveNMEADataScreen(
                 modifier = Modifier
                     .padding(vertical = 8.dp, horizontal = 12.dp)
             ) {
+                // Show message statistics first
+                if (messageStatistics.isNotEmpty()) {
+                    item(key = "statistics") {
+                        MessageStatisticsCard(
+                            statistics = messageStatistics,
+                            isExpanded = statisticsExpanded.value,
+                            onExpandedChange = { statisticsExpanded.value = it }
+                        )
+                    }
+                }
+                
                 // Define the order for standard NMEA messages
                 val standardOrder = listOf("GGA", "RMC", "GSA", "VTG")
                 val gsvMessages = latestMessages.filter { it.key.contains("GSV") }
@@ -124,7 +140,7 @@ fun LiveNMEADataScreen(
                 
                 // Show GSV messages as a group if any exist
                 if (gsvMessages.isNotEmpty()) {
-                    item {
+                    item(key = "gsv_group") {
                         RenderGSVInfo(gsvMessages = gsvMessages)
                     }
                 }

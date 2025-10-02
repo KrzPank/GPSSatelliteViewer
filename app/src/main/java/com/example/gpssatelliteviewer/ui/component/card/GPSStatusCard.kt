@@ -19,36 +19,16 @@ import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.utils.GPSStatusUtils
 
-data class SNRStats(
-    val average: Float,
-    val count: Float
-)
 
 @Composable
 fun GPSStatusCard(
     satellites: List<GNSSStatusData>,
     modifier: Modifier = Modifier
 ) {
-    val totalSatellites = satellites.size
-
-    val groupedSatellites = satellites.groupBy { it.constellation }
-    val usedInFixCount = satellites.count { it.usedInFix }
-
-        val averageSNRByConstellation = groupedSatellites.mapValues { (_, sats) ->
-        val valid = sats.filter { it.snr != 0f}
-        if (valid.isNotEmpty()) {
-            val avg = valid.map { it.snr }.average().toFloat()
-            val count = valid.size.toFloat()
-            SNRStats(avg, count)
-        }
-        else
-            SNRStats(0f, 0f)
-    }
-
-    val satellitesInFix = satellites.filter { it.usedInFix }
-    val averageSNRInFix = if (satellitesInFix.isNotEmpty()) {
-        satellitesInFix.map { it.snr }.average().toFloat()
-    } else 0f
+    val totalSatellitesCount = GPSStatusUtils.getTotalSatelliteCount(satellites)
+    val usedInFixCount = GPSStatusUtils.getUsedInFixCount(satellites)
+    val averageSNRByConstellation = GPSStatusUtils.calculateAverageSNRByConstellation(satellites)
+    val averageSNRInFix = GPSStatusUtils.calculateAverageSNRInFix(satellites)
 
     // NEW: Calculate GPS status
     val gpsStatus = GPSStatusUtils.determineGPSStatus(
@@ -78,7 +58,7 @@ fun GPSStatusCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Existing satellite info
-            InfoRow(label = "In view", value = totalSatellites.toString())
+            InfoRow(label = "In view", value = totalSatellitesCount.toString())
             InfoRow(label = "Used in fix", value = usedInFixCount.toString())
             InfoRow(
                 label = "Avg. fix SNR",

@@ -39,6 +39,10 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
     // Unified StateFlow for all parsed messages by type
     private val _latestMessages = MutableStateFlow<Map<String, NMEAMessage>>(emptyMap())
     val latestMessages: StateFlow<Map<String, NMEAMessage>> = _latestMessages
+    
+    // Message statistics - count of each message type
+    private val _messageStatistics = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val messageStatistics: StateFlow<Map<String, Int>> = _messageStatistics
 
     private val handler = Handler(Looper.getMainLooper())
     private val noNMEAMessageTimeout = Runnable {
@@ -71,6 +75,11 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
                             else -> parsed.messageType
                         }
                     } ?: messageType
+                    
+                    // Update message statistics
+                    val currentStats = _messageStatistics.value.toMutableMap()
+                    currentStats[key] = (currentStats[key] ?: 0) + 1
+                    _messageStatistics.value = currentStats
                     
                     // Update raw message map with consistent key
                     _nmeaMessageMap.value = _nmeaMessageMap.value + (key to message)

@@ -24,10 +24,11 @@ import com.example.gpssatelliteviewer.utils.mapTalker
 @Composable
 fun NMEAMessageCard(
     message: NMEAMessage,
-    rawMessage: String
+    rawMessage: String,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .animateContentSize(),
@@ -115,9 +116,12 @@ private fun RenderGSVInfo(gsv: NMEAMessage.GSV) {
 }
 
 @Composable
-fun RenderGSVInfo(gsvMessages: Map<String, NMEAMessage>) {
+fun RenderGSVInfo(
+    gsvMessages: Map<String, NMEAMessage>,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
             .animateContentSize(),
