@@ -30,7 +30,6 @@ fun GPSStatusCard(
     val averageSNRByConstellation = GPSStatusUtils.calculateAverageSNRByConstellation(satellites)
     val averageSNRInFix = GPSStatusUtils.calculateAverageSNRInFix(satellites)
 
-    // NEW: Calculate GPS status
     val gpsStatus = GPSStatusUtils.determineGPSStatus(
         satellites = satellites,
         averageSNRInFix,
@@ -72,6 +71,7 @@ fun GPSStatusCard(
             Spacer(modifier = Modifier.height(4.dp))
             Text("Constellation  Avg. SNR/sat SNR!=0", style = MaterialTheme.typography.bodyMedium)
 
+            Spacer(modifier = Modifier.height(4.dp))
             averageSNRByConstellation.forEach { (constellation, stats) ->
                 InfoRow(
                     label = constellation,

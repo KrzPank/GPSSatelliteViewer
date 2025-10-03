@@ -51,8 +51,12 @@ import com.example.gpssatelliteviewer.ui.component.menu.Scene3DParametersMenu
 import com.example.gpssatelliteviewer.ui.component.menu.SatelliteFilterMenu
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.scene3d.Scene3D
+import com.example.gpssatelliteviewer.ui.theme.DarkBackground
 import com.example.gpssatelliteviewer.utils.HideSystemUI
 import com.example.gpssatelliteviewer.utils.LockOrientationLandscape
+import com.example.gpssatelliteviewer.ui.theme.DarkBackground
+import com.example.gpssatelliteviewer.ui.theme.TextLabel
+import com.example.gpssatelliteviewer.ui.theme.GreenPrimary
 import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberModelLoader
@@ -152,7 +156,7 @@ fun Satellite3DScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black) // Prevent white background during animation
+            .background(DarkBackground) // Use theme background
     ) {
         AnimatedVisibility(
             visible = !isSceneReady,
@@ -199,7 +203,7 @@ fun Satellite3DScreen(
                     modifier = Modifier
                         .fillMaxHeight()
                         .requiredWidth(totalMenuWidth)
-                        .background(Color(0xFF000000)) // Solid black background
+                        .background(DarkBackground) // Solid black background
                         .padding(
                             start = safeInsets.calculateLeftPadding(LayoutDirection.Ltr),
                             top = 0.dp,
@@ -210,21 +214,21 @@ fun Satellite3DScreen(
                     TabRow(
                         selectedTabIndex = selectedTab,
                         containerColor = Color.Transparent,
-                        contentColor = Color.White,
+                        contentColor = TextLabel,
                         indicator = { tabPositions ->
                             TabRowDefaults.SecondaryIndicator(
-                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]), color = Color.Green)
+                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]), color = GreenPrimary)
                         }
                     ) {
                         Tab(
                             selected = selectedTab == 0,
                             onClick = { selectedTab = 0 },
-                            text = { Text("Satellites", color = Color.White) }
+                            text = { Text("Satellites", color = TextLabel) }
                         )
                         Tab(
                             selected = selectedTab == 1,
                             onClick = { selectedTab = 1 },
-                            text = { Text("Scene Settings", color = Color.White) }
+                            text = { Text("Scene Settings", color = TextLabel) }
                         )
                     }
 

@@ -9,35 +9,82 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    // Primary colors - using green as accent
+    primary = GreenPrimary,
+    onPrimary = Color.Black,
+    primaryContainer = GreenDark,
+    onPrimaryContainer = Color.White,
+    
+    // Secondary colors
+    secondary = GreenLight,
+    onSecondary = Color.Black,
+    secondaryContainer = DarkSurfaceVariant,
+    onSecondaryContainer = TextPrimary,
+    
+    // Tertiary colors
+    tertiary = StatusWarning,
+    onTertiary = Color.Black,
+    
+    // Background colors
+    background = DarkBackground,
+    onBackground = TextPrimary,
+    
+    // Surface colors (for cards and elevated elements)
+    surface = DarkSurface,
+    onSurface = TextPrimary,
+    surfaceVariant = CardBackground,
+    onSurfaceVariant = TextSecondary,
+    
+    // Error colors
+    error = StatusError,
+    onError = Color.White,
+    errorContainer = Color(0xFF93000A),
+    onErrorContainer = Color(0xFFFFDAD6),
+    
+    // Outline and border colors
+    outline = OutlineColor,
+    outlineVariant = BorderColor
 )
 
+// Light color scheme - using same colors but inverted where appropriate
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+    primary = GreenDark,
     onPrimary = Color.White,
+    primaryContainer = GreenLight,
+    onPrimaryContainer = Color.Black,
+    
+    secondary = GreenPrimary,
     onSecondary = Color.White,
+    secondaryContainer = Color(0xFFE8F5E8),
+    onSecondaryContainer = Color.Black,
+    
+    tertiary = StatusWarning,
     onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    
+    background = Color.White,
+    onBackground = Color.Black,
+    
+    surface = Color.White,
+    onSurface = Color.Black,
+    surfaceVariant = Color(0xFFF5F5F5),
+    onSurfaceVariant = Color(0xFF424242),
+    
+    error = StatusError,
+    onError = Color.White,
+    
+    outline = Color(0xFF757575),
+    outlineVariant = Color(0xFFBDBDBD)
 )
 
 @Composable
 fun GPSSatelliteViewerTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    darkTheme: Boolean = true, // Default to dark theme
+    // Dynamic color disabled for consistent theming
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {

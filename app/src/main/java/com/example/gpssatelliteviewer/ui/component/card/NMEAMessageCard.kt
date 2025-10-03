@@ -31,8 +31,7 @@ fun NMEAMessageCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .animateContentSize(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            .animateContentSize()
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
@@ -124,8 +123,7 @@ fun RenderGSVInfo(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .animateContentSize(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            .animateContentSize()
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(

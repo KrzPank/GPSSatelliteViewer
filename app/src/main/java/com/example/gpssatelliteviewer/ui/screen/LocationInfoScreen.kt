@@ -2,6 +2,7 @@ package com.example.gpssatelliteviewer.ui.screen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -48,6 +49,8 @@ import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
+import com.example.gpssatelliteviewer.ui.theme.CardBackground
+import com.example.gpssatelliteviewer.ui.theme.DarkBackground
 
 //*
 @RequiresApi(Build.VERSION_CODES.R)
@@ -75,7 +78,7 @@ fun LocationInfoScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Location Info", style = MaterialTheme.typography.titleLarge) },
+                title = { Text("Location Info", style = MaterialTheme.typography.headlineMedium) },
                 actions = {
                     Box {
                         IconButton(onClick = { dropDownMenuExpanded.value = true}) {
@@ -112,8 +115,9 @@ fun LocationInfoScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp, vertical = 8.dp)
-                .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .fillMaxWidth()
+                .background(DarkBackground),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // --- Location Card ---
             item {
@@ -147,7 +151,7 @@ fun LocationInfoScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { expandedMap[constellation] = !expanded },
-                        elevation = CardDefaults.cardElevation(4.dp)
+                        elevation = CardDefaults.cardElevation(4.dp),
                     ) {
                         Row(
                             modifier = Modifier

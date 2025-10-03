@@ -33,9 +33,15 @@ import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.Scene3DParametersState
 import com.example.gpssatelliteviewer.utils.ParameterSection
 import com.google.android.filament.LightManager
+import com.example.gpssatelliteviewer.ui.theme.DarkSurface
+import com.example.gpssatelliteviewer.ui.theme.TextLabel
+import com.example.gpssatelliteviewer.ui.theme.GreenPrimary
+import com.example.gpssatelliteviewer.ui.theme.StatusError
+import com.example.gpssatelliteviewer.ui.theme.OutlineColor
 import kotlin.math.log10
 import kotlin.math.pow
 import androidx.compose.runtime.*
+import com.example.gpssatelliteviewer.ui.theme.DarkBackground
 import com.example.gpssatelliteviewer.utils.format
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,7 +55,7 @@ fun Scene3DParametersMenu(
 
     Column(
         modifier = modifier
-            .background(Color(0xDD000000)) // Semi-transparent black background
+            .background(DarkBackground.copy(alpha = 0.95f))
             .padding(16.dp)
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -57,12 +63,12 @@ fun Scene3DParametersMenu(
         // Header
         Text(
             text = "Scene3D Parameters",
-            color = Color.Companion.White,
+            color = TextLabel,
             fontSize = 20.sp,
-            fontWeight = FontWeight.Companion.Bold
+            fontWeight = FontWeight.Bold
         )
 
-        HorizontalDivider(thickness = 1.dp, color = Color.Companion.Gray)
+        HorizontalDivider(thickness = 1.dp, color = OutlineColor)
 
         // Control buttons
         Row(
@@ -75,9 +81,9 @@ fun Scene3DParametersMenu(
                     onParametersChanged(parametersState.parameters)
                 },
                 modifier = Modifier.Companion.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBD1A1A)) // Muted dark red
+                colors = ButtonDefaults.buttonColors(containerColor = StatusError)
             ) {
-                Text("Reset", color = Color.Companion.White, fontSize = 12.sp)
+                Text("Reset", color = TextLabel, fontSize = 12.sp)
             }
         }
 
@@ -160,17 +166,17 @@ fun SliderParameter(
             modifier = Modifier.Companion.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = label, color = Color.Companion.White, fontSize = 14.sp)
-            Text(text = valueFormatter(value), color = Color.Companion.White, fontSize = 12.sp)
+            Text(text = label, color = TextLabel, fontSize = 14.sp)
+            Text(text = valueFormatter(value), color = TextLabel, fontSize = 12.sp)
         }
         Slider(
             value = value,
             onValueChange = onValueChange,
             valueRange = valueRange,
             colors = SliderDefaults.colors(
-                thumbColor = Color.Companion.White,
-                activeTrackColor = Color.Companion.Green,
-                inactiveTrackColor = Color.Companion.Gray
+                thumbColor = TextLabel,
+                activeTrackColor = GreenPrimary,
+                inactiveTrackColor = OutlineColor
             )
         )
     }
@@ -185,7 +191,7 @@ fun ColorParameter(
     onColorChanged: (Float, Float, Float) -> Unit
 ) {
     Column {
-        Text(text = label, color = Color.Companion.White, fontSize = 14.sp)
+        Text(text = label, color = TextLabel, fontSize = 14.sp)
 
         // Red component
         SliderParameter(
@@ -236,7 +242,7 @@ fun ModelSelector(
     val currentDisplayName = options.find { it.first == currentPath }?.second ?: "Unknown"
 
     Column {
-        Text(text = label, color = Color.Companion.White, fontSize = 14.sp)
+        Text(text = label, color = TextLabel, fontSize = 14.sp)
 
         ExposedDropdownMenuBox(
             expanded = expanded,
@@ -248,10 +254,10 @@ fun ModelSelector(
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = Color.Companion.White,
-                    unfocusedTextColor = Color.Companion.White,
-                    focusedBorderColor = Color.Companion.Green,
-                    unfocusedBorderColor = Color.Companion.Gray
+                    focusedTextColor = TextLabel,
+                    unfocusedTextColor = TextLabel,
+                    focusedBorderColor = GreenPrimary,
+                    unfocusedBorderColor = OutlineColor
                 ),
                 modifier = Modifier.Companion
                     .fillMaxWidth()
@@ -296,8 +302,8 @@ fun LogarithmicSliderParameter(
             modifier = Modifier.Companion.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = label, color = Color.Companion.White, fontSize = 14.sp)
-            Text(text = valueFormatter(value), color = Color.Companion.White, fontSize = 12.sp)
+            Text(text = label, color = TextLabel, fontSize = 14.sp)
+            Text(text = valueFormatter(value), color = TextLabel, fontSize = 12.sp)
         }
         Slider(
             value = sliderPosition,
@@ -309,9 +315,9 @@ fun LogarithmicSliderParameter(
             },
             valueRange = 0f..1f,
             colors = SliderDefaults.colors(
-                thumbColor = Color.Companion.White,
-                activeTrackColor = Color.Companion.Green,
-                inactiveTrackColor = Color.Companion.Gray
+                thumbColor = TextLabel,
+                activeTrackColor = GreenPrimary,
+                inactiveTrackColor = OutlineColor
             )
         )
     }

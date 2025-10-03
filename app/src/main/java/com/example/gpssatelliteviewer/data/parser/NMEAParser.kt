@@ -214,7 +214,7 @@ object NMEAParser {
         return when (talker) {
             "GPGSV" -> if (prn > 32) prn + 87 else prn        // GPS/SBAS
             "GLGSV" -> prn - 64                                // GLONASS
-            "GBGSV" -> prn - 100                               // BeiDou
+            //"GBGSV" -> prn - 100                               // BeiDou what?? negative BeoDou PRN
             else -> prn                                     // GA, GQ, etc.
         }
     }

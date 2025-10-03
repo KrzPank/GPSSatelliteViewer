@@ -95,10 +95,7 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-    
-    /**
-     * Update combined location data from latest parsed messages
-     */
+
     private fun updateLocationData() {
         val messages = _latestMessages.value
         val gga = messages["GGA"] as? NMEAMessage.GGA

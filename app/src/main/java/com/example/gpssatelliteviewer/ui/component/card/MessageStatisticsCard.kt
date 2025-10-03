@@ -56,8 +56,7 @@ fun MessageStatisticsCard(
                     dampingRatio = Spring.DampingRatioNoBouncy,
                     stiffness = Spring.StiffnessHigh
                 )
-            ),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+            )
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
@@ -70,7 +69,6 @@ fun MessageStatisticsCard(
                 Text(
                     text = "Message Statistics",
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
@@ -94,6 +92,10 @@ fun MessageStatisticsCard(
             ) {
                 Column {
                     Spacer(modifier = Modifier.height(6.dp))
+
+                    val totalMessages = statistics.values.sum()
+
+                    InfoRow("Total messages received", totalMessages.toString())
                     
                     // Sort statistics: Standard messages first, then GSV in order, then vendor alphabetically
                     val standardMessages = standardOrder.mapNotNull { key -> 

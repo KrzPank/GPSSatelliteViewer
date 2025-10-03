@@ -18,7 +18,7 @@ import java.util.Locale
 
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
-    private val updateInterval = 1000L // in milis
+    private val updateInterval = 1001L // in milis
     private val timeoutPeriod: Long = 15 * 1000 // 15 sec
     private val handler = Handler(Looper.getMainLooper())
 

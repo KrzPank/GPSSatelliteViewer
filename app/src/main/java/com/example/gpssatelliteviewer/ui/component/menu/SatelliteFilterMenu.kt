@@ -23,9 +23,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.gpssatelliteviewer.data.GNSSStatusData
+import com.example.gpssatelliteviewer.ui.theme.DarkBackground
 import com.example.gpssatelliteviewer.utils.CustomCheckbox
 import com.example.gpssatelliteviewer.utils.ParameterSection
-import com.example.gpssatelliteviewer.utils.StatisticItem
+import com.example.gpssatelliteviewer.utils.InfoRow
+import com.example.gpssatelliteviewer.ui.theme.DarkSurface
+import com.example.gpssatelliteviewer.ui.theme.DarkSurfaceVariant
+import com.example.gpssatelliteviewer.ui.theme.GreenLight
+import com.example.gpssatelliteviewer.ui.theme.TextLabel
+import com.example.gpssatelliteviewer.ui.theme.TextSecondary
+import com.example.gpssatelliteviewer.ui.theme.GreenPrimary
+import com.example.gpssatelliteviewer.ui.theme.StatusError
+import com.example.gpssatelliteviewer.ui.theme.OutlineColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,7 +53,7 @@ fun SatelliteFilterMenu(
 
     Column(
         modifier = modifier
-            .background(Color(0xDD000000)) // Semi-transparent black background
+            .background(DarkBackground.copy(alpha = 0.95f)) // Use theme background
             .padding(16.dp)
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -52,12 +61,12 @@ fun SatelliteFilterMenu(
         // Header
         Text(
             text = "Satellite Filters",
-            color = Color.Companion.White,
+            color = TextLabel,
             fontSize = 20.sp,
-            fontWeight = FontWeight.Companion.Bold
+            fontWeight = FontWeight.Bold
         )
 
-        HorizontalDivider(thickness = 1.dp, color = Color.Companion.Gray)
+        HorizontalDivider(thickness = 1.dp, color = OutlineColor)
 
         // Control buttons
         Row(
@@ -66,10 +75,10 @@ fun SatelliteFilterMenu(
         ) {
             Button(
                 onClick = { navController.navigate("LocationInfoScreen") },
-                modifier = Modifier.Companion.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4A5568)) // Muted blue-gray
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(containerColor = DarkSurfaceVariant)
             ) {
-                Text("Location Info", color = Color.Companion.White, fontSize = 12.sp)
+                Text("Location Info", color = TextLabel, fontSize = 12.sp)
             }
         }
 
@@ -77,7 +86,7 @@ fun SatelliteFilterMenu(
         ParameterSection("Navigation") {
             Text(
                 text = "Double tap to open/close menu",
-                color = Color(0xFFCCCCCC),
+                color = TextSecondary,
                 fontSize = 14.sp
             )
         }
@@ -94,17 +103,17 @@ fun SatelliteFilterMenu(
                         selectedConstellations.clear()
                         selectedConstellations.addAll(allConstellations)
                     },
-                    modifier = Modifier.Companion.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF20BD28)) // Muted forest green
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
                 ) {
-                    Text("Select All", color = Color.Companion.White, fontSize = 12.sp)
+                    Text("Select All", color = TextLabel, fontSize = 12.sp)
                 }
                 Button(
                     onClick = { selectedConstellations.clear() },
-                    modifier = Modifier.Companion.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFBD1A1A)) // Muted dark red
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = StatusError)
                 ) {
-                    Text("Deselect All", color = Color.Companion.White, fontSize = 12.sp)
+                    Text("Deselect All", color = TextLabel, fontSize = 12.sp)
                 }
             }
 
@@ -154,13 +163,13 @@ fun SatelliteFilterMenu(
             }
             val usedInFix = satelliteList.count { it.usedInFix }
 
-            StatisticItem("Total Satellites", totalSatellites.toString())
-            StatisticItem("Currently Visible", visibleSatellites.toString())
-            StatisticItem("Used in Fix", usedInFix.toString())
+            InfoRow("Total Satellites", totalSatellites.toString())
+            InfoRow("Currently Visible", visibleSatellites.toString())
+            InfoRow("Used in Fix", usedInFix.toString())
 
             allConstellations.forEach { constellation ->
                 val count = satelliteList.count { it.constellation == constellation }
-                StatisticItem(constellation, count.toString())
+                InfoRow(constellation, count.toString())
             }
         }
     }

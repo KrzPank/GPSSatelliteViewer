@@ -41,10 +41,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.data.NMEALocationData
+import com.example.gpssatelliteviewer.ui.theme.SNRDarkerGreen
+import com.example.gpssatelliteviewer.ui.theme.SNRLightGreen
+import com.example.gpssatelliteviewer.ui.theme.SNROrange
+import com.example.gpssatelliteviewer.ui.theme.SNRRed
+import com.example.gpssatelliteviewer.ui.theme.SNRYellow
+import com.example.gpssatelliteviewer.ui.theme.GPSExcellent
+import com.example.gpssatelliteviewer.ui.theme.GPSGood
+import com.example.gpssatelliteviewer.ui.theme.GPSFair
+import com.example.gpssatelliteviewer.ui.theme.GPSPoor
+import com.example.gpssatelliteviewer.ui.theme.GPSNoFix
+import com.example.gpssatelliteviewer.ui.theme.GPSSearching
+import com.example.gpssatelliteviewer.ui.theme.GPSDisabled
+import com.example.gpssatelliteviewer.ui.theme.TextPrimary
 
-/**
- * Represents different GPS status levels for visual feedback
- */
 sealed class GPSStatus {
     object Excellent : GPSStatus()      // Strong signal, many satellites, high accuracy
     object Good : GPSStatus()           // Good signal, adequate satellites
@@ -93,6 +103,7 @@ object GPSStatusUtils {
             satellitesUsedInFix >= 1 && averageSnr >= 10f ->{
                 GPSStatus.Poor
             }
+            // TODO ADD searching and disabled GPSStatus
             else -> GPSStatus.NoFix
         }
     }
@@ -152,13 +163,13 @@ object GPSStatusUtils {
     
     fun getStatusColor(gpsStatus: GPSStatus): Color {
         return when (gpsStatus) {
-            is GPSStatus.Excellent -> Color(0xFF4CAF50) // Green
-            is GPSStatus.Good -> Color(0xFF8BC34A)       // Light Green
-            is GPSStatus.Fair -> Color(0xFFFF9800)       // Orange
-            is GPSStatus.Poor -> Color(0xFFFF5722)       // Red Orange
-            is GPSStatus.NoFix -> Color(0xFFF44336)      // Red
-            is GPSStatus.Searching -> Color(0xFF2196F3)  // Blue
-            is GPSStatus.Disabled -> Color(0xFF9E9E9E)   // Gray
+            is GPSStatus.Excellent -> GPSExcellent
+            is GPSStatus.Good -> GPSGood
+            is GPSStatus.Fair -> GPSFair
+            is GPSStatus.Poor -> GPSPoor
+            is GPSStatus.NoFix -> GPSNoFix
+            is GPSStatus.Searching -> GPSSearching
+            is GPSStatus.Disabled -> GPSDisabled
         }
     }
 
@@ -171,11 +182,11 @@ object GPSStatusUtils {
         val clamped = value.coerceIn(0f, 99f)
 
         val ranges = listOf(
-            0f to 10f to Color.Red,
-            10f to 20f to Color(0xFFFF9800),
-            20f to 30f to Color.Yellow,
-            30f to 50f to Color(0xFF86D317),
-            50f to 99f to Color(0xFF39BB3F)
+            0f to 10f to SNRRed,
+            10f to 20f to SNROrange,
+            20f to 30f to SNRYellow,
+            30f to 50f to SNRLightGreen,
+            50f to 99f to SNRDarkerGreen
         )
 
         val thresholds = listOf(0f, 10f, 20f, 30f, 50f, 99f)
@@ -209,7 +220,7 @@ object GPSStatusUtils {
                         lineTo(indicatorX + triangleWidth / 2, -8f)
                         close()
                     }
-                    drawPath(path, color = Color.Black)
+                    drawPath(path, color = TextPrimary)
                 }
             }
 

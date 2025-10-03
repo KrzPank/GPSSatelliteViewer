@@ -11,6 +11,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import android.graphics.Color
+import android.os.Build
 
 
 @Composable
@@ -33,6 +35,42 @@ fun HideSystemUI() {
                 val controller = WindowCompat.getInsetsController(window, window.decorView)
                 controller.show(WindowInsetsCompat.Type.systemBars())
                 WindowCompat.setDecorFitsSystemWindows(window, true)
+            }
+        }
+    }
+}
+
+@Composable
+fun SetupDarkSystemUI() {
+    val activity = LocalActivity.current as? ComponentActivity
+
+    DisposableEffect(activity) {
+        activity?.window?.let { window ->
+            // Enable edge-to-edge content
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            
+            // Set status bar and navigation bar colors to dark
+            window.statusBarColor = Color.parseColor("#1E1E1E") // Your dark background
+            window.navigationBarColor = Color.parseColor("#1E1E1E")
+
+            // Set light status bar icons (dark icons on light background = false, light icons on dark background = true)
+            val controller = WindowCompat.getInsetsController(window, window.decorView)
+            controller.isAppearanceLightStatusBars = false  // Light icons for dark background
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                controller.isAppearanceLightNavigationBars = false  // Light icons for dark navigation
+            }
+        }
+
+        onDispose {
+            // Reset to default when leaving the screen
+            activity?.window?.let { window ->
+                window.statusBarColor = Color.TRANSPARENT
+                window.navigationBarColor = Color.TRANSPARENT
+                val controller = WindowCompat.getInsetsController(window, window.decorView)
+                controller.isAppearanceLightStatusBars = true
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    controller.isAppearanceLightNavigationBars = true
+                }
             }
         }
     }

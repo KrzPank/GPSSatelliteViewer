@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import com.example.gpssatelliteviewer.ui.theme.GPSSatelliteViewerTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,6 +40,7 @@ import com.example.gpssatelliteviewer.ui.screen.LiveNMEADataScreen
 import com.example.gpssatelliteviewer.ui.screen.LocationDenyScreen
 import com.example.gpssatelliteviewer.ui.screen.LocationInfoScreen
 import com.example.gpssatelliteviewer.ui.screen.Satellite3DScreen
+import com.example.gpssatelliteviewer.utils.SetupDarkSystemUI
 
 class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.R)
@@ -67,8 +69,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            MaterialTheme {
-                Surface {
+            GPSSatelliteViewerTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize()
+                ) {
                     when (hasPermission) {
                         null -> {
                             Box(
@@ -95,6 +99,7 @@ fun AppNavigation(
     hasPermission: Boolean,
     permissionLauncher: ManagedActivityResultLauncher<String, Boolean>
 ) {
+    SetupDarkSystemUI()
     val navController = rememberNavController()
 
     if (hasPermission) {

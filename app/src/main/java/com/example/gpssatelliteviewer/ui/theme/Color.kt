@@ -2,6 +2,51 @@ package com.example.gpssatelliteviewer.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+// Dark Theme Colors
+// Background Colors
+val DarkBackground = Color(0xFF1E1E1E)
+val DarkSurface = Color(0xFF2D2D2D)
+val DarkSurfaceVariant = Color(0xFF3A3A3A)
+val CardBackground = Color(0xFF3A3A3A)
+
+// Text Colors
+val TextPrimary = Color(0xFFFFFFFF)
+val TextSecondary = Color(0xFFE0E0E0)
+val TextLabel = Color(0xFFFFFFFF)
+val TextHint = Color(0xFF9E9E9E)
+
+// Green Accent Colors for Values
+val GreenPrimary = Color(0xFF4CAF50)
+val GreenLight = Color(0xFF81C784)
+val GreenDark = Color(0xFF388E3C)
+val ValueText = Color(0xFF4CAF50)
+
+// Status Colors
+val StatusGood = Color(0xFF4CAF50)
+val StatusWarning = Color(0xFFFF9800)
+val StatusError = Color(0xFFF44336)
+
+// GPS Status Colors
+val GPSExcellent = Color(0xFF4CAF50)    // Green
+val GPSGood = Color(0xFF8BC34A)         // Light Green  
+val GPSFair = Color(0xFFFF9800)         // Orange
+val GPSPoor = Color(0xFFFF5722)         // Red Orange
+val GPSNoFix = Color(0xFFF44336)        // Red
+val GPSSearching = Color(0xFF2196F3)    // Blue
+val GPSDisabled = Color(0xFF9E9E9E)     // Gray
+
+// Border and Outline Colors
+val BorderColor = Color(0xFF555555)
+val OutlineColor = Color(0xFF424242)
+
+// SNR bar colors
+val SNRRed = Color.Red
+val SNROrange = Color(0xFFFF9800)
+val SNRYellow = Color.Yellow
+val SNRLightGreen = Color(0xFF86D317)
+val SNRDarkerGreen = Color(0xFF39BB3F)
+
+// Legacy colors (keeping for compatibility)
 val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)

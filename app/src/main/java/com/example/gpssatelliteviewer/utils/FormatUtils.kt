@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
@@ -18,50 +17,32 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.gpssatelliteviewer.ui.theme.TextLabel
+import com.example.gpssatelliteviewer.ui.theme.ValueText
+import com.example.gpssatelliteviewer.ui.theme.GreenPrimary
+import com.example.gpssatelliteviewer.ui.theme.TextHint
 
 @Composable
 fun InfoRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.Companion.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.bodyMedium,
-            fontSize = 15.sp
-        )
-        Text(
-            value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Companion.Bold,
-            fontSize = 17.sp
-        )
-    }
-}
-
-@Composable
-fun StatisticItem(
-    label: String,
-    value: String
-) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
             text = label,
-            color = Color.White,
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextLabel,
             fontSize = 15.sp
         )
         Text(
             text = value,
-            color = Color.Green,
-            fontSize = 17.sp,
-            fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.bodyMedium,
+            color = ValueText,
+            fontWeight = FontWeight.Bold,
+            fontSize = 17.sp
         )
     }
 }
@@ -74,7 +55,6 @@ fun ParameterSection(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0x33FFFFFF))
     ) {
         Column(
             modifier = Modifier.padding(12.dp),
@@ -82,7 +62,7 @@ fun ParameterSection(
         ) {
             Text(
                 text = title,
-                color = Color.White,
+                color = TextLabel,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
             )
@@ -107,15 +87,15 @@ fun CustomCheckbox(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 colors = CheckboxDefaults.colors(
-                    checkmarkColor = Color.White,
-                    uncheckedColor = Color.White,
-                    checkedColor = Color.Green
+                    checkmarkColor = TextLabel,
+                    uncheckedColor = TextLabel,
+                    checkedColor = GreenPrimary
                 )
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = label,
-                color = Color.White,
+                color = TextLabel,
                 fontSize = 14.sp
             )
         }
@@ -124,7 +104,7 @@ fun CustomCheckbox(
         description?.let {
             Text(
                 text = it,
-                color = Color(0xFFCCCCCC),
+                color = TextHint,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(start = 15.dp)
             )
