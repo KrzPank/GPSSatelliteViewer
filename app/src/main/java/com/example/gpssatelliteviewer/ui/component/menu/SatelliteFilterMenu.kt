@@ -74,7 +74,7 @@ fun SatelliteFilterMenu(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(
-                onClick = { navController.navigate("LocationInfoScreen") },
+                onClick = { navController.navigate("MainScreen") },
                 modifier = Modifier.weight(1f),
                 colors = ButtonDefaults.buttonColors(containerColor = DarkSurfaceVariant)
             ) {

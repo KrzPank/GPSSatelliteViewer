@@ -39,6 +39,7 @@ import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
 import com.example.gpssatelliteviewer.ui.screen.LiveNMEADataScreen
 import com.example.gpssatelliteviewer.ui.screen.LocationDenyScreen
 import com.example.gpssatelliteviewer.ui.screen.LocationInfoScreen
+import com.example.gpssatelliteviewer.ui.screen.MainScreen
 import com.example.gpssatelliteviewer.ui.screen.Satellite3DScreen
 import com.example.gpssatelliteviewer.utils.SetupDarkSystemUI
 
@@ -122,17 +123,14 @@ fun AppNavigation(
 
         NavHost(
             navController = navController,
-            startDestination = "LocationInfoScreen"
+            startDestination = "MainScreen"
         ) {
-            composable("LocationInfoScreen") {
-                LocationInfoScreen(navController, gnssViewModel, nmeaViewModel, locationViewModel)
+            composable("MainScreen") {
+                MainScreen(navController, gnssViewModel, nmeaViewModel, locationViewModel)
             }
             composable("Satellite3DScreen") {
                 val locationNMEA by nmeaViewModel.locationNMEA.collectAsState()
                 Satellite3DScreen(navController, gnssViewModel, locationNMEA)
-            }
-            composable("LiveNMEADataScreen") {
-                LiveNMEADataScreen(navController, nmeaViewModel)
             }
         }
     } else {

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DropdownMenu
@@ -21,47 +22,35 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.navigation.NavController
+import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.example.gpssatelliteviewer.ui.component.card.AndroidApiLocationCard
-import com.example.gpssatelliteviewer.ui.component.card.LoadingLocationTextCard
-import com.example.gpssatelliteviewer.ui.component.card.NMEALocationCard
-import com.example.gpssatelliteviewer.ui.component.card.GPSStatusCard
-
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
-import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
-import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
+import com.example.gpssatelliteviewer.ui.component.card.ConstellationCard
+import com.example.gpssatelliteviewer.ui.component.card.SatelliteInfoCard
 import com.example.gpssatelliteviewer.ui.theme.DarkBackground
 
-//*
-@RequiresApi(Build.VERSION_CODES.R)
 @OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.R)
 @Composable
-fun LocationInfoScreen(
+fun SatelliteScreen(
     navController: NavController,
-    gnssStatusViewModel: GNSSViewModel,
-    nmeaViewModel: NMEAViewModel,
-    locationViewModel: LocationViewModel
+    gnssViewModel: GNSSViewModel
 ) {
-    val satellites by gnssStatusViewModel.satelliteList.collectAsState()
-
-    val locationNMEA by nmeaViewModel.locationNMEA.collectAsState()
-    val locationAndroidApi by locationViewModel.locationAndroidApi.collectAsState()
-
-    val hasLocationNMEA by nmeaViewModel.hasLocationNMEA.collectAsState()
-    val hasLocationAndroidApi by locationViewModel.hasLocationAndroidApi.collectAsState()
-
+    val satellites by gnssViewModel.satelliteList.collectAsState()
+    val groupedSatellites = satellites.groupBy { it.constellation }
 
     var dropDownMenuExpanded = remember { mutableStateOf(false) }
+    val expandedMap = remember { mutableStateMapOf<String, Boolean>() }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Location Info", style = MaterialTheme.typography.headlineMedium) },
+                title = { Text("Satellite Info", style = MaterialTheme.typography.headlineMedium) },
                 actions = {
                     Box {
                         IconButton(onClick = { dropDownMenuExpanded.value = true}) {
@@ -95,18 +84,23 @@ fun LocationInfoScreen(
                 .background(DarkBackground),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // --- Location Card ---
-            item {
-                when {
-                    hasLocationNMEA -> NMEALocationCard(locationNMEA)
-                    hasLocationAndroidApi -> AndroidApiLocationCard(locationAndroidApi)
-                    else -> LoadingLocationTextCard()
-                }
-            }
+            groupedSatellites.forEach { (constellation, satellitesInGroup) ->
+                val expanded = expandedMap.getOrPut(constellation) { false }
 
-            // --- Summary of GPS status ---
-            item {
-                GPSStatusCard(satellites, hasLocationNMEA)
+                item {
+                    ConstellationCard(
+                        constellation = constellation,
+                        satellitesCount = satellitesInGroup.size,
+                        expanded = expanded,
+                        onClick = { expandedMap[constellation] = !expanded }
+                    )
+                }
+
+                if (expanded) {
+                    items(satellitesInGroup) { satellites ->
+                        SatelliteInfoCard(satellites)
+                    }
+                }
             }
         }
     }

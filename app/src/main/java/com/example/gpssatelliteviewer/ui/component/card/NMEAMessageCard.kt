@@ -15,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.data.parser.NMEAParser
+import com.example.gpssatelliteviewer.ui.theme.GreenPrimary
+import com.example.gpssatelliteviewer.ui.theme.ValueText
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.mapFixQuality
@@ -39,9 +41,9 @@ fun NMEAMessageCard(
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(6.dp))
-            InfoRow("Raw message", rawMessage)
+            Text("Raw message:", style = MaterialTheme.typography.bodyMedium)
+            Text(rawMessage, style = MaterialTheme.typography.bodyMedium, color = ValueText)
 
-            // Pattern matching with sealed classes
             when (message) {
                 is NMEAMessage.GGA -> {
                     RenderGGAInfo(message)

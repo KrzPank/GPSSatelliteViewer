@@ -23,6 +23,7 @@ import com.example.gpssatelliteviewer.utils.GPSStatusUtils
 @Composable
 fun GPSStatusCard(
     satellites: List<GNSSStatusData>,
+    hasLocationNMEA: Boolean,
     modifier: Modifier = Modifier
 ) {
     val totalSatellitesCount = GPSStatusUtils.getTotalSatelliteCount(satellites)
@@ -30,11 +31,7 @@ fun GPSStatusCard(
     val averageSNRByConstellation = GPSStatusUtils.calculateAverageSNRByConstellation(satellites)
     val averageSNRInFix = GPSStatusUtils.calculateAverageSNRInFix(satellites)
 
-    val gpsStatus = GPSStatusUtils.determineGPSStatus(
-        satellites = satellites,
-        averageSNRInFix,
-        hasLocationNMEA = satellites.isNotEmpty()
-    )
+    val gpsStatus = GPSStatusUtils.determineGPSStatus(satellites, averageSNRInFix, hasLocationNMEA)
 
     Card(
         shape = RoundedCornerShape(12.dp),

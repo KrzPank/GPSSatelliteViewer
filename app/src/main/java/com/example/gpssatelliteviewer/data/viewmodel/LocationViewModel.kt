@@ -11,8 +11,13 @@ import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.AndroidViewModel
 import com.example.gpssatelliteviewer.data.ListenerData
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import java.util.Date
 import java.util.Locale
 
@@ -21,6 +26,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     private val updateInterval = 1001L // in milis
     private val timeoutPeriod: Long = 15 * 1000 // 15 sec
     private val handler = Handler(Looper.getMainLooper())
+    private val parsingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val _locationAndroidApi = MutableStateFlow<ListenerData>(ListenerData())
     val locationAndroidApi: StateFlow<ListenerData> = _locationAndroidApi
@@ -32,29 +38,28 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         _hasLocationAndroidApi.value = false
     }
 
-
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
 
-            _hasLocationAndroidApi.value = true
-            handler.removeCallbacks(noAndroidApiLocationTimeout)
-            handler.postDelayed(noAndroidApiLocationTimeout, timeoutPeriod)
+            parsingScope.launch {
+                _hasLocationAndroidApi.value = true
+                handler.removeCallbacks(noAndroidApiLocationTimeout)
+                handler.postDelayed(noAndroidApiLocationTimeout, timeoutPeriod)
 
-            //if (_hasLocationNMEA.value) return
+                val sdf = SimpleDateFormat("HHmmss", Locale.US)
+                sdf.timeZone = TimeZone.getTimeZone("UTC")
+                val formattedTime = sdf.format(Date(System.currentTimeMillis()))
 
-            val sdf = SimpleDateFormat("HHmmss", Locale.US)
-            sdf.timeZone = TimeZone.getTimeZone("UTC")
-            val formattedTime = sdf.format(Date(System.currentTimeMillis()))
-
-            val listenerData = ListenerData(
-                time = formattedTime,
-                latitude = location.latitude,
-                longitude = location.longitude,
-                altitude = location.altitude,
-                latHemisphere = if (location.latitude >= 0) "N" else "S",
-                longHemisphere = if (location.longitude >= 0) "E" else "W"
-            )
-            _locationAndroidApi.value = listenerData
+                val listenerData = ListenerData(
+                    time = formattedTime,
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    altitude = location.altitude,
+                    latHemisphere = if (location.latitude >= 0) "N" else "S",
+                    longHemisphere = if (location.longitude >= 0) "E" else "W"
+                )
+                _locationAndroidApi.value = listenerData
+            }
         }
 
         override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
@@ -78,5 +83,6 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     override fun onCleared() {
         super.onCleared()
         locationManager.removeUpdates(locationListener)
+        parsingScope.cancel()
     }
 }

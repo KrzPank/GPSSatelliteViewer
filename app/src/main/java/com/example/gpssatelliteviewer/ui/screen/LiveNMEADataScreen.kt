@@ -46,7 +46,6 @@ import com.example.gpssatelliteviewer.data.NMEAMessage
 import com.example.gpssatelliteviewer.ui.component.card.RenderGSVInfo
 
 
-// New version using sealed classes - cleaner and more type-safe
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
@@ -86,13 +85,13 @@ fun LiveNMEADataScreen(
                                     navController.navigate("Satellite3DScreen")
                                 }
                             )
-                            DropdownMenuItem(
-                                text = { Text("Location Info") },
-                                onClick = {
-                                    dropDownMenuExpanded.value = false
-                                    navController.navigate("LocationInfoScreen")
-                                }
-                            )
+                            //DropdownMenuItem(
+                            //    text = { Text("Location Info") },
+                            //    onClick = {
+                            //        dropDownMenuExpanded.value = false
+                            //        navController.navigate("LocationInfoScreen")
+                            //    }
+                            //)
                         }
                     }
                 }
@@ -108,9 +107,8 @@ fun LiveNMEADataScreen(
                 modifier = Modifier
                     .padding(vertical = 8.dp, horizontal = 12.dp)
             ) {
-                // Show message statistics first
                 if (messageStatistics.isNotEmpty()) {
-                    item(key = "statistics") {
+                    item{
                         MessageStatisticsCard(
                             statistics = messageStatistics,
                             isExpanded = statisticsExpanded.value,

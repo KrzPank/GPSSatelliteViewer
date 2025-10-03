@@ -1,6 +1,5 @@
 package com.example.gpssatelliteviewer.ui.screen
 
-import android.content.pm.ActivityInfo
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -42,7 +41,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.LayoutDirection
 import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.scene3d.Scene3DParametersState
@@ -54,7 +52,6 @@ import com.example.gpssatelliteviewer.scene3d.Scene3D
 import com.example.gpssatelliteviewer.ui.theme.DarkBackground
 import com.example.gpssatelliteviewer.utils.HideSystemUI
 import com.example.gpssatelliteviewer.utils.LockOrientationLandscape
-import com.example.gpssatelliteviewer.ui.theme.DarkBackground
 import com.example.gpssatelliteviewer.ui.theme.TextLabel
 import com.example.gpssatelliteviewer.ui.theme.GreenPrimary
 import io.github.sceneview.rememberEngine
@@ -120,7 +117,8 @@ fun Satellite3DScreen(
         firstView.value = false
     }
 
-    // Apply filters to satelliteList
+    // Apply filters to satelliteList ??? something wrong here need testing
+    // Wrong satellite filters or wrong node management
     val filteredSatellites = satelliteList.filter { sat ->
         selectedConstellations.contains(sat.constellation) && (!onlyUsedInFix || sat.usedInFix)
     }
@@ -156,7 +154,7 @@ fun Satellite3DScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground) // Use theme background
+            .background(DarkBackground)
     ) {
         AnimatedVisibility(
             visible = !isSceneReady,
@@ -169,7 +167,6 @@ fun Satellite3DScreen(
             )
         }
 
-        // 3D Scene with fade in animation
         AnimatedVisibility(
             visible = isSceneReady,
             enter = fadeIn(
@@ -186,7 +183,6 @@ fun Satellite3DScreen(
             }
         }
 
-        // Left-side overlay menu with tabs - only show when scene is loaded
         if (isSceneReady) {
             AnimatedVisibility(
                 visible = scene.isMenuVisible(),
@@ -203,7 +199,7 @@ fun Satellite3DScreen(
                     modifier = Modifier
                         .fillMaxHeight()
                         .requiredWidth(totalMenuWidth)
-                        .background(DarkBackground) // Solid black background
+                        .background(DarkBackground)
                         .padding(
                             start = safeInsets.calculateLeftPadding(LayoutDirection.Ltr),
                             top = 0.dp,
@@ -233,7 +229,6 @@ fun Satellite3DScreen(
                     }
 
                     when (selectedTab) {
-                        // Satellites Tab Content
                         0 -> {
                             SatelliteFilterMenu(
                                 satelliteList = satelliteList,
@@ -246,7 +241,6 @@ fun Satellite3DScreen(
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
-                        // Scene3D Parameters Tab Content
                         1 -> {
                             Scene3DParametersMenu(
                                 parametersState = parametersState,

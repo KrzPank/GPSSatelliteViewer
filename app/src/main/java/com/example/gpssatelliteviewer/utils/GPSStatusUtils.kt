@@ -22,6 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationDisabled
+import androidx.compose.material.icons.filled.LocationSearching
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -77,10 +79,10 @@ object GPSStatusUtils {
         hasLocationNMEA: Boolean,
     ): GPSStatus {
         if (!hasLocationNMEA && satellites.isEmpty()) {
-            return GPSStatus.Searching
+            return GPSStatus.Disabled
         }
 
-        if (satellites.isEmpty()) {
+        if (!hasLocationNMEA) {
             return GPSStatus.NoFix
         }
 
@@ -88,22 +90,24 @@ object GPSStatusUtils {
         
         return when {
             // Excellent: Many satellites, good SNR, many used in fix
-            satellitesUsedInFix >= 20 && averageSnr >= 32f -> {
+            satellitesUsedInFix >= 20 && averageSnr >= 30f -> {
                 GPSStatus.Excellent
             }
             // Good: Adequate satellites, decent SNR
-            satellitesUsedInFix >= 10 && averageSnr >= 25f -> {
+            satellitesUsedInFix >= 10 && averageSnr >= 22f -> {
                 GPSStatus.Good
             }
             // Fair: Some satellites, moderate SNR
-            satellitesUsedInFix >= 6 && averageSnr >= 17f -> {
+            satellitesUsedInFix >= 4 && averageSnr >= 15f -> {
                 GPSStatus.Fair
             }
             // Poor: Few satellites or weak signal
-            satellitesUsedInFix >= 1 && averageSnr >= 10f ->{
+            satellitesUsedInFix >= 1 && averageSnr >= 10f -> {
                 GPSStatus.Poor
             }
-            // TODO ADD searching and disabled GPSStatus
+            satellitesUsedInFix == 0 && averageSnr == 0f -> {
+                GPSStatus.Searching
+            }
             else -> GPSStatus.NoFix
         }
     }
@@ -144,8 +148,8 @@ object GPSStatusUtils {
             is GPSStatus.Fair -> Icons.Default.Home
             is GPSStatus.Poor -> Icons.Default.Person
             is GPSStatus.NoFix -> Icons.Default.Close
-            is GPSStatus.Searching -> Icons.Default.Search
-            is GPSStatus.Disabled -> Icons.Default.Close
+            is GPSStatus.Searching -> Icons.Default.LocationSearching
+            is GPSStatus.Disabled -> Icons.Default.LocationDisabled
         }
     }
 
