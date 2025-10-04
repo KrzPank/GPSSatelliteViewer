@@ -1,10 +1,10 @@
 package com.example.gpssatelliteviewer.utils
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationDisabled
 import androidx.compose.material.icons.filled.LocationSearching
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,7 +41,6 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.ui.theme.SNRDarkerGreen
 import com.example.gpssatelliteviewer.ui.theme.SNRLightGreen
 import com.example.gpssatelliteviewer.ui.theme.SNROrange
@@ -57,133 +55,132 @@ import com.example.gpssatelliteviewer.ui.theme.GPSSearching
 import com.example.gpssatelliteviewer.ui.theme.GPSDisabled
 import com.example.gpssatelliteviewer.ui.theme.TextPrimary
 
-sealed class GPSStatus {
-    object Excellent : GPSStatus()      // Strong signal, many satellites, high accuracy
-    object Good : GPSStatus()           // Good signal, adequate satellites
-    object Fair : GPSStatus()           // Weak signal, few satellites
-    object Poor : GPSStatus()           // Very weak signal, poor accuracy
-    object NoFix : GPSStatus()          // No GPS fix available
-    object Searching : GPSStatus()      // Searching for satellites
-    object Disabled : GPSStatus()       // GPS is turned off
+
+sealed class GPSStatusState {
+    object Excellent : GPSStatusState()      // Strong signal, many satellites, high accuracy
+    object Good : GPSStatusState()           // Good signal, adequate satellites
+    object Fair : GPSStatusState()           // Weak signal, few satellites
+    object Poor : GPSStatusState()           // Very weak signal, poor accuracy
+    object NoFix : GPSStatusState()          // No GPS fix available
+    object Searching : GPSStatusState()      // Searching for satellites
+    object Disabled : GPSStatusState()       // GPS is turned off
 }
 
-data class SNRStats(
-    val average: Float,
-    val count: Float
-)
+class GPSStatus(
+    private val satellites: List<GNSSStatusData>,
+    private val hasLocation: Boolean
+) {
+    val averageSNRByConstellation = calculateAverageSNRByConstellation(satellites)
+    val averageSNRInFix = calculateAverageSNRInFix(satellites)
+    val gpsStatusState = determineGPSStatusState()
 
-object GPSStatusUtils {
-    fun determineGPSStatus(
-        satellites: List<GNSSStatusData>,
-        averageSnr: Float,
-        hasLocationNMEA: Boolean,
-    ): GPSStatus {
-        if (!hasLocationNMEA && satellites.isEmpty()) {
-            return GPSStatus.Disabled
+    private fun determineGPSStatusState(): GPSStatusState {
+        if (!hasLocation && satellites.isEmpty()) {
+            return GPSStatusState.Disabled
         }
 
-        if (!hasLocationNMEA) {
-            return GPSStatus.NoFix
+        if (!hasLocation) {
+            return GPSStatusState.NoFix
         }
 
         val satellitesUsedInFix = satellites.count { it.usedInFix }
         
         return when {
-            // Excellent: Many satellites, good SNR, many used in fix
-            satellitesUsedInFix >= 20 && averageSnr >= 30f -> {
-                GPSStatus.Excellent
+            satellitesUsedInFix >= 20 && averageSNRInFix >= 30f -> {
+                GPSStatusState.Excellent
             }
-            // Good: Adequate satellites, decent SNR
-            satellitesUsedInFix >= 10 && averageSnr >= 22f -> {
-                GPSStatus.Good
+            satellitesUsedInFix >= 10 && averageSNRInFix >= 22f -> {
+                GPSStatusState.Good
             }
-            // Fair: Some satellites, moderate SNR
-            satellitesUsedInFix >= 4 && averageSnr >= 15f -> {
-                GPSStatus.Fair
+            satellitesUsedInFix >= 4 && averageSNRInFix >= 15f -> {
+                GPSStatusState.Fair
             }
-            // Poor: Few satellites or weak signal
-            satellitesUsedInFix >= 1 && averageSnr >= 10f -> {
-                GPSStatus.Poor
+            satellitesUsedInFix >= 1 && averageSNRInFix >= 5f -> {
+                GPSStatusState.Poor
             }
-            satellitesUsedInFix == 0 && averageSnr == 0f -> {
-                GPSStatus.Searching
+            satellitesUsedInFix == 0 && averageSNRInFix == 0f -> {
+                GPSStatusState.Searching
             }
-            else -> GPSStatus.NoFix
+            else -> GPSStatusState.NoFix
         }
     }
 
-    fun calculateAverageSNRByConstellation(satellites: List<GNSSStatusData>): Map<String, SNRStats> {
+    private fun calculateAverageSNRByConstellation(satellites: List<GNSSStatusData>): Map<String, Float> {
         val groupedSatellites = satellites.groupBy { it.constellation }
+
         return groupedSatellites.mapValues { (_, sats) ->
             val valid = sats.filter { it.snr != 0f }
+
             if (valid.isNotEmpty()) {
-                val avg = valid.map { it.snr }.average().toFloat()
-                val count = valid.size.toFloat()
-                SNRStats(avg, count)
+                valid.map { it.snr }.average().toFloat()
             } else {
-                SNRStats(0f, 0f)
+                0f
             }
         }
     }
 
-    fun calculateAverageSNRInFix(satellites: List<GNSSStatusData>): Float {
+    private fun calculateAverageSNRInFix(satellites: List<GNSSStatusData>): Float {
         val satellitesInFix = satellites.filter { it.usedInFix }
         return if (satellitesInFix.isNotEmpty()) {
             satellitesInFix.map { it.snr }.average().toFloat()
         } else 0f
     }
 
-    fun getUsedInFixCount(satellites: List<GNSSStatusData>): Int {
+    fun getFixCount(): Int {
         return satellites.count { it.usedInFix }
     }
 
-    fun getTotalSatelliteCount(satellites: List<GNSSStatusData>): Int {
+    fun getFixCountByConstellation(constellation: String): Int {
+        val satellitesInFix = satellites.filter { it.usedInFix }
+        return satellitesInFix.count { it.constellation == constellation }
+    }
+
+    fun getSatelliteCount(): Int {
         return satellites.size
     }
 
     // Helper functions for GPS status display
-    fun getStatusIcon(gpsStatus: GPSStatus): ImageVector {
-        return when (gpsStatus) {
-            is GPSStatus.Excellent, is GPSStatus.Good -> Icons.Default.Check
-            is GPSStatus.Fair -> Icons.Default.Home
-            is GPSStatus.Poor -> Icons.Default.Person
-            is GPSStatus.NoFix -> Icons.Default.Close
-            is GPSStatus.Searching -> Icons.Default.LocationSearching
-            is GPSStatus.Disabled -> Icons.Default.LocationDisabled
+    private fun getStatusIcon(gpsStatusState: GPSStatusState): ImageVector {
+        return when (gpsStatusState) {
+            is GPSStatusState.Excellent, is GPSStatusState.Good -> Icons.Default.Check
+            is GPSStatusState.Fair -> Icons.Default.Home
+            is GPSStatusState.Poor -> Icons.Default.Person
+            is GPSStatusState.NoFix -> Icons.Default.Close
+            is GPSStatusState.Searching -> Icons.Default.LocationSearching
+            is GPSStatusState.Disabled -> Icons.Default.LocationDisabled
         }
     }
 
-    fun getStatusTitle(gpsStatus: GPSStatus): String {
-        return when (gpsStatus) {
-            is GPSStatus.Excellent -> "Excellent Signal"
-            is GPSStatus.Good -> "Good Signal"
-            is GPSStatus.Fair -> "Fair Signal"
-            is GPSStatus.Poor -> "Poor Signal"
-            is GPSStatus.NoFix -> "No GPS Fix"
-            is GPSStatus.Searching -> "Searching..."
-            is GPSStatus.Disabled -> "GPS Disabled"
+    private fun getStatusTitle(gpsStatusState: GPSStatusState): String {
+        return when (gpsStatusState) {
+            is GPSStatusState.Excellent -> "Excellent Signal"
+            is GPSStatusState.Good -> "Good Signal"
+            is GPSStatusState.Fair -> "Fair Signal"
+            is GPSStatusState.Poor -> "Poor Signal"
+            is GPSStatusState.NoFix -> "No GPS Fix"
+            is GPSStatusState.Searching -> "Searching..."
+            is GPSStatusState.Disabled -> "GPS Disabled"
         }
     }
     
-    fun getStatusColor(gpsStatus: GPSStatus): Color {
-        return when (gpsStatus) {
-            is GPSStatus.Excellent -> GPSExcellent
-            is GPSStatus.Good -> GPSGood
-            is GPSStatus.Fair -> GPSFair
-            is GPSStatus.Poor -> GPSPoor
-            is GPSStatus.NoFix -> GPSNoFix
-            is GPSStatus.Searching -> GPSSearching
-            is GPSStatus.Disabled -> GPSDisabled
+    private fun getStatusColor(gpsStatusState: GPSStatusState): Color {
+        return when (gpsStatusState) {
+            is GPSStatusState.Excellent -> GPSExcellent
+            is GPSStatusState.Good -> GPSGood
+            is GPSStatusState.Fair -> GPSFair
+            is GPSStatusState.Poor -> GPSPoor
+            is GPSStatusState.NoFix -> GPSNoFix
+            is GPSStatusState.Searching -> GPSSearching
+            is GPSStatusState.Disabled -> GPSDisabled
         }
     }
 
     @SuppressLint("UnusedBoxWithConstraintsScope")
     @Composable
     fun SNRBar(
-        value: Float,
         modifier: Modifier = Modifier
     ) {
-        val clamped = value.coerceIn(0f, 99f)
+        val clamped = averageSNRInFix.coerceIn(0f, 99f)
 
         val ranges = listOf(
             0f to 10f to SNRRed,
@@ -246,16 +243,12 @@ object GPSStatusUtils {
             }
         }
     }
-    
-    /**
-     * GPS Status Header - displays status icon and title in a row
-     */
+
     @Composable
     fun GPSStatusHeader(
-        gpsStatus: GPSStatus,
         modifier: Modifier = Modifier
     ) {
-        val statusColor = getStatusColor(gpsStatus)
+        val statusColor = getStatusColor(gpsStatusState)
         
         Row(
             modifier = modifier.fillMaxWidth(),
@@ -277,7 +270,7 @@ object GPSStatusUtils {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = getStatusIcon(gpsStatus),
+                    imageVector = getStatusIcon(gpsStatusState),
                     contentDescription = null,
                     tint = statusColor,
                     modifier = Modifier.size(18.dp)
@@ -287,7 +280,7 @@ object GPSStatusUtils {
             Spacer(modifier = Modifier.width(12.dp))
             
             Text(
-                text = getStatusTitle(gpsStatus),
+                text = getStatusTitle(gpsStatusState),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium,
                 color = statusColor

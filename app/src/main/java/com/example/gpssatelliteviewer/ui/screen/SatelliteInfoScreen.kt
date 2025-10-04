@@ -37,7 +37,7 @@ import com.example.gpssatelliteviewer.ui.theme.DarkBackground
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
-fun SatelliteScreen(
+fun SatelliteInfoScreen(
     navController: NavController,
     gnssViewModel: GNSSViewModel
 ) {
@@ -79,10 +79,10 @@ fun SatelliteScreen(
         LazyColumn(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .padding(horizontal = 16.dp, vertical = 6.dp)
                 .fillMaxWidth()
                 .background(DarkBackground),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             groupedSatellites.forEach { (constellation, satellitesInGroup) ->
                 val expanded = expandedMap.getOrPut(constellation) { false }

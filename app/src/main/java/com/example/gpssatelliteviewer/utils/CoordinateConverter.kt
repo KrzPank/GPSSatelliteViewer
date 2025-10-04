@@ -131,8 +131,8 @@ object CoordinateConverter {
      * Gets accuracy estimate based on HDOP and satellite count as a Float value
      */
     @SuppressLint("DefaultLocale")
-    fun getAccuracyEstimate(locationNMEA: NMEALocationData): String? {
-        if (locationNMEA.hdop <= 0 || locationNMEA.numSatellites <= 0) return null
+    fun getAccuracyEstimate(locationNMEA: NMEALocationData): Float {
+        if (locationNMEA.hdop <= 0 || locationNMEA.numSatellites <= 0) return 0f
 
         // Rough accuracy estimation based on HDOP
         val baseAccuracy = 5.0f // meters
@@ -147,6 +147,6 @@ object CoordinateConverter {
         }
 
         val accuracy = baseAccuracy * hdopFactor * satelliteFactor
-        return String.format("%.1f", accuracy)
+        return accuracy
     }
 }

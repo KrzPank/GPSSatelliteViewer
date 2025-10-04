@@ -27,6 +27,10 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val _satelliteList = MutableStateFlow<List<GNSSStatusData>>(listOf())
     val satelliteList: StateFlow<List<GNSSStatusData>> = _satelliteList
 
+    private val _snrHistory = MutableStateFlow<Map<String, MutableList<Float>>>(emptyMap())
+    val snrHistory: StateFlow<Map<String, List<Float>>> = _snrHistory
+    private val N = 50 // Keep only last N points (moving window)  e.g., last 50 updates
+
     // Keep reference to last parsing job
     private var parseJob: Job? = null
 
@@ -62,10 +66,11 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                         )
                     )
                 }
-
+                val updated = updateSNRHistory(list)
                 // Update UI state on main thread
                 withContext(Dispatchers.Main) {
                     _satelliteList.value = list
+                    _snrHistory.value = updated
                 }
             }
         }
@@ -79,6 +84,30 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
             e.printStackTrace()
         }
     }
+
+    private fun updateSNRHistory(gnssStatusList: List<GNSSStatusData>): MutableMap<String, MutableList<Float>> {
+        val allConstellations = (_snrHistory.value.keys + gnssStatusList.map { it.constellation }).toSet()
+
+        val updated = mutableMapOf<String, MutableList<Float>>()
+
+        allConstellations.forEach { constellation ->
+            val oldHistory = _snrHistory.value[constellation] ?: emptyList()
+
+            // Compute new value: average of satellites usedInFix, else 0
+            val newValue = gnssStatusList
+                .filter { it.constellation == constellation && it.usedInFix }
+                .map { it.snr }
+                .averageOrNull()
+                ?.toFloat() ?: 0f
+
+            val newHistory = (oldHistory.takeLast(N - 1) + newValue).toMutableList()
+            updated[constellation] = newHistory
+        }
+
+        return updated
+    }
+
+    private fun Iterable<Float>.averageOrNull(): Double? = if (this.any()) this.average() else null
 
     override fun onCleared() {
         super.onCleared()

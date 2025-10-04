@@ -1,5 +1,6 @@
 package com.example.gpssatelliteviewer.ui.component.card
 
+import android.icu.text.SimpleDateFormat
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
@@ -22,8 +23,11 @@ import com.example.gpssatelliteviewer.data.ListenerData
 import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.InfoRow
+import com.example.gpssatelliteviewer.utils.format
 import com.example.gpssatelliteviewer.utils.mapFixQuality
 import com.example.gpssatelliteviewer.utils.mapFixType
+import java.sql.Date
+import java.util.Locale
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -34,7 +38,9 @@ fun NMEALocationCard(
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(Modifier.padding(12.dp)) {
@@ -58,6 +64,14 @@ fun NMEALocationCard(
                 value = if (nmea.time == "") "No data"
                 else nmea.time
             )
+            val timestampMillis = System.currentTimeMillis() + 1000
+            val date = Date(timestampMillis)
+            val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+
+            InfoRow(
+                label = "Current system time",
+                value = sdf.format(date).toString()
+            )
             InfoRow(
                 label = "Date",
                 value = if (nmea.date == "") "No data"
@@ -79,7 +93,7 @@ fun NMEALocationCard(
             )
             InfoRow(
                 label = "Accuracy",
-                value = CoordinateConverter.getAccuracyEstimate(nmea)?.toString() ?: "0"
+                value = CoordinateConverter.getAccuracyEstimate(nmea).let { "%.1f m".format(it) }
             )
             val speedkmh = nmea.speedKnots * 1.852
             InfoRow(

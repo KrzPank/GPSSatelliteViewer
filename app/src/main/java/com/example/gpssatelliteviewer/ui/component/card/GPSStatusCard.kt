@@ -1,7 +1,9 @@
 package com.example.gpssatelliteviewer.ui.component.card
 
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,25 +15,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.utils.GPSStatusUtils
+import com.example.gpssatelliteviewer.ui.theme.TextLabel
+import com.example.gpssatelliteviewer.ui.theme.ValueText
+import com.example.gpssatelliteviewer.utils.GPSStatus
 
 
 @Composable
 fun GPSStatusCard(
     satellites: List<GNSSStatusData>,
-    hasLocationNMEA: Boolean,
+    hasLocation: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val totalSatellitesCount = GPSStatusUtils.getTotalSatelliteCount(satellites)
-    val usedInFixCount = GPSStatusUtils.getUsedInFixCount(satellites)
-    val averageSNRByConstellation = GPSStatusUtils.calculateAverageSNRByConstellation(satellites)
-    val averageSNRInFix = GPSStatusUtils.calculateAverageSNRInFix(satellites)
-
-    val gpsStatus = GPSStatusUtils.determineGPSStatus(satellites, averageSNRInFix, hasLocationNMEA)
+    val gpsStatus = GPSStatus(satellites, hasLocation)
 
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -49,30 +49,45 @@ fun GPSStatusCard(
             Spacer(Modifier.height(8.dp))
             
             // GPS Status Header
-            GPSStatusUtils.GPSStatusHeader(gpsStatus = gpsStatus)
+            gpsStatus.GPSStatusHeader()
             
             Spacer(modifier = Modifier.height(16.dp))
 
             // Existing satellite info
-            InfoRow(label = "In view", value = totalSatellitesCount.toString())
-            InfoRow(label = "Used in fix", value = usedInFixCount.toString())
+            InfoRow(label = "In view", value = gpsStatus.getSatelliteCount().toString())
+            InfoRow(label = "Used in fix", value = gpsStatus.getFixCount().toString())
             InfoRow(
                 label = "Avg. fix SNR",
-                value = if (averageSNRInFix != 0f) "${"%.1f".format(averageSNRInFix)} dBHz"
-                else  "0"
+                value = "${"%.1f".format(gpsStatus.averageSNRInFix)} dBHz"
             )
 
             Spacer(modifier = Modifier.height(8.dp))
-            GPSStatusUtils.SNRBar(value = averageSNRInFix)
+            gpsStatus.SNRBar()
 
             Spacer(modifier = Modifier.height(4.dp))
-            Text("Constellation  Avg. SNR/sat SNR!=0", style = MaterialTheme.typography.bodyMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Constellation",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextLabel,
+                    fontSize = 15.sp
+                )
+                Text(
+                    text = "Avg. SNR/in Fix",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextLabel,
+                    fontSize = 15.sp
+                )
+            }
 
             Spacer(modifier = Modifier.height(4.dp))
-            averageSNRByConstellation.forEach { (constellation, stats) ->
+            gpsStatus.averageSNRByConstellation.forEach { (constellation, snr) ->
                 InfoRow(
                     label = constellation,
-                    value = "${"%.1f".format(stats.average)} dBHz / ${"%.0f".format(stats.count)}"
+                    value = "${"%.1f".format(snr)} dBHz / ${gpsStatus.getFixCountByConstellation(constellation)}"
                 )
                 Spacer(Modifier.height(4.dp))
             }

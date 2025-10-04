@@ -26,11 +26,12 @@ fun MainScreen(
 
     HorizontalPager(
         state = pagerState,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        beyondViewportPageCount = 2
     ) { page ->
         when (page) {
             0 -> LocationInfoScreen(navController, gnssViewModel, nmeaViewModel, locationViewModel)
-            1 -> SatelliteScreen(navController, gnssViewModel)
+            1 -> SatelliteInfoScreen(navController, gnssViewModel)
             2 -> LiveNMEADataScreen(navController, nmeaViewModel)
         }
     }
