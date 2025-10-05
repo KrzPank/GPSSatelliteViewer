@@ -49,7 +49,7 @@ import com.example.gpssatelliteviewer.utils.format
 fun Scene3DParametersMenu(
     parametersState: Scene3DParametersState,
     onParametersChanged: (Scene3DParameters) -> Unit,
-    modifier: Modifier = Modifier.Companion
+    modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
 

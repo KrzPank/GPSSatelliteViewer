@@ -9,13 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.data.parser.NMEAParser
-import com.example.gpssatelliteviewer.ui.theme.GreenPrimary
 import com.example.gpssatelliteviewer.ui.theme.ValueText
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.InfoRow
@@ -75,8 +73,8 @@ fun NMEAMessageCard(
 @Composable
 private fun RenderGGAInfo(gga: NMEAMessage.GGA) {
     InfoRow("Time (UTC)", gga.time)
-    InfoRow("Latitude", CoordinateConverter.geodeticToDMS(gga.latitude, gga.latDirection))
-    InfoRow("Longitude", CoordinateConverter.geodeticToDMS(gga.longitude, gga.lonDirection))
+    InfoRow("Latitude", CoordinateConverter.nmeaCoordinateToDMS(gga.latitude, gga.latDirection))
+    InfoRow("Longitude", CoordinateConverter.nmeaCoordinateToDMS(gga.longitude, gga.lonDirection))
     InfoRow("Fix Quality", mapFixQuality(gga.fixQuality))
     InfoRow("Satellites", gga.satelliteCount.toString())
     InfoRow("HDOP", gga.horizontalDilution.toString())
@@ -88,8 +86,8 @@ private fun RenderGGAInfo(gga: NMEAMessage.GGA) {
 private fun RenderRMCInfo(rmc: NMEAMessage.RMC) {
     InfoRow("Time (UTC)", rmc.time)
     InfoRow("Date", rmc.date)
-    InfoRow("Latitude", CoordinateConverter.geodeticToDMS(rmc.latitude, rmc.latDirection))
-    InfoRow("Longitude", CoordinateConverter.geodeticToDMS(rmc.longitude, rmc.lonDirection))
+    InfoRow("Latitude", CoordinateConverter.nmeaCoordinateToDMS(rmc.latitude, rmc.latDirection))
+    InfoRow("Longitude", CoordinateConverter.nmeaCoordinateToDMS(rmc.longitude, rmc.lonDirection))
     InfoRow("Speed (knots)", rmc.speedOverGround.toString())
     InfoRow("Course", rmc.courseOverGround.toString())
     InfoRow("Magnetic Variation", rmc.magneticVariation?.toString() ?: "-")

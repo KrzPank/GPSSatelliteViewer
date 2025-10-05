@@ -95,7 +95,7 @@ class GPSStatus(
             satellitesUsedInFix >= 4 && averageSNRInFix >= 15f -> {
                 GPSStatusState.Fair
             }
-            satellitesUsedInFix >= 1 && averageSNRInFix >= 5f -> {
+            satellitesUsedInFix >= 3 && averageSNRInFix >= 5f -> {
                 GPSStatusState.Poor
             }
             satellitesUsedInFix == 0 && averageSNRInFix == 0f -> {

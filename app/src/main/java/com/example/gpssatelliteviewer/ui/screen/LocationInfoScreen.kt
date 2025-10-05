@@ -1,5 +1,6 @@
 package com.example.gpssatelliteviewer.ui.screen
 
+import android.icu.text.SimpleDateFormat
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -14,6 +15,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -30,9 +32,14 @@ import androidx.compose.runtime.setValue
 import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
-import com.example.gpssatelliteviewer.ui.component.card.GNSSChipsetInfoCard
 import com.example.gpssatelliteviewer.ui.component.card.SNRChartCard
 import com.example.gpssatelliteviewer.ui.theme.DarkBackground
+import com.example.gpssatelliteviewer.utils.InfoRow
+import kotlinx.coroutines.delay
+import java.sql.Date
+import java.util.Locale
+import kotlin.text.format
+import kotlin.toString
 
 //*
 @RequiresApi(Build.VERSION_CODES.R)
@@ -57,9 +64,26 @@ fun LocationInfoScreen(
         hasLocationAndroidApi -> "Location Listener"
         else -> "Loading text"
     }
-    var selectedLocationType by remember { mutableStateOf(locationType)}
 
+    var selectedLocationType by remember { mutableStateOf(locationType) }
     var showPicker by remember { mutableStateOf(false) }
+    var userHasSelectedType by remember { mutableStateOf(false) }
+
+    LaunchedEffect(locationType) {
+        if (!userHasSelectedType) {
+            selectedLocationType = locationType
+        }
+    }
+
+    var currentSystemTime by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        while (true) {
+            val date = Date(System.currentTimeMillis())
+            currentSystemTime = sdf.format(date)
+            delay(450L) // wait 1 second
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -71,8 +95,14 @@ fun LocationInfoScreen(
         // --- Location Card ---
         item {
             when (selectedLocationType) {
-                "NMEA" -> NMEALocationCard(locationNMEA) { showPicker = true }
-                "Location Listener" -> AndroidApiLocationCard(locationAndroidApi) { showPicker = true }
+                "NMEA" -> NMEALocationCard(locationNMEA, currentSystemTime) {
+                    showPicker = true
+                    userHasSelectedType = true
+                }
+                "Location Listener" -> AndroidApiLocationCard(locationAndroidApi, currentSystemTime) {
+                    showPicker = true
+                    userHasSelectedType = true
+                }
                 else -> LoadingLocationTextCard()
             }
         }

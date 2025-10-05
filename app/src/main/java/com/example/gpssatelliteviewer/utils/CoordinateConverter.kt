@@ -3,6 +3,7 @@ package com.example.gpssatelliteviewer.utils
 import android.annotation.SuppressLint
 import com.example.gpssatelliteviewer.data.NMEALocationData
 import dev.romainguy.kotlin.math.Float3
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -12,16 +13,11 @@ private const val EARTH_RADIUS_WORLD_UNIT = 0.5f
 private const val E2 = 6.69437999014e-3
 
 object CoordinateConverter {
-
-    fun dmsToGeodetic(degrees: Int, minutes: Int, seconds: Double, direction: Char): Double {
-        var decimal = degrees + minutes / 60.0 + seconds / 3600.0
-        if (direction == 'S' || direction == 'W') {
-            decimal *= -1
-        }
-        return decimal
-    }
-
-    fun geodeticToECEF(latDeg: Double, lonDeg: Double, alt: Double = 0.0): Float3 {
+    fun geodeticToECEF(
+        latDeg: Double,
+        lonDeg: Double,
+        alt: Double = 0.0
+    ): Float3 {
         val lat = Math.toRadians(latDeg)
         val lon = Math.toRadians(lonDeg)
 
@@ -37,7 +33,7 @@ object CoordinateConverter {
     // Scale & remap ECEF → SceneView
     fun ecefToScenePos(
         ecef: Float3,
-        yawDeg: Float = -2f,            // optional prime-meridian texture offset
+        yawDeg: Float = -2f,           // optional prime-meridian texture offset
         flipLon: Boolean = false       // set true if East/West appears mirrored
     ): Float3 {
         val s = EARTH_RADIUS_WORLD_UNIT / EARTH_RADIUS_METERS
@@ -47,7 +43,7 @@ object CoordinateConverter {
         // Optional: flip longitude if east/west looks mirrored
         if (flipLon) v = Float3(v.x, v.y, -v.z)
 
-        // Optional: apply a yaw around Y if your Earth texture’s 0° meridian isn’t aligned
+        // Optional: apply a yaw around Y Earth texture’s 0° meridian isn’t aligned
         if (yawDeg != 0f) {
             val r = Math.toRadians(yawDeg.toDouble())
             val c = cos(r).toFloat()
@@ -59,7 +55,13 @@ object CoordinateConverter {
         return v
     }
 
-    fun enuToECEF(e: Double, n: Double, u: Double, lat: Double, lon: Double): Triple<Double, Double, Double> {
+    fun enuToECEF(
+        e: Double,
+        n: Double,
+        u: Double,
+        lat: Double,
+        lon: Double
+    ): Triple<Double, Double, Double> {
         val radLat = Math.toRadians(lat)
         val radLon = Math.toRadians(lon)
 
@@ -74,7 +76,7 @@ object CoordinateConverter {
         azimuth: Float,
         elevation: Float,
         userLocation: Triple<Float, Float, Float>, // lat, lon, alt
-        altitude: Float = 20200000.0f                // default satellite distance in meters (example for GPS)
+        altitude: Float = 0.0f
     ): Float3 {
         val (lat, lon, alt) = userLocation
 
@@ -101,7 +103,10 @@ object CoordinateConverter {
     }
 
     @SuppressLint("DefaultLocale")
-    fun geodeticToDMS(value: Double, hemisphere: Char): String {
+    fun nmeaCoordinateToDMS(
+        value: Double,
+        hemisphere: Char
+    ): String {
         if (value == 0.0) return "0°0'0\" N/A"
 
         // NMEA coordinates are in DDMM.MMMM format (degrees + minutes as decimal)
@@ -110,11 +115,26 @@ object CoordinateConverter {
         val minutes = minutesDecimal.toInt()
         val seconds = (minutesDecimal - minutes) * 60
 
-        return String.format("%d°%02d'%06.3f\" %c", degrees, minutes, seconds, hemisphere)
+        return String.format("%d°%02d'%06.2f\" %c", degrees, minutes, seconds, hemisphere)
     }
 
     @SuppressLint("DefaultLocale")
-    fun nmeaCoordinateToDecimal(nmeaCoord: Double, hemisphere: Char): Double {
+    fun decimalToDMS(
+        value: Double,
+        hemisphere: Char
+    ): String {
+        val degrees = value.toInt()
+        val minutesDecimal = abs((value - degrees) * 60)
+        val minutes = minutesDecimal.toInt()
+        val seconds = ((minutesDecimal - minutes) * 60)
+        return String.format("%d°%d'%.2f\" %c", degrees, minutes, seconds, hemisphere)
+    }
+
+    @SuppressLint("DefaultLocale")
+    fun nmeaCoordinateToDecimal(
+        nmeaCoord: Double,
+        hemisphere: Char
+    ): Double {
         if (nmeaCoord == 0.0) return 0.0
         
         val degrees = (nmeaCoord / 100).toInt()
@@ -127,9 +147,6 @@ object CoordinateConverter {
         return decimal
     }
 
-    /**
-     * Gets accuracy estimate based on HDOP and satellite count as a Float value
-     */
     @SuppressLint("DefaultLocale")
     fun getAccuracyEstimate(locationNMEA: NMEALocationData): Float {
         if (locationNMEA.hdop <= 0 || locationNMEA.numSatellites <= 0) return 0f

@@ -46,7 +46,7 @@ fun SatelliteFilterMenu(
     showLocationMarker: Boolean,
     onShowLocationMarkerChanged: (Boolean) -> Unit,
     navController: NavController,
-    modifier: Modifier = Modifier.Companion
+    modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
     val allConstellations = satelliteList.map { it.constellation }.distinct()

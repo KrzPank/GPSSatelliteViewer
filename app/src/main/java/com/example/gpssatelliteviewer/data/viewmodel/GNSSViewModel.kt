@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
 import com.example.gpssatelliteviewer.data.GnssHardwareInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +33,6 @@ class GNSSViewModel(
 
     private val _snrHistory = MutableStateFlow<Map<String, MutableList<Float>>>(emptyMap())
     val snrHistory: StateFlow<Map<String, List<Float>>> = _snrHistory
-    private val N = 50 // Keep only last N points (moving window)  e.g., last 50 updates
 
     private val _gnssHardwareInfo = MutableStateFlow(GnssHardwareInfo())
     val gnssHardwareInfo: StateFlow<GnssHardwareInfo> = _gnssHardwareInfo
@@ -131,14 +131,13 @@ class GNSSViewModel(
         allConstellations.forEach { constellation ->
             val oldHistory = _snrHistory.value[constellation] ?: emptyList()
 
-            // Compute new value: average of satellites usedInFix, else 0
             val newValue = gnssStatusList
                 .filter { it.constellation == constellation && it.usedInFix }
                 .map { it.snr }
                 .averageOrNull()
                 ?.toFloat() ?: 0f
 
-            val newHistory = (oldHistory.takeLast(N - 1) + newValue).toMutableList()
+            val newHistory = (oldHistory.takeLast(CHART_UPDATE_WINDOW - 1) + newValue).toMutableList()
             updated[constellation] = newHistory
         }
 

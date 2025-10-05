@@ -1,6 +1,5 @@
 package com.example.gpssatelliteviewer.ui.component.card
 
-import android.icu.text.SimpleDateFormat
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
@@ -32,14 +31,13 @@ import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.mapFixQuality
 import com.example.gpssatelliteviewer.utils.mapFixType
-import java.sql.Date
-import java.util.Locale
 
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NMEALocationCard(
     nmea: NMEALocationData,
+    currentSystemTime: String,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
@@ -72,25 +70,20 @@ fun NMEALocationCard(
             Spacer(Modifier.height(8.dp))
 
             InfoRow(
-                label = "Fix / Type",
-                value = listOf(
-                    mapFixQuality(nmea.fixQuality),
-                    mapFixType(nmea.fixType)
-                ).joinToString(" / ")
+                label = "Current system time",
+                value = currentSystemTime
             )
-
             InfoRow(
                 label = "Last update (UTC)",
                 value = if (nmea.time == "") "No data"
                 else nmea.time
             )
-            val timestampMillis = System.currentTimeMillis() + 1000
-            val date = Date(timestampMillis)
-            val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-
             InfoRow(
-                label = "Current system time",
-                value = sdf.format(date).toString()
+                label = "Fix / Type",
+                value = listOf(
+                    mapFixQuality(nmea.fixQuality),
+                    mapFixType(nmea.fixType)
+                ).joinToString(" / ")
             )
             InfoRow(
                 label = "Date",
@@ -100,12 +93,12 @@ fun NMEALocationCard(
             InfoRow(
                 label = "Latitude",
                 value = if (nmea.latitude == 0.0) "No data"
-                else CoordinateConverter.geodeticToDMS(nmea.latitude, nmea.latHemisphere)
+                else CoordinateConverter.nmeaCoordinateToDMS(nmea.latitude, nmea.latHemisphere)
             )
             InfoRow(
                 label = "Longitude",
                 value = if (nmea.longitude == 0.0) "No data"
-                else CoordinateConverter.geodeticToDMS(nmea.longitude, nmea.lonHemisphere)
+                else CoordinateConverter.nmeaCoordinateToDMS(nmea.longitude, nmea.lonHemisphere)
             )
             InfoRow(
                 label = "Altitude MSL",
@@ -125,12 +118,12 @@ fun NMEALocationCard(
             )
             InfoRow(
                 label = "Course",
-                value = if (nmea.course == 0.0) "-"
+                value = if (nmea.course == 0.0) "No data"
                     else nmea.course.let { "%.1f°".format(it) }
             )
             InfoRow(
                 label = "Magnetic variation",
-                value = if (nmea.magneticVariation == 0.0) "-"
+                value = if (nmea.magneticVariation == 0.0) "No data"
                     else nmea.magneticVariation.let { "%.1f°".format(it) }
             )
         }
@@ -141,6 +134,7 @@ fun NMEALocationCard(
 @Composable
 fun AndroidApiLocationCard(
     locationData: ListenerData,
+    currentSystemTime: String,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null
 ) {
@@ -158,7 +152,7 @@ fun AndroidApiLocationCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    "Quick Location",
+                    "Location Listener",
                     style = MaterialTheme.typography.titleMedium,
                     fontSize = 20.sp
                 )
@@ -172,36 +166,63 @@ fun AndroidApiLocationCard(
             Spacer(Modifier.height(8.dp))
 
             // --- Basic Location Info ---
-            val timestampMillis = System.currentTimeMillis() + 1000
-            val date = Date(timestampMillis)
-            val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-
-            InfoRow(label = "Current system time", value = sdf.format(date).toString())
-            InfoRow(label = "Last update (UTC)", value = locationData.time)
+            InfoRow(label = "Current system time", value = currentSystemTime)
+            InfoRow(
+                label = "Last update (UTC)",
+                value = if (locationData.time == "") "No data"
+                else locationData.time)
             InfoRow(
                 label = "Latitude",
                 value = if (locationData.latitude == 0.0) "No Data"
-                else CoordinateConverter.geodeticToDMS(locationData.latitude, locationData.latHemisphere)
+                else CoordinateConverter.decimalToDMS(locationData.latitude, locationData.latHemisphere)
             )
             InfoRow(
                 label = "Longitude",
-                value = if (locationData.longitude == 0.0) "No Data" else
-                    CoordinateConverter.geodeticToDMS(locationData.longitude, locationData.longHemisphere)
+                value = if (locationData.longitude == 0.0) "No Data"
+                else CoordinateConverter.decimalToDMS(locationData.longitude, locationData.longHemisphere)
             )
-            InfoRow(label = "Altitude (MSL)", value = "%.1f m".format(locationData.altitude))
-            InfoRow(label = "Accuracy (2D)", value = "%.1f m".format(locationData.accuracy))
-            InfoRow(label = "Speed", value = "%.2f m/s".format(locationData.speed))
-            InfoRow(label = "Provider", value = locationData.provider)
+            InfoRow(
+                label = "Altitude (MSL)",
+                value = if (locationData.altitude == 0.0) "No data"
+                else "%.1f m".format(locationData.altitude)
+            )
+            InfoRow(
+                label = "Accuracy (2D)", value =
+                    if (locationData.accuracy == 0f) "Do data"
+            else "%.1f m".format(locationData.accuracy)
+            )
+            InfoRow(
+                label = "Speed",
+                value = if (locationData.speed == 0f) "No data"
+                else "%.2f m/s".format(locationData.speed)
+            )
+            InfoRow(
+                label = "Provider",
+                value = if (locationData.provider == "") "No data"
+                else locationData.provider
+            )
 
             // --- Optional / Extended Data ---
-            if (locationData.verticalAccuracy != null)
-                InfoRow(label = "Vertical Accuracy", value = "%.1f m".format(locationData.verticalAccuracy))
-            if (locationData.speedAccuracy != null)
-                InfoRow(label = "Speed Accuracy", value = "%.2f m/s".format(locationData.speedAccuracy))
-            if (locationData.bearing != 0f)
-                InfoRow(label = "Bearing", value = "%.1f°".format(locationData.bearing))
-            if (locationData.bearingAccuracy != null)
-                InfoRow(label = "Bearing Accuracy", value = "%.1f°".format(locationData.bearingAccuracy))
+            InfoRow(
+                label = "Vertical Accuracy",
+                value = if (locationData.verticalAccuracy == null) "No data"
+                else "%.1f m".format(locationData.verticalAccuracy)
+            )
+            InfoRow(
+                label = "Speed Accuracy",
+                value = if (locationData.speedAccuracy == null) "No data"
+                else "%.2f m/s".format(locationData.speedAccuracy)
+            )
+            InfoRow(
+                label = "Bearing",
+                value = if (locationData.bearing == 0f) "No data"
+                else "%.2f m/s".format(locationData.bearing)
+            )
+            InfoRow(
+                label = "Bearing Accuracy",
+                value = if (locationData.bearingAccuracy == null) "No data"
+                else "%.2f m/s".format(locationData.bearingAccuracy)
+            )
 
             Spacer(Modifier.height(4.dp))
 
@@ -219,7 +240,9 @@ fun LoadingLocationTextCard(
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(12.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         InfoRow(

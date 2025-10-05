@@ -11,6 +11,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.AndroidViewModel
+import com.example.gpssatelliteviewer.data.LOCATION_TIMEOUT_PERIOD
+import com.example.gpssatelliteviewer.data.LOCATION_UPDATE_INTERVAL
 import com.example.gpssatelliteviewer.data.ListenerData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,8 +26,6 @@ import java.util.Locale
 
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
-    private val updateInterval = 1001L // in milis
-    private val timeoutPeriod: Long = 15 * 1000 // 15 sec
     private val handler = Handler(Looper.getMainLooper())
     private val parsingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -44,7 +44,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
             parsingScope.launch {
                 _hasLocationAndroidApi.value = true
                 handler.removeCallbacks(noAndroidApiLocationTimeout)
-                handler.postDelayed(noAndroidApiLocationTimeout, timeoutPeriod)
+                handler.postDelayed(noAndroidApiLocationTimeout, LOCATION_TIMEOUT_PERIOD)
 
                 val listenerData = ListenerData(
                     time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(location.time)),
@@ -75,7 +75,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         try {
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
-                updateInterval,
+                LOCATION_UPDATE_INTERVAL,
                 0f,
                 locationListener
             )

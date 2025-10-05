@@ -32,9 +32,7 @@ class Scene3D(
     private var parameters: Scene3DParameters = Scene3DParameters()
 ) {
     // Management systems
-    private lateinit var mainLight: LightHandler
-    private lateinit var satellites: SatelliteManager
-    private lateinit var locationMarker: LocationMarkerManager
+    //private lateinit var satellites: SatelliteManager
 
     private val centerNode = Node(engine)
     private val cameraNode = CameraNode(engine).apply {
@@ -42,6 +40,9 @@ class Scene3D(
         lookAt(centerNode)
         centerNode.addChildNode(this)
     }
+    var satellites: SatelliteManager = SatelliteManager(modelLoader, centerNode, parameters)
+    private var mainLight: LightHandler = LightHandler(engine, centerNode, cameraNode, parameters)
+    private var locationMarker: LocationMarkerManager = LocationMarkerManager(modelLoader, centerNode, parameters)
     private var earthNode: ModelNode? = null
 
     private var _menuVisible by mutableStateOf(true)
@@ -86,18 +87,12 @@ class Scene3D(
             Log.e("Scene3D", "Failed to load Earth model: ${e.message}")
         }
 
-        satellites = SatelliteManager(modelLoader, centerNode, parameters)
-        locationMarker = LocationMarkerManager(modelLoader, centerNode, parameters)
-        mainLight = LightHandler(engine, centerNode, cameraNode, parameters)
-
         // Apply visual effects
         try {
             applyVisualEffects(view)
         } catch (e: Exception) {
             Log.e("Scene3D", "Failed to apply visual effects: ${e.message}")
         }
-
-        _isSceneReady = true
     }
 
     @Composable

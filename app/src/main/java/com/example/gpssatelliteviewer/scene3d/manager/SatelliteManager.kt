@@ -38,38 +38,45 @@ class SatelliteManager(
 
     // Dynamic object pooling for satellite nodes
     private val satelliteNodePool = mutableListOf<ModelNode>() // Reusable nodes from disappeared satellites
-    private val activeSatelliteNodes = mutableMapOf<Int, ModelNode>() // PRN -> active ModelNode
+    private val activeSatelliteNodes = mutableMapOf<String, ModelNode>() // "constellation:prn" -> node
+
+    var onSatelliteClick: ((GNSSStatusData) -> Unit)? = null
+
+    private fun satelliteKey(constellation: String, prn: Int) = "$constellation:$prn"
+    private fun satelliteKey(sat: GNSSStatusData) = satelliteKey(sat.constellation, sat.prn)
 
     /**
      * Update satellites in the scene
      * Handles adding, removing, and updating satellite positions
      */
     fun updateSatellites(satelliteList: List<GNSSStatusData>, userLocation: Triple<Float, Float, Float>) {
-        val currentSatellitePrns = satelliteList.map { it.prn }.toSet()
-        val activePrns = activeSatelliteNodes.keys.toSet()
+        // Build keys from the incoming (already filtered) list
+        val currentSatelliteKeys = satelliteList.map { satelliteKey(it) }.toSet()
+        val activeKeys = activeSatelliteNodes.keys.toSet()
 
-        // Remove satellites that are no longer visible (return nodes to pool)
-        val disappearedSatellites = activePrns - currentSatellitePrns
-        disappearedSatellites.forEach { prn ->
-            activeSatelliteNodes[prn]?.let { node ->
+        // Remove satellites that are no longer present in the passed list (return nodes to pool)
+        val disappearedKeys = activeKeys - currentSatelliteKeys
+        disappearedKeys.forEach { key ->
+            activeSatelliteNodes[key]?.let { node ->
+                // ensure node is removed from scene and cleaned up
                 centerNode.removeChildNode(node)
                 returnNodeToPool(node)
-                activeSatelliteNodes.remove(prn)
+                activeSatelliteNodes.remove(key)
             }
         }
 
         // Add or update satellites
         satelliteList.forEach { sat ->
-            val existingNode = activeSatelliteNodes[sat.prn]
+            val key = satelliteKey(sat)
+            val existingNode = activeSatelliteNodes[key]
 
             if (existingNode != null) {
-                // Update position of existing satellite
                 updateSatellitePosition(existingNode, sat, userLocation)
             } else {
                 // Create or reuse node for new satellite
                 val satelliteNode = getOrCreateSatelliteNode()
                 setupSatelliteNode(satelliteNode, sat, userLocation)
-                activeSatelliteNodes[sat.prn] = satelliteNode
+                activeSatelliteNodes[key] = satelliteNode
             }
         }
 
@@ -135,6 +142,12 @@ class SatelliteManager(
     private fun setupSatelliteNode(node: ModelNode, sat: GNSSStatusData, userLocation: Triple<Float, Float, Float>) {
         updateSatellitePosition(node, sat, userLocation)
         centerNode.addChildNode(node)
+        node.name = satelliteKey(sat)
+        node.onSingleTapUp = { _ ->
+            Log.d("satelliteNode", "Tapped node: ${node.name}")
+            onSatelliteClick?.invoke(sat)
+            true
+        }
     }
 
     /**

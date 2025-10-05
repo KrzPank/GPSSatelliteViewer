@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
 import com.example.gpssatelliteviewer.ui.theme.ChartBeoDou
 import com.example.gpssatelliteviewer.ui.theme.ChartGLONASS
 import com.example.gpssatelliteviewer.ui.theme.ChartGPS
@@ -99,13 +100,12 @@ fun SNRChartCard(
                 }
             },
             update = { lineChart ->
-                val windowSize = 50
                 val dataSets = snrHistory.entries.mapIndexedNotNull { index, (constellation, snrList) ->
-                    val clipped = if (snrList.size > windowSize) snrList.takeLast(windowSize) else snrList
+                    val clipped = if (snrList.size > CHART_UPDATE_WINDOW) snrList.takeLast(CHART_UPDATE_WINDOW) else snrList
 
                     if (clipped.isEmpty()) return@mapIndexedNotNull null // skip empty series
 
-                    val startX = (windowSize - clipped.size).coerceAtLeast(0)
+                    val startX = (CHART_UPDATE_WINDOW - clipped.size).coerceAtLeast(0)
                     val entries = clipped.mapIndexedNotNull { i, snr ->
                         if (snr != 0f) {
                             Entry(startX + i.toFloat(), snr)
@@ -122,7 +122,7 @@ fun SNRChartCard(
                 }
 
                 lineChart.data = LineData(dataSets)
-                lineChart.setVisibleXRangeMaximum(windowSize.toFloat())
+                lineChart.setVisibleXRangeMaximum(CHART_UPDATE_WINDOW.toFloat())
                 lineChart.invalidate() // Refresh the chart
             }
         )

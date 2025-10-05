@@ -33,6 +33,8 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -40,8 +42,11 @@ import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
+import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.scene3d.Scene3DParametersState
 import com.example.gpssatelliteviewer.ui.component.Scene3DLoadingScreen
@@ -69,6 +74,7 @@ fun Satellite3DScreen(
     gnssViewModel: GNSSViewModel,
     locationNMEA: NMEALocationData
 ) {
+    // Immersion mode
     HideSystemUI()
     LockOrientationLandscape()
 
@@ -87,6 +93,7 @@ fun Satellite3DScreen(
             locationNMEA.altitude.toFloat()
         )
 
+    // SceneView parematers init
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
     val environmentLoader = rememberEnvironmentLoader(engine)
@@ -94,7 +101,6 @@ fun Satellite3DScreen(
     val parametersState = remember { Scene3DParametersState() }
 
     var isSceneReady by remember { mutableStateOf(false) }
-    
     val scene = remember {
         Scene3D(
             modifier = Modifier.fillMaxSize(),
@@ -105,32 +111,6 @@ fun Satellite3DScreen(
             parameters = parametersState.parameters
         )
     }
-
-    val selectedConstellations = remember { mutableStateListOf<String>() }
-    var onlyUsedInFix by remember { mutableStateOf(false) }
-    var showLocationMarker by remember { mutableStateOf(true) }
-    val firstView = remember { mutableStateOf(true) }
-    var selectedTab by remember { mutableIntStateOf(0) }
-
-    if (firstView.value) {
-        selectedConstellations.addAll(satelliteList.map { it.constellation }.distinct())
-        firstView.value = false
-    }
-
-    // Apply filters to satelliteList ??? something wrong here need testing
-    // Wrong satellite filters or wrong node management
-    val filteredSatellites = satelliteList.filter { sat ->
-        selectedConstellations.contains(sat.constellation) && (!onlyUsedInFix || sat.usedInFix)
-    }
-
-    val menuWidth = 300.dp
-    val safeInsets = WindowInsets.safeDrawing.asPaddingValues()
-    val totalMenuWidth = menuWidth + safeInsets.calculateLeftPadding(LayoutDirection.Ltr)
-
-    val menuAnimationDuration = 300
-    val sceneOffsetX by animateDpAsState(
-        targetValue = if (scene.isMenuVisible()) totalMenuWidth else 0.dp,
-    )
 
     LaunchedEffect(scene) {
         scene.initializeScene()
@@ -143,12 +123,43 @@ fun Satellite3DScreen(
         delay(200)
         isSceneReady = true
     }
-    
+
+    // Satellite filtering
+    val selectedConstellations = remember { mutableStateListOf<String>() }
+    var onlyUsedInFix by remember { mutableStateOf(false) }
+    val filteredSatellites = satelliteList.filter { sat ->
+        selectedConstellations.contains(sat.constellation) && (!onlyUsedInFix || sat.usedInFix)
+    }
+
+    //  First view set constellation to be visible
+    val firstView = remember { mutableStateOf(true) }
+    if (firstView.value) {
+        selectedConstellations.addAll(satelliteList.map { it.constellation }.distinct())
+        firstView.value = false
+    }
+
+    //  menu stuff
+    var selectedTab by remember { mutableIntStateOf(0) }
+    val menuWidth = 300.dp
+    val safeInsets = WindowInsets.safeDrawing.asPaddingValues()
+    val totalMenuWidth = menuWidth + safeInsets.calculateLeftPadding(LayoutDirection.Ltr)
+    val menuAnimationDuration = 300
+    val sceneOffsetX by animateDpAsState(
+        targetValue = if (scene.isMenuVisible()) totalMenuWidth else 0.dp,
+    )
+
     // Handle location marker visibility changes
+    var showLocationMarker by remember { mutableStateOf(true) }
     LaunchedEffect(showLocationMarker) {
         if (isSceneReady) {
             scene.setLocationMarkerVisible(showLocationMarker)
         }
+    }
+
+    var clickedSatellite by remember { mutableStateOf<GNSSStatusData?>(null) }
+
+    scene.satellites.onSatelliteClick = { sat ->
+        clickedSatellite = sat
     }
 
     Box(
@@ -180,6 +191,25 @@ fun Satellite3DScreen(
             ) {
                 scene.Render()
                 scene.updateScene(filteredSatellites, userLocation)
+                clickedSatellite?.let { sat ->
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 50.dp)
+                    ) {
+                        Card(
+                            modifier = Modifier.padding(8.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.7f))
+                        ) {
+                            Column(Modifier.padding(8.dp)) {
+                                Text("${sat.constellation} PRN ${sat.prn}", fontWeight = FontWeight.Bold, color = Color.White)
+                                Text("SNR: ${sat.snr}", color = Color.White)
+                                Text("Used in fix: ${sat.usedInFix}", color = Color.White)
+                                Text("Azimuth: ${sat.azimuth}, Elevation: ${sat.elevation}", color = Color.White)
+                            }
+                        }
+                    }
+                }
             }
         }
 

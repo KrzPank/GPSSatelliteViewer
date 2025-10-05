@@ -12,6 +12,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.example.gpssatelliteviewer.data.LOCATION_TIMEOUT_PERIOD
 import com.example.gpssatelliteviewer.data.parser.NMEAParser
 import java.util.concurrent.Executors
 import kotlinx.coroutines.*
@@ -21,7 +22,6 @@ import com.example.gpssatelliteviewer.data.NMEAMessage
 @RequiresApi(Build.VERSION_CODES.R)
 class NMEAViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
-    private val timeoutPeriod: Long = 15 * 1000 // 15 sec
     
     // Background parsing scope with IO dispatcher
     private val parsingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -52,7 +52,7 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
     private val nmeaListener = OnNmeaMessageListener { message, _ ->
         _hasLocationNMEA.value = true
         handler.removeCallbacks(noNMEAMessageTimeout)
-        handler.postDelayed(noNMEAMessageTimeout, timeoutPeriod)
+        handler.postDelayed(noNMEAMessageTimeout, LOCATION_TIMEOUT_PERIOD)
         handleNMEAMessage(message)
     }
 

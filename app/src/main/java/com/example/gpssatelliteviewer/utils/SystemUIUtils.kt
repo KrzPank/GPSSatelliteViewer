@@ -13,6 +13,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import android.graphics.Color
 import android.os.Build
+import androidx.core.graphics.toColorInt
 
 
 @Composable
@@ -50,8 +51,8 @@ fun SetupDarkSystemUI() {
             WindowCompat.setDecorFitsSystemWindows(window, false)
             
             // Set status bar and navigation bar colors to dark
-            window.statusBarColor = Color.parseColor("#1E1E1E") // Your dark background
-            window.navigationBarColor = Color.parseColor("#1E1E1E")
+            window.statusBarColor = "#1E1E1E".toColorInt() // Your dark background
+            window.navigationBarColor = "#1E1E1E".toColorInt()
 
             // Set light status bar icons (dark icons on light background = false, light icons on dark background = true)
             val controller = WindowCompat.getInsetsController(window, window.decorView)

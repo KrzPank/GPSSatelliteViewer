@@ -78,7 +78,7 @@ sealed class NMEAMessage {
         val longitude: Double,
         val lonDirection: Char,
         val fixQuality: Int,
-        val satelliteCount: Int,  // renamed to avoid conflict
+        val satelliteCount: Int,
         val horizontalDilution: Double,
         val altitude: Double,
         val altitudeUnits: Char,
@@ -92,14 +92,14 @@ sealed class NMEAMessage {
     
     data class RMC(
         val time: String,
-        val status: Char,            // A=active, V=void
+        val status: Char,
         val latitude: Double,
         val latDirection: Char,
         val longitude: Double,
         val lonDirection: Char,
         val speedOverGround: Double,
         val courseOverGround: Double,
-        val date: String,            // ddmmyy
+        val date: String,
         val magneticVariation: Double?,
         val variationDirection: Char?
     ) : NMEAMessage() {

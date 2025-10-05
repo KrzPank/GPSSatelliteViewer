@@ -2,6 +2,7 @@ package com.example.gpssatelliteviewer.ui.component.card
 
 import android.location.GnssCapabilities
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.data.GnssHardwareInfo
+import com.example.gpssatelliteviewer.ui.theme.ValueText
 import com.example.gpssatelliteviewer.utils.CapabilityRow
 import com.example.gpssatelliteviewer.utils.InfoRow
 
@@ -43,8 +45,12 @@ fun GNSSChipsetInfoCard(
             )
             Spacer(Modifier.height(8.dp))
 
+            // mediatek ???getting different chip names??? sometimes good sometimes shit
             InfoRow("Chipset", prettifyGNSSModelName(info.modelName))
             InfoRow("Hardware Year", info.hardwareYear?.toString() ?: "Unknown")
+            Spacer(Modifier.height(8.dp))
+            Text("Model name including vendor and hardware/software version", style = MaterialTheme.typography.bodyMedium)
+            Text(info.modelName.toString(), style = MaterialTheme.typography.bodyMedium, color = ValueText)
         }
     }
 }
@@ -157,25 +163,21 @@ fun GNSSChipsetCapabilitiesCard(
 private fun prettifyGNSSModelName(
     rawName: String?,
 ): String {
-    val hardware = Build.HARDWARE
+    val hardware = Build.MODEL.ifBlank { "Unknown" }
 
-    // Make it more human-readable
-    val clean = rawName
-        ?.split(",")
-        ?.firstOrNull()
-        ?.replace("_default", "", ignoreCase = true)
-        ?.replace("_ver", "", ignoreCase = true)
-        ?.replace("ver_", "", ignoreCase = true)
-        ?.replace("fw_", "", ignoreCase = true)
-        ?.replace("_", " ")
-        ?.trim()
-        ?: return "Unknown Chipset"
+    if (rawName.isNullOrBlank()) return "Unknown GNSS Chipset ($hardware)"
 
-    return when {
-        clean.contains("MTK", true) -> "MediaTek $hardware ($clean)"
-        clean.contains("Qualcomm", true) || clean.contains("SDM", true) -> "Qualcomm $hardware ($clean)"
-        clean.contains("Broadcom", true) || clean.contains("BCM", true) -> "Broadcom $hardware ($clean)"
-        clean.contains("u-blox", true) -> "u-blox GNSS $hardware ($clean)"
-        else -> clean
+    Log.d("chipset", "$rawName $hardware")
+
+    val vendor = when {
+        rawName.contains("mediatek", true) || rawName.contains("mtk", true) -> "MediaTek"
+        rawName.contains("qualcomm", true) || rawName.contains("sdm", true) || rawName.contains("sm", true) -> "Qualcomm"
+        rawName.contains("broadcom", true) || rawName.contains("bcm", true) -> "Broadcom"
+        rawName.contains("u-blox", true) || rawName.contains("ublox", true) -> "u-blox"
+        rawName.contains("samsung", true) || rawName.contains("exynos", true) -> "Samsung"
+        rawName.contains("hisilicon", true) || rawName.contains("kirin", true) -> "HiSilicon"
+        else -> null
     }
+
+    return "$vendor $hardware"
 }
