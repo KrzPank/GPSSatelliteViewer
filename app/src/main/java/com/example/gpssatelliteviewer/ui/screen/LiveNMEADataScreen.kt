@@ -50,109 +50,68 @@ import com.example.gpssatelliteviewer.ui.component.card.RenderGSVInfo
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun LiveNMEADataScreen(
-    navController: NavController,
     viewModel: NMEAViewModel
 ) {
     val latestMessages by viewModel.latestMessages.collectAsState()
     val nmeaMessageMap by viewModel.nmeaMessageMap.collectAsState()
     val messageStatistics by viewModel.messageStatistics.collectAsState()
 
-    var dropDownMenuExpanded = remember { mutableStateOf(false) }
     var statisticsExpanded = remember { mutableStateOf(true) }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text("Live NMEA Messages", style = MaterialTheme.typography.titleLarge)
-                },
-                actions = {
-                    Box {
-                        IconButton(onClick = { dropDownMenuExpanded.value = true}) {
-                            Icon(
-                                imageVector = Icons.Default.Menu,
-                                contentDescription = "Menu"
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = dropDownMenuExpanded.value,
-                            onDismissRequest = { dropDownMenuExpanded.value = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Satellite 3D View") },
-                                onClick = {
-                                    dropDownMenuExpanded.value = false
-                                    navController.navigate("Satellite3DScreen")
-                                }
-                            )
-                            //DropdownMenuItem(
-                            //    text = { Text("Location Info") },
-                            //    onClick = {
-                            //        dropDownMenuExpanded.value = false
-                            //        navController.navigate("LocationInfoScreen")
-                            //    }
-                            //)
-                        }
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        LazyColumn(
             modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
+                .padding(vertical = 8.dp, horizontal = 12.dp)
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(vertical = 8.dp, horizontal = 12.dp)
-            ) {
-                if (messageStatistics.isNotEmpty()) {
-                    item{
-                        MessageStatisticsCard(
-                            statistics = messageStatistics,
-                            isExpanded = statisticsExpanded.value,
-                            onExpandedChange = { statisticsExpanded.value = it }
-                        )
-                    }
-                }
-                
-                // Define the order for standard NMEA messages
-                val standardOrder = listOf("GGA", "RMC", "GSA", "VTG")
-                val gsvMessages = latestMessages.filter { it.key.contains("GSV") }
-                val standardMessages = latestMessages.filter { it.key in standardOrder }
-                val vendorMessages = latestMessages.filter { it.key !in standardOrder && !it.key.contains("GSV") }
-                
-                // Show standard NMEA messages in defined order
-                items(
-                    items = standardOrder.mapNotNull { key -> 
-                        standardMessages[key]?.let { message -> key to message }
-                    },
-                    key = { it.first }
-                ) { (type, message) ->
-                    NMEAMessageCard(
-                        message = message,
-                        rawMessage = nmeaMessageMap[type] ?: ""
+            if (messageStatistics.isNotEmpty()) {
+                item {
+                    MessageStatisticsCard(
+                        statistics = messageStatistics,
+                        isExpanded = statisticsExpanded.value,
+                        onExpandedChange = { statisticsExpanded.value = it }
                     )
                 }
-                
-                // Show GSV messages as a group if any exist
-                if (gsvMessages.isNotEmpty()) {
-                    item(key = "gsv_group") {
-                        RenderGSVInfo(gsvMessages = gsvMessages)
-                    }
+            }
+
+            // Define the order for standard NMEA messages
+            val standardOrder = listOf("GGA", "RMC", "GSA", "VTG")
+            val gsvMessages = latestMessages.filter { it.key.contains("GSV") }
+            val standardMessages = latestMessages.filter { it.key in standardOrder }
+            val vendorMessages =
+                latestMessages.filter { it.key !in standardOrder && !it.key.contains("GSV") }
+
+            // Show standard NMEA messages in defined order
+            items(
+                items = standardOrder.mapNotNull { key ->
+                    standardMessages[key]?.let { message -> key to message }
+                },
+                key = { it.first }
+            ) { (type, message) ->
+                NMEAMessageCard(
+                    message = message,
+                    rawMessage = nmeaMessageMap[type] ?: ""
+                )
+            }
+
+            // Show GSV messages as a group if any exist
+            if (gsvMessages.isNotEmpty()) {
+                item(key = "gsv_group") {
+                    RenderGSVInfo(gsvMessages = gsvMessages)
                 }
-                
-                // Show vendor/unknown messages last
-                items(
-                    items = vendorMessages.entries.toList(),
-                    key = { it.key }
-                ) { (type, message) ->
-                    NMEAMessageCard(
-                        message = message,
-                        rawMessage = nmeaMessageMap[type] ?: ""
-                    )
-                }
+            }
+
+            // Show vendor/unknown messages last
+            items(
+                items = vendorMessages.entries.toList(),
+                key = { it.key }
+            ) { (type, message) ->
+                NMEAMessageCard(
+                    message = message,
+                    rawMessage = nmeaMessageMap[type] ?: ""
+                )
             }
         }
     }

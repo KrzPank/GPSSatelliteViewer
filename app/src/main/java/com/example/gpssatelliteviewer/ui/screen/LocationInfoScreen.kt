@@ -3,24 +3,16 @@ package com.example.gpssatelliteviewer.ui.screen
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
@@ -34,9 +26,11 @@ import com.example.gpssatelliteviewer.ui.component.card.GPSStatusCard
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
+import com.example.gpssatelliteviewer.ui.component.card.GNSSChipsetInfoCard
 import com.example.gpssatelliteviewer.ui.component.card.SNRChartCard
 import com.example.gpssatelliteviewer.ui.theme.DarkBackground
 
@@ -45,7 +39,6 @@ import com.example.gpssatelliteviewer.ui.theme.DarkBackground
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationInfoScreen(
-    navController: NavController,
     gnssStatusViewModel: GNSSViewModel,
     nmeaViewModel: NMEAViewModel,
     locationViewModel: LocationViewModel
@@ -59,74 +52,81 @@ fun LocationInfoScreen(
     val hasLocationNMEA by nmeaViewModel.hasLocationNMEA.collectAsState()
     val hasLocationAndroidApi by locationViewModel.hasLocationAndroidApi.collectAsState()
 
-    var dropDownMenuExpanded = remember { mutableStateOf(false) }
+    val locationType = when {
+        hasLocationNMEA -> "NMEA"
+        hasLocationAndroidApi -> "Location Listener"
+        else -> "Loading text"
+    }
+    var selectedLocationType by remember { mutableStateOf(locationType)}
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Location Info", style = MaterialTheme.typography.headlineMedium) },
-                actions = {
-                    Box {
-                        IconButton(onClick = { dropDownMenuExpanded.value = true}) {
-                            Icon(
-                                imageVector = Icons.Default.Menu,
-                                contentDescription = "Menu"
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = dropDownMenuExpanded.value,
-                            onDismissRequest = { dropDownMenuExpanded.value = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Satellite 3D View") },
-                                onClick = {
-                                    dropDownMenuExpanded.value = false
-                                    navController.navigate("Satellite3DScreen")
-                                }
-                            )
-                        }
-                    }
-                }
-            )
+    var showPicker by remember { mutableStateOf(false) }
+
+    LazyColumn(
+        modifier = Modifier
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .fillMaxSize()
+            .background(DarkBackground),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        // --- Location Card ---
+        item {
+            when (selectedLocationType) {
+                "NMEA" -> NMEALocationCard(locationNMEA) { showPicker = true }
+                "Location Listener" -> AndroidApiLocationCard(locationAndroidApi) { showPicker = true }
+                else -> LoadingLocationTextCard()
+            }
         }
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(horizontal = 8.dp, vertical = 4.dp)
-                .fillMaxWidth()
-                .background(DarkBackground),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            // --- Location Card ---
-            //item {
-                when {
-                    hasLocationNMEA -> NMEALocationCard(locationNMEA)
-                    hasLocationAndroidApi -> AndroidApiLocationCard(locationAndroidApi)
-                    else -> LoadingLocationTextCard()
-                }
-            //}
 
-            // --- Summary of GPS status ---
-            //item {
-                val hasLocation = when {
-                    hasLocationNMEA -> true
-                    hasLocationAndroidApi -> true
-                    else -> false
-                }
-                GPSStatusCard(satellites, hasLocation)
-            //}
-
-            // --- SNR Line Chart ---
-            //item {
-            SNRChartCard(
-                snrHistory,
-                timeStamp = locationNMEA.time,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxSize()
-            )
-            //}
+        // --- Summary of GPS status ---
+        item {
+            val hasLocation = when {
+                hasLocationNMEA -> true
+                hasLocationAndroidApi -> true
+                else -> false
+            }
+            GPSStatusCard(satellites, hasLocation)
         }
+
+        // --- SNR Line Chart ---
+        //item {
+        //SNRChartCard(
+        //    snrHistory,
+        //    modifier = Modifier
+        //        .weight(1f)
+        //        .fillMaxSize()
+        //)
+        //}
+    }
+    // Dialog to choose location type
+    if (showPicker) {
+        AlertDialog(
+            onDismissRequest = { showPicker = false },
+            title = { Text("Select Location Source") },
+            text = {
+                Column {
+                    Text(
+                        "NMEA",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                selectedLocationType = "NMEA"
+                                showPicker = false
+                            }
+                            .padding(12.dp)
+                    )
+                    Text(
+                        "Location Listener",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                selectedLocationType = "Location Listener"
+                                showPicker = false
+                            }
+                            .padding(12.dp)
+                    )
+                }
+            },
+            confirmButton = {}
+        )
     }
 }

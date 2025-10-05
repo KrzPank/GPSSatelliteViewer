@@ -14,7 +14,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import com.example.gpssatelliteviewer.ui.theme.GPSSatelliteViewerTheme
 import androidx.compose.runtime.Composable
@@ -36,9 +35,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
-import com.example.gpssatelliteviewer.ui.screen.LiveNMEADataScreen
 import com.example.gpssatelliteviewer.ui.screen.LocationDenyScreen
-import com.example.gpssatelliteviewer.ui.screen.LocationInfoScreen
 import com.example.gpssatelliteviewer.ui.screen.MainScreen
 import com.example.gpssatelliteviewer.ui.screen.Satellite3DScreen
 import com.example.gpssatelliteviewer.utils.SetupDarkSystemUI
@@ -117,7 +114,7 @@ fun AppNavigation(
             factory = ViewModelProvider.AndroidViewModelFactory.getInstance(app)
         )
 
-        gnssViewModel.startLocationInfo()
+        gnssViewModel.startGNSSInfo()
         nmeaViewModel.startNMEAInfo()
         locationViewModel.startLocationListenerInfo()
 

@@ -175,6 +175,50 @@ class GPSStatus(
         }
     }
 
+    @Composable
+    fun GPSStatusHeader(
+        modifier: Modifier = Modifier
+    ) {
+        val statusColor = getStatusColor(gpsStatusState)
+
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Status icon with colored border
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .border(
+                        width = 2.dp,
+                        color = statusColor,
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .background(
+                        color = statusColor.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(16.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = getStatusIcon(gpsStatusState),
+                    contentDescription = null,
+                    tint = statusColor,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Text(
+                text = getStatusTitle(gpsStatusState),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Medium,
+                color = statusColor
+            )
+        }
+    }
+
     @SuppressLint("UnusedBoxWithConstraintsScope")
     @Composable
     fun SNRBar(
@@ -241,50 +285,6 @@ class GPSStatus(
                     )
                 }
             }
-        }
-    }
-
-    @Composable
-    fun GPSStatusHeader(
-        modifier: Modifier = Modifier
-    ) {
-        val statusColor = getStatusColor(gpsStatusState)
-        
-        Row(
-            modifier = modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Status icon with colored border
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .border(
-                        width = 2.dp,
-                        color = statusColor,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .background(
-                        color = statusColor.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(16.dp)
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = getStatusIcon(gpsStatusState),
-                    contentDescription = null,
-                    tint = statusColor,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(12.dp))
-            
-            Text(
-                text = getStatusTitle(gpsStatusState),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Medium,
-                color = statusColor
-            )
         }
     }
 }

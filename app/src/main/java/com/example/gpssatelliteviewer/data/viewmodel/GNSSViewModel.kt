@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.example.gpssatelliteviewer.data.GnssHardwareInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -19,7 +20,9 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 
 @RequiresApi(Build.VERSION_CODES.R)
-class GNSSViewModel(application: Application) : AndroidViewModel(application) {
+class GNSSViewModel(
+    application: Application
+) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
 
     private val parsingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -30,6 +33,9 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val _snrHistory = MutableStateFlow<Map<String, MutableList<Float>>>(emptyMap())
     val snrHistory: StateFlow<Map<String, List<Float>>> = _snrHistory
     private val N = 50 // Keep only last N points (moving window)  e.g., last 50 updates
+
+    private val _gnssHardwareInfo = MutableStateFlow(GnssHardwareInfo())
+    val gnssHardwareInfo: StateFlow<GnssHardwareInfo> = _gnssHardwareInfo
 
     // Keep reference to last parsing job
     private var parseJob: Job? = null
@@ -75,14 +81,46 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+    // is it good?
+    init {
+        loadGNSSHardwareInfo()
+    }
 
-    fun startLocationInfo() {
+    fun startGNSSInfo() {
         try {
             val executor = Executors.newSingleThreadExecutor()
             locationManager.registerGnssStatusCallback(executor, gnssCallback)
         } catch (e: SecurityException) {
             e.printStackTrace()
         }
+    }
+
+    private fun loadGNSSHardwareInfo() {
+        // API 28+
+        val model = try {
+            locationManager.gnssHardwareModelName
+        } catch (_: Exception) {
+            null
+        }
+
+        val year = try {
+            locationManager.gnssYearOfHardware
+        } catch (_: Exception) {
+            null
+        }
+
+        val caps =  // API 30+
+            try {
+                locationManager.gnssCapabilities
+            } catch (_: Exception) {
+                null
+            }
+
+        _gnssHardwareInfo.value = GnssHardwareInfo(
+            modelName = model,
+            hardwareYear = year,
+            capabilities = caps
+        )
     }
 
     private fun updateSNRHistory(gnssStatusList: List<GNSSStatusData>): MutableMap<String, MutableList<Float>> {

@@ -3,14 +3,21 @@ package com.example.gpssatelliteviewer.ui.component.card
 import android.icu.text.SimpleDateFormat
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +30,6 @@ import com.example.gpssatelliteviewer.data.ListenerData
 import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.InfoRow
-import com.example.gpssatelliteviewer.utils.format
 import com.example.gpssatelliteviewer.utils.mapFixQuality
 import com.example.gpssatelliteviewer.utils.mapFixType
 import java.sql.Date
@@ -34,21 +40,35 @@ import java.util.Locale
 @Composable
 fun NMEALocationCard(
     nmea: NMEALocationData,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 4.dp)
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(Modifier.padding(12.dp)) {
-            Text(
-                "Current location",
-                style = MaterialTheme.typography.titleMedium,
-                fontSize = 20.sp
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    "NMEA Location",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontSize = 20.sp
+                )
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Location Settings",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
             Spacer(Modifier.height(8.dp))
 
             InfoRow(
@@ -120,7 +140,81 @@ fun NMEALocationCard(
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun AndroidApiLocationCard(
-    locationAndroidApi: ListenerData,
+    locationData: ListenerData,
+    modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    "Quick Location",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontSize = 20.sp
+                )
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Location Settings",
+                    modifier = Modifier.size(24.dp) // 16.dp is very small, usually 24.dp looks better
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // --- Basic Location Info ---
+            val timestampMillis = System.currentTimeMillis() + 1000
+            val date = Date(timestampMillis)
+            val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+
+            InfoRow(label = "Current system time", value = sdf.format(date).toString())
+            InfoRow(label = "Last update (UTC)", value = locationData.time)
+            InfoRow(
+                label = "Latitude",
+                value = if (locationData.latitude == 0.0) "No Data"
+                else CoordinateConverter.geodeticToDMS(locationData.latitude, locationData.latHemisphere)
+            )
+            InfoRow(
+                label = "Longitude",
+                value = if (locationData.longitude == 0.0) "No Data" else
+                    CoordinateConverter.geodeticToDMS(locationData.longitude, locationData.longHemisphere)
+            )
+            InfoRow(label = "Altitude (MSL)", value = "%.1f m".format(locationData.altitude))
+            InfoRow(label = "Accuracy (2D)", value = "%.1f m".format(locationData.accuracy))
+            InfoRow(label = "Speed", value = "%.2f m/s".format(locationData.speed))
+            InfoRow(label = "Provider", value = locationData.provider)
+
+            // --- Optional / Extended Data ---
+            if (locationData.verticalAccuracy != null)
+                InfoRow(label = "Vertical Accuracy", value = "%.1f m".format(locationData.verticalAccuracy))
+            if (locationData.speedAccuracy != null)
+                InfoRow(label = "Speed Accuracy", value = "%.2f m/s".format(locationData.speedAccuracy))
+            if (locationData.bearing != 0f)
+                InfoRow(label = "Bearing", value = "%.1f°".format(locationData.bearing))
+            if (locationData.bearingAccuracy != null)
+                InfoRow(label = "Bearing Accuracy", value = "%.1f°".format(locationData.bearingAccuracy))
+
+            Spacer(Modifier.height(4.dp))
+
+            InfoRow(
+                label = "Elapsed Time (ns)",
+                value = "%,d".format(locationData.elapsedRealtimeNanos)
+            )
+        }
+    }
+}
+
+@Composable
+fun LoadingLocationTextCard(
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -128,36 +222,8 @@ fun AndroidApiLocationCard(
         modifier = modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(Modifier.padding(12.dp)) {
-            val data = locationAndroidApi
-            Text(
-                "Quick Location",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(Modifier.height(8.dp))
-
-            InfoRow(label = "Last update (UTC)", value = data.time)
-            InfoRow(
-                label = "Latitude",
-                value = "%.6f° ${data.latHemisphere}".format(data.latitude)
-            )
-            InfoRow(
-                label = "Longitude",
-                value = "%.6f° ${data.longHemisphere}".format(data.longitude)
-            )
-            InfoRow(
-                label = "Altitude (MSL)",
-                value = "%.1f m".format(data.altitude)
-            )
-        }
-    }
-}
-
-@Composable
-fun LoadingLocationTextCard(baseText: String = "Waiting for location") {
-    Card {
         InfoRow(
-            label = "$baseText...",
+            label = "Waiting for location...",
             value = ""
         )
     }

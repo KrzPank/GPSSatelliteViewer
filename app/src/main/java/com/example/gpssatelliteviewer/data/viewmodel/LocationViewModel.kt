@@ -6,6 +6,7 @@ import android.icu.util.TimeZone
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -40,23 +41,26 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
-
             parsingScope.launch {
                 _hasLocationAndroidApi.value = true
                 handler.removeCallbacks(noAndroidApiLocationTimeout)
                 handler.postDelayed(noAndroidApiLocationTimeout, timeoutPeriod)
 
-                val sdf = SimpleDateFormat("HHmmss", Locale.US)
-                sdf.timeZone = TimeZone.getTimeZone("UTC")
-                val formattedTime = sdf.format(Date(System.currentTimeMillis()))
-
                 val listenerData = ListenerData(
-                    time = formattedTime,
+                    time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(location.time)),
                     latitude = location.latitude,
                     longitude = location.longitude,
                     altitude = location.altitude,
-                    latHemisphere = if (location.latitude >= 0) "N" else "S",
-                    longHemisphere = if (location.longitude >= 0) "E" else "W"
+                    accuracy = location.accuracy,
+                    speed = location.speed,
+                    bearing = location.bearing,
+                    verticalAccuracy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) location.verticalAccuracyMeters else null,
+                    speedAccuracy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) location.speedAccuracyMetersPerSecond else null,
+                    bearingAccuracy = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) location.bearingAccuracyDegrees else null,
+                    provider = location.provider.toString(),
+                    latHemisphere = if (location.latitude >= 0) 'N' else 'S',
+                    longHemisphere = if (location.longitude >= 0) 'E' else 'W',
+                    elapsedRealtimeNanos = location.elapsedRealtimeNanos
                 )
                 _locationAndroidApi.value = listenerData
             }

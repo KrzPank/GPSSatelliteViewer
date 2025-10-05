@@ -1,5 +1,7 @@
 package com.example.gpssatelliteviewer.data
 
+import android.location.GnssCapabilities
+
 data class GNSSStatusData(
     val constellation: String,
     val prn: Int,
@@ -7,6 +9,12 @@ data class GNSSStatusData(
     val usedInFix: Boolean,
     val azimuth: Float,
     val elevation: Float
+)
+
+data class GnssHardwareInfo(
+    val modelName: String? = null,
+    val hardwareYear: Int? = null,
+    val capabilities: GnssCapabilities? = null
 )
 
 /**         *** TO DO ***
@@ -20,9 +28,18 @@ data class ListenerData(
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
     val altitude: Double = 0.0,
-    val latHemisphere: String = "",
-    val longHemisphere: String = "",
+    val accuracy: Float = 0f,
+    val speed: Float = 0f,
+    val bearing: Float = 0f,
+    val verticalAccuracy: Float? = null,  // available API 26+
+    val speedAccuracy: Float? = null,     // API 26+
+    val bearingAccuracy: Float? = null,   // API 26+
+    val provider: String = "",
+    val latHemisphere: Char = 0.toChar(),
+    val longHemisphere: Char = 0.toChar(),
+    val elapsedRealtimeNanos: Long = 0L,
 )
+
 
 data class NMEALocationData(
     val time: String = "",

@@ -83,7 +83,6 @@ private val LightColorScheme = lightColorScheme(
 @Composable
 fun GPSSatelliteViewerTheme(
     darkTheme: Boolean = true, // Default to dark theme
-    // Dynamic color disabled for consistent theming
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {

@@ -47,13 +47,14 @@ val SNRLightGreen = Color(0xFF86D317)
 val SNRDarkerGreen = Color(0xFF39BB3F)
 
 // Chart line colors (optimized for dark backgrounds)
-val ChartGPS = Color(0xFFFA3D3D)     // Coral Red
-val ChartGLONASS = Color(0xFF3B88F8) // Bright Sky Blue
-val ChartGalileo = Color(0xFF5AF36C) // Mint Green
-val ChartBeoDou = Color(0xFFA541F3)  // Soft Violet
-val ChartQZSS = Color(0xFF58E0F5)    // Cyan-Teal
-val ChartIRNSS = Color(0xFFFAC64D)   // Warm Amber
-val ChartSBAS = Color(0xFFBDB2FF)    // Lavender Gray
+val ChartGPS = Color(0xFFFA3D3D)
+val ChartGLONASS = Color(0xFF3B88F8)
+val ChartGalileo = Color(0xFF5AF36C)
+val ChartBeoDou = Color(0xFFA541F3)
+val ChartQZSS = Color(0xFF58E0F5)
+val ChartIRNSS = Color(0xFFFAC64D)
+val ChartSBAS = Color(0xFFBDB2FF)
+val ChartAverageSNR = Color(0xFF0729D5) // to see
 
 // Legacy colors (keeping for compatibility)
 val Purple80 = Color(0xFFD0BCFF)
