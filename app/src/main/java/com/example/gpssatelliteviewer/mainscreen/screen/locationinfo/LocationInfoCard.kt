@@ -1,9 +1,10 @@
-package com.example.gpssatelliteviewer.ui.component.card
+package com.example.gpssatelliteviewer.mainscreen.screen.locationinfo
 
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,8 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-// Removed LaunchedEffect import
-
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,7 +31,6 @@ import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.mapFixQuality
 import com.example.gpssatelliteviewer.utils.mapFixType
-
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -46,12 +45,12 @@ fun NMEALocationCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
+            .then(if (onClick != null) Modifier.Companion.clickable { onClick() } else Modifier.Companion),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(Modifier.padding(12.dp)) {
+        Column(Modifier.Companion.padding(12.dp)) {
             Row(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
@@ -63,11 +62,11 @@ fun NMEALocationCard(
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Location Settings",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.Companion.size(24.dp)
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.Companion.height(8.dp))
 
             InfoRow(
                 label = "Current system time",
@@ -119,12 +118,12 @@ fun NMEALocationCard(
             InfoRow(
                 label = "Course",
                 value = if (nmea.course == 0.0) "No data"
-                    else nmea.course.let { "%.1f°".format(it) }
+                else nmea.course.let { "%.1f°".format(it) }
             )
             InfoRow(
                 label = "Magnetic variation",
                 value = if (nmea.magneticVariation == 0.0) "No data"
-                    else nmea.magneticVariation.let { "%.1f°".format(it) }
+                else nmea.magneticVariation.let { "%.1f°".format(it) }
             )
         }
     }
@@ -139,15 +138,15 @@ fun AndroidApiLocationCard(
     onClick: (() -> Unit)? = null
 ) {
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
         modifier = modifier
             .fillMaxWidth()
-            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier),
+            .then(if (onClick != null) Modifier.Companion.clickable { onClick() } else Modifier.Companion),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(Modifier.padding(12.dp)) {
+        Column(Modifier.Companion.padding(12.dp)) {
             Row(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
@@ -159,18 +158,18 @@ fun AndroidApiLocationCard(
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Location Settings",
-                    modifier = Modifier.size(24.dp) // 16.dp is very small, usually 24.dp looks better
+                    modifier = Modifier.Companion.size(24.dp)
                 )
             }
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.Companion.height(8.dp))
 
-            // --- Basic Location Info ---
             InfoRow(label = "Current system time", value = currentSystemTime)
             InfoRow(
-                label = "Last update (UTC)",
+                label = "Last update",
                 value = if (locationData.time == "") "No data"
-                else locationData.time)
+                else locationData.time
+            )
             InfoRow(
                 label = "Latitude",
                 value = if (locationData.latitude == 0.0) "No Data"
@@ -189,7 +188,7 @@ fun AndroidApiLocationCard(
             InfoRow(
                 label = "Accuracy (2D)", value =
                     if (locationData.accuracy == 0f) "Do data"
-            else "%.1f m".format(locationData.accuracy)
+                    else "%.1f m".format(locationData.accuracy)
             )
             InfoRow(
                 label = "Speed",
@@ -201,8 +200,6 @@ fun AndroidApiLocationCard(
                 value = if (locationData.provider == "") "No data"
                 else locationData.provider
             )
-
-            // --- Optional / Extended Data ---
             InfoRow(
                 label = "Vertical Accuracy",
                 value = if (locationData.verticalAccuracy == null) "No data"
@@ -223,9 +220,6 @@ fun AndroidApiLocationCard(
                 value = if (locationData.bearingAccuracy == null) "No data"
                 else "%.2f m/s".format(locationData.bearingAccuracy)
             )
-
-            Spacer(Modifier.height(4.dp))
-
             InfoRow(
                 label = "Elapsed Time (ns)",
                 value = "%,d".format(locationData.elapsedRealtimeNanos)
@@ -239,15 +233,22 @@ fun LoadingLocationTextCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
         modifier = modifier
-            .fillMaxWidth()
-            .padding(12.dp),
+            .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        InfoRow(
-            label = "Waiting for location...",
-            value = ""
-        )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 24.dp, horizontal = 16.dp), // Inner padding
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                "Waiting for location...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.ui.screen
+package com.example.gpssatelliteviewer.mainscreen.screen.locationinfo
 
 import android.icu.text.SimpleDateFormat
 import android.os.Build
@@ -20,11 +20,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.example.gpssatelliteviewer.ui.component.card.AndroidApiLocationCard
-import com.example.gpssatelliteviewer.ui.component.card.LoadingLocationTextCard
-import com.example.gpssatelliteviewer.ui.component.card.NMEALocationCard
-import com.example.gpssatelliteviewer.ui.component.card.GPSStatusCard
+import com.example.gpssatelliteviewer.mainscreen.screen.locationinfo.AndroidApiLocationCard
+import com.example.gpssatelliteviewer.mainscreen.screen.locationinfo.LoadingLocationTextCard
+import com.example.gpssatelliteviewer.mainscreen.screen.locationinfo.NMEALocationCard
+import com.example.gpssatelliteviewer.mainscreen.screen.locationinfo.GPSStatusCard
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,16 +31,11 @@ import androidx.compose.runtime.setValue
 import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
-import com.example.gpssatelliteviewer.ui.component.card.SNRChartCard
-import com.example.gpssatelliteviewer.ui.theme.DarkBackground
-import com.example.gpssatelliteviewer.utils.InfoRow
+import com.example.gpssatelliteviewer.app.theme.DarkBackground
 import kotlinx.coroutines.delay
 import java.sql.Date
 import java.util.Locale
-import kotlin.text.format
-import kotlin.toString
 
-//*
 @RequiresApi(Build.VERSION_CODES.R)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,12 +45,12 @@ fun LocationInfoScreen(
     locationViewModel: LocationViewModel
 ) {
     val satellites by gnssStatusViewModel.satelliteList.collectAsState()
-    val snrHistory by gnssStatusViewModel.snrHistory.collectAsState()
+    //val snrHistory by gnssStatusViewModel.snrHistory.collectAsState()
 
     val locationNMEA by nmeaViewModel.locationNMEA.collectAsState()
-    val locationAndroidApi by locationViewModel.locationAndroidApi.collectAsState()
-
     val hasLocationNMEA by nmeaViewModel.hasLocationNMEA.collectAsState()
+
+    val locationAndroidApi by locationViewModel.locationAndroidApi.collectAsState()
     val hasLocationAndroidApi by locationViewModel.hasLocationAndroidApi.collectAsState()
 
     val locationType = when {
@@ -75,6 +69,14 @@ fun LocationInfoScreen(
         }
     }
 
+    val isLocationEnabled by locationViewModel.isLocationEnabled.collectAsState()
+    LaunchedEffect(Unit) {
+        while (true) {
+            locationViewModel.checkLocationEnabled()
+            delay(10000L) // 10 seconds
+        }
+    }
+
     var currentSystemTime by remember { mutableStateOf("") }
     LaunchedEffect(Unit) {
         val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
@@ -86,7 +88,7 @@ fun LocationInfoScreen(
     }
 
     LazyColumn(
-        modifier = Modifier
+        modifier = Modifier.Companion
             .padding(horizontal = 8.dp, vertical = 4.dp)
             .fillMaxSize()
             .background(DarkBackground),
@@ -99,11 +101,16 @@ fun LocationInfoScreen(
                     showPicker = true
                     userHasSelectedType = true
                 }
-                "Location Listener" -> AndroidApiLocationCard(locationAndroidApi, currentSystemTime) {
+
+                "Location Listener" -> AndroidApiLocationCard(
+                    locationAndroidApi,
+                    currentSystemTime
+                ) {
                     showPicker = true
                     userHasSelectedType = true
                 }
-                else -> LoadingLocationTextCard()
+
+                "Loading text" -> LoadingLocationTextCard()
             }
         }
 
@@ -114,7 +121,7 @@ fun LocationInfoScreen(
                 hasLocationAndroidApi -> true
                 else -> false
             }
-            GPSStatusCard(satellites, hasLocation)
+            GPSStatusCard(satellites, hasLocation, isLocationEnabled)
         }
 
         // --- SNR Line Chart ---
@@ -136,7 +143,7 @@ fun LocationInfoScreen(
                 Column {
                     Text(
                         "NMEA",
-                        modifier = Modifier
+                        modifier = Modifier.Companion
                             .fillMaxWidth()
                             .clickable {
                                 selectedLocationType = "NMEA"
@@ -146,7 +153,7 @@ fun LocationInfoScreen(
                     )
                     Text(
                         "Location Listener",
-                        modifier = Modifier
+                        modifier = Modifier.Companion
                             .fillMaxWidth()
                             .clickable {
                                 selectedLocationType = "Location Listener"

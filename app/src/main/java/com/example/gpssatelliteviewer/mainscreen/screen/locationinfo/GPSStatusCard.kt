@@ -1,5 +1,4 @@
-package com.example.gpssatelliteviewer.ui.component.card
-
+package com.example.gpssatelliteviewer.mainscreen.screen.locationinfo
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,23 +14,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.gpssatelliteviewer.utils.InfoRow
+import com.example.gpssatelliteviewer.app.theme.TextLabel
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.ui.theme.TextLabel
-import com.example.gpssatelliteviewer.ui.theme.ValueText
 import com.example.gpssatelliteviewer.utils.GPSStatus
-
+import com.example.gpssatelliteviewer.utils.InfoRow
 
 @Composable
 fun GPSStatusCard(
     satellites: List<GNSSStatusData>,
     hasLocation: Boolean,
+    isLocationEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val gpsStatus = GPSStatus(satellites, hasLocation)
+    val gpsStatus = GPSStatus(satellites, hasLocation, isLocationEnabled)
 
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -40,18 +37,18 @@ fun GPSStatusCard(
             .padding(vertical = 4.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.Companion.padding(16.dp)) {
             Text(
                 "GPS Status",
                 style = MaterialTheme.typography.titleMedium,
                 fontSize = 20.sp
             )
-            Spacer(Modifier.height(8.dp))
-            
+            Spacer(Modifier.Companion.height(8.dp))
+
             // GPS Status Header
             gpsStatus.GPSStatusHeader()
-            
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Spacer(modifier = Modifier.Companion.height(16.dp))
 
             // Existing satellite info
             InfoRow(label = "In view", value = gpsStatus.getSatelliteCount().toString())
@@ -61,12 +58,12 @@ fun GPSStatusCard(
                 value = "${"%.1f".format(gpsStatus.averageSNRInFix)} dBHz"
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.Companion.height(8.dp))
             gpsStatus.SNRBar()
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.Companion.height(4.dp))
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.Companion.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
@@ -83,13 +80,17 @@ fun GPSStatusCard(
                 )
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.Companion.height(4.dp))
             gpsStatus.averageSNRByConstellation.forEach { (constellation, snr) ->
                 InfoRow(
                     label = constellation,
-                    value = "${"%.1f".format(snr)} dBHz / ${gpsStatus.getFixCountByConstellation(constellation)}"
+                    value = "${"%.1f".format(snr)} dBHz / ${
+                        gpsStatus.getFixCountByConstellation(
+                            constellation
+                        )
+                    }"
                 )
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.Companion.height(4.dp))
             }
         }
     }

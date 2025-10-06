@@ -33,10 +33,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.gpssatelliteviewer.ui.theme.TextLabel
-import com.example.gpssatelliteviewer.ui.theme.ValueText
-import com.example.gpssatelliteviewer.ui.theme.GreenPrimary
-import com.example.gpssatelliteviewer.ui.theme.TextHint
+import com.example.gpssatelliteviewer.app.theme.TextLabel
+import com.example.gpssatelliteviewer.app.theme.ValueText
+import com.example.gpssatelliteviewer.app.theme.GreenPrimary
+import com.example.gpssatelliteviewer.app.theme.TextHint
 
 @Composable
 fun InfoRow(
@@ -126,7 +126,6 @@ fun NavigationTopAppBar(
         }
     )
 }
-
 
 @Composable
 fun ParameterSection(

@@ -31,15 +31,14 @@ class Scene3D(
     private val view: View,
     private var parameters: Scene3DParameters = Scene3DParameters()
 ) {
-    // Management systems
-    //private lateinit var satellites: SatelliteManager
-
     private val centerNode = Node(engine)
     private val cameraNode = CameraNode(engine).apply {
         position = parameters.startingCameraLocation
         lookAt(centerNode)
         centerNode.addChildNode(this)
     }
+
+    // Management systems
     var satellites: SatelliteManager = SatelliteManager(modelLoader, centerNode, parameters)
     private var mainLight: LightHandler = LightHandler(engine, centerNode, cameraNode, parameters)
     private var locationMarker: LocationMarkerManager = LocationMarkerManager(modelLoader, centerNode, parameters)
@@ -122,6 +121,7 @@ class Scene3D(
         )
     }
 
+    // Optimisation when i create camera node handler move updateLookAt only when it moves not every frame
     private fun updateLookAt() {
         cameraNode.lookAt(centerNode)
 
@@ -181,9 +181,8 @@ class Scene3D(
         }
     }
 
-
     /**
-     * Apply visual effects based on current parameters (uses medium preset by default)
+     * Apply visual effects based on current parameters (medium preset by default)
      */
     private fun applyVisualEffects(view: View) {
         try {

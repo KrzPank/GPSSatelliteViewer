@@ -1,7 +1,5 @@
-package com.example.gpssatelliteviewer.ui.component.card
+package com.example.gpssatelliteviewer.mainscreen.screen.livenmea
 
-import androidx.compose.runtime.Composable
-import com.example.gpssatelliteviewer.data.NMEAMessage
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,10 +9,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.gpssatelliteviewer.app.theme.ValueText
+import com.example.gpssatelliteviewer.data.NMEAMessage
 import com.example.gpssatelliteviewer.data.parser.NMEAParser
-import com.example.gpssatelliteviewer.ui.theme.ValueText
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.mapFixQuality
@@ -33,12 +33,12 @@ fun NMEAMessageCard(
             .padding(vertical = 4.dp)
             .animateContentSize()
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.Companion.padding(12.dp)) {
             Text(
                 text = message.messageType,
                 style = MaterialTheme.typography.titleMedium
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.Companion.height(6.dp))
             Text("Raw message:", style = MaterialTheme.typography.bodyMedium)
             Text(rawMessage, style = MaterialTheme.typography.bodyMedium, color = ValueText)
 
@@ -46,18 +46,23 @@ fun NMEAMessageCard(
                 is NMEAMessage.GGA -> {
                     RenderGGAInfo(message)
                 }
+
                 is NMEAMessage.RMC -> {
                     RenderRMCInfo(message)
                 }
+
                 is NMEAMessage.GSA -> {
                     RenderGSAInfo(message)
                 }
+
                 is NMEAMessage.GSV -> {
                     RenderGSVInfo(message)
                 }
+
                 is NMEAMessage.VTG -> {
                     RenderVTGInfo(message)
                 }
+
                 is NMEAMessage.Unknown -> {
                     InfoRow("Info", "Vendor defined message")
                     val parsed = NMEAParser.parseVendorMessage(rawMessage)
@@ -111,7 +116,7 @@ private fun RenderGSVInfo(gsv: NMEAMessage.GSV) {
     gsv.satellitesInfo.forEach { sat ->
         InfoRow("PRN ${sat.prn}", "E:${sat.elevation}° Az:${sat.azimuth}° SNR:${sat.snr}")
     }
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.Companion.height(8.dp))
 }
 
 @Composable
@@ -125,12 +130,12 @@ fun RenderGSVInfo(
             .padding(vertical = 4.dp)
             .animateContentSize()
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.Companion.padding(12.dp)) {
             Text(
                 text = "GSV - Satellites in View",
                 style = MaterialTheme.typography.titleMedium
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.Companion.height(6.dp))
 
             gsvMessages.forEach { (_, message) ->
                 if (message is NMEAMessage.GSV) {
@@ -138,9 +143,12 @@ fun RenderGSVInfo(
                     InfoRow("Message", "${message.messageNumber}/${message.totalMessages}")
                     InfoRow("SV in view", message.satellitesInView.toString())
                     message.satellitesInfo.forEach { sat ->
-                        InfoRow("PRN ${sat.prn}", "E:${sat.elevation}° Az:${sat.azimuth}° SNR:${sat.snr}")
+                        InfoRow(
+                            "PRN ${sat.prn}",
+                            "E:${sat.elevation}° Az:${sat.azimuth}° SNR:${sat.snr}"
+                        )
                     }
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.Companion.height(10.dp))
                 }
             }
         }

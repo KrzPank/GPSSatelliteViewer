@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.ui.component.menu
+package com.example.gpssatelliteviewer.scene3d.ui.menu
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -32,16 +32,14 @@ import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.Scene3DParametersState
 import com.example.gpssatelliteviewer.utils.ParameterSection
-import com.google.android.filament.LightManager
-import com.example.gpssatelliteviewer.ui.theme.DarkSurface
-import com.example.gpssatelliteviewer.ui.theme.TextLabel
-import com.example.gpssatelliteviewer.ui.theme.GreenPrimary
-import com.example.gpssatelliteviewer.ui.theme.StatusError
-import com.example.gpssatelliteviewer.ui.theme.OutlineColor
+import com.example.gpssatelliteviewer.app.theme.TextLabel
+import com.example.gpssatelliteviewer.app.theme.GreenPrimary
+import com.example.gpssatelliteviewer.app.theme.StatusError
+import com.example.gpssatelliteviewer.app.theme.OutlineColor
 import kotlin.math.log10
 import kotlin.math.pow
 import androidx.compose.runtime.*
-import com.example.gpssatelliteviewer.ui.theme.DarkBackground
+import com.example.gpssatelliteviewer.app.theme.DarkBackground
 import com.example.gpssatelliteviewer.utils.format
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,7 +68,6 @@ fun Scene3DParametersMenu(
 
         HorizontalDivider(thickness = 1.dp, color = OutlineColor)
 
-        // Control buttons
         Row(
             modifier = Modifier.Companion.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -154,7 +151,7 @@ fun Scene3DParametersMenu(
 }
 
 @Composable
-fun SliderParameter(
+private fun SliderParameter(
     label: String,
     value: Float,
     valueRange: ClosedFloatingPointRange<Float>,
@@ -183,7 +180,7 @@ fun SliderParameter(
 }
 
 @Composable
-fun ColorParameter(
+private fun ColorParameter(
     label: String,
     red: Float,
     green: Float,
@@ -232,7 +229,7 @@ fun ColorParameter(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModelSelector(
+private fun ModelSelector(
     label: String,
     options: List<Pair<String, String>>,
     currentPath: String,
@@ -283,7 +280,7 @@ fun ModelSelector(
 }
 
 @Composable
-fun LogarithmicSliderParameter(
+private fun LogarithmicSliderParameter(
     label: String,
     value: Float,
     minValue: Float,

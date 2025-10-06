@@ -1,27 +1,8 @@
-package com.example.gpssatelliteviewer.ui.screen
+package com.example.gpssatelliteviewer.scene3d.ui
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
-import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -29,42 +10,60 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.data.NMEALocationData
-import com.example.gpssatelliteviewer.scene3d.Scene3DParametersState
-import com.example.gpssatelliteviewer.ui.component.Scene3DLoadingScreen
-import com.example.gpssatelliteviewer.ui.component.menu.Scene3DParametersMenu
-import com.example.gpssatelliteviewer.ui.component.menu.SatelliteFilterMenu
-import com.example.gpssatelliteviewer.utils.CoordinateConverter
+import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import com.example.gpssatelliteviewer.scene3d.Scene3D
-import com.example.gpssatelliteviewer.ui.theme.DarkBackground
+import com.example.gpssatelliteviewer.scene3d.Scene3DParametersState
+import com.example.gpssatelliteviewer.scene3d.ui.menu.SatelliteFilterMenu
+import com.example.gpssatelliteviewer.scene3d.ui.menu.Scene3DParametersMenu
+import com.example.gpssatelliteviewer.app.theme.DarkBackground
+import com.example.gpssatelliteviewer.app.theme.GreenPrimary
+import com.example.gpssatelliteviewer.app.theme.TextLabel
+import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.HideSystemUI
 import com.example.gpssatelliteviewer.utils.LockOrientationLandscape
-import com.example.gpssatelliteviewer.ui.theme.TextLabel
-import com.example.gpssatelliteviewer.ui.theme.GreenPrimary
 import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberView
 import kotlinx.coroutines.delay
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.R)
@@ -74,7 +73,7 @@ fun Satellite3DScreen(
     gnssViewModel: GNSSViewModel,
     locationNMEA: NMEALocationData
 ) {
-    // Immersion mode
+    // Immersive mode
     HideSystemUI()
     LockOrientationLandscape()
 
@@ -83,17 +82,17 @@ fun Satellite3DScreen(
     val userLocation: Triple<Float, Float, Float> =
         Triple(
             CoordinateConverter.nmeaCoordinateToDecimal(
-                locationNMEA.latitude, 
+                locationNMEA.latitude,
                 locationNMEA.latHemisphere
             ).toFloat(),
             CoordinateConverter.nmeaCoordinateToDecimal(
-                locationNMEA.longitude, 
+                locationNMEA.longitude,
                 locationNMEA.lonHemisphere
             ).toFloat(),
             locationNMEA.altitude.toFloat()
         )
 
-    // SceneView parematers init
+    // SceneView parameters init
     val engine = rememberEngine()
     val modelLoader = rememberModelLoader(engine)
     val environmentLoader = rememberEnvironmentLoader(engine)
@@ -103,7 +102,7 @@ fun Satellite3DScreen(
     var isSceneReady by remember { mutableStateOf(false) }
     val scene = remember {
         Scene3D(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.Companion.fillMaxSize(),
             environmentLoader = environmentLoader,
             modelLoader = modelLoader,
             engine = engine,
@@ -141,7 +140,7 @@ fun Satellite3DScreen(
     //  menu stuff
     var selectedTab by remember { mutableIntStateOf(0) }
     val menuWidth = 300.dp
-    val safeInsets = WindowInsets.safeDrawing.asPaddingValues()
+    val safeInsets = WindowInsets.Companion.safeDrawing.asPaddingValues()
     val totalMenuWidth = menuWidth + safeInsets.calculateLeftPadding(LayoutDirection.Ltr)
     val menuAnimationDuration = 300
     val sceneOffsetX by animateDpAsState(
@@ -163,7 +162,7 @@ fun Satellite3DScreen(
     }
 
     Box(
-        modifier = Modifier
+        modifier = Modifier.Companion
             .fillMaxSize()
             .background(DarkBackground)
     ) {
@@ -174,7 +173,7 @@ fun Satellite3DScreen(
             )
         ) {
             Scene3DLoadingScreen(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.Companion.fillMaxSize()
             )
         }
 
@@ -185,27 +184,46 @@ fun Satellite3DScreen(
             )
         ) {
             Box(
-                modifier = Modifier
+                modifier = Modifier.Companion
                     .fillMaxSize()
-                    .offset(x = sceneOffsetX/2)
+                    .offset(x = sceneOffsetX / 2)
             ) {
                 scene.Render()
-                scene.updateScene(filteredSatellites, userLocation)
+                //scene.updateScene(filteredSatellites, userLocation)
+
+                LaunchedEffect(filteredSatellites) {
+                    if (isSceneReady) {
+                        scene.updateScene(filteredSatellites, userLocation)
+                        Log.d("updateScene", "Updated Scene")
+                    }
+                }
+
                 clickedSatellite?.let { sat ->
                     Box(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
+                        modifier = Modifier.Companion
+                            .align(Alignment.Companion.TopCenter)
                             .padding(top = 50.dp)
                     ) {
                         Card(
-                            modifier = Modifier.padding(8.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.7f))
+                            modifier = Modifier.Companion.padding(8.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.Companion.Black.copy(
+                                    alpha = 0.7f
+                                )
+                            )
                         ) {
-                            Column(Modifier.padding(8.dp)) {
-                                Text("${sat.constellation} PRN ${sat.prn}", fontWeight = FontWeight.Bold, color = Color.White)
-                                Text("SNR: ${sat.snr}", color = Color.White)
-                                Text("Used in fix: ${sat.usedInFix}", color = Color.White)
-                                Text("Azimuth: ${sat.azimuth}, Elevation: ${sat.elevation}", color = Color.White)
+                            Column(Modifier.Companion.padding(8.dp)) {
+                                Text(
+                                    "${sat.constellation} PRN ${sat.prn}",
+                                    fontWeight = FontWeight.Companion.Bold,
+                                    color = Color.Companion.White
+                                )
+                                Text("SNR: ${sat.snr}", color = Color.Companion.White)
+                                Text("Used in fix: ${sat.usedInFix}", color = Color.Companion.White)
+                                Text(
+                                    "Azimuth: ${sat.azimuth}, Elevation: ${sat.elevation}",
+                                    color = Color.Companion.White
+                                )
                             }
                         }
                     }
@@ -226,7 +244,7 @@ fun Satellite3DScreen(
                 )
             ) {
                 Column(
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .fillMaxHeight()
                         .requiredWidth(totalMenuWidth)
                         .background(DarkBackground)
@@ -239,11 +257,13 @@ fun Satellite3DScreen(
                 ) {
                     TabRow(
                         selectedTabIndex = selectedTab,
-                        containerColor = Color.Transparent,
+                        containerColor = Color.Companion.Transparent,
                         contentColor = TextLabel,
                         indicator = { tabPositions ->
                             TabRowDefaults.SecondaryIndicator(
-                                Modifier.tabIndicatorOffset(tabPositions[selectedTab]), color = GreenPrimary)
+                                Modifier.Companion.tabIndicatorOffset(tabPositions[selectedTab]),
+                                color = GreenPrimary
+                            )
                         }
                     ) {
                         Tab(
@@ -268,16 +288,17 @@ fun Satellite3DScreen(
                                 showLocationMarker = showLocationMarker,
                                 onShowLocationMarkerChanged = { showLocationMarker = it },
                                 navController = navController,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.Companion.fillMaxSize()
                             )
                         }
+
                         1 -> {
                             Scene3DParametersMenu(
                                 parametersState = parametersState,
                                 onParametersChanged = { newParams ->
                                     scene.updateParameters(newParams)
                                 },
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.Companion.fillMaxSize()
                             )
                         }
                     }

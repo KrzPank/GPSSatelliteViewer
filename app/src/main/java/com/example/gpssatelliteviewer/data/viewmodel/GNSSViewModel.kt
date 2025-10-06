@@ -21,9 +21,7 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 
 @RequiresApi(Build.VERSION_CODES.R)
-class GNSSViewModel(
-    application: Application
-) : AndroidViewModel(application) {
+class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
 
     private val parsingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())

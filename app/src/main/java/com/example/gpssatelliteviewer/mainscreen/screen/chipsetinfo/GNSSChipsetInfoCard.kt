@@ -1,8 +1,7 @@
-package com.example.gpssatelliteviewer.ui.component.card
+package com.example.gpssatelliteviewer.mainscreen.screen.chipsetinfo
 
 import android.location.GnssCapabilities
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -18,11 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.gpssatelliteviewer.app.theme.ValueText
 import com.example.gpssatelliteviewer.data.GnssHardwareInfo
-import com.example.gpssatelliteviewer.ui.theme.ValueText
 import com.example.gpssatelliteviewer.utils.CapabilityRow
 import com.example.gpssatelliteviewer.utils.InfoRow
-
 
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
@@ -37,20 +35,37 @@ fun GNSSChipsetInfoCard(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.Companion.padding(12.dp)) {
             Text(
                 "Hardware Info",
                 style = MaterialTheme.typography.titleMedium,
                 fontSize = 20.sp
             )
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.Companion.height(8.dp))
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                InfoRow("SOC Manufacturer", Build.SOC_MANUFACTURER)
+                InfoRow("SOC Model", Build.SOC_MODEL)
+            } else {
+                InfoRow("SOC Manufacturer", tryToGetSOCManufacturer(info.modelName))
+                InfoRow("SOC Model", Build.HARDWARE.ifBlank { "Unknown" })
+            }
 
             // mediatek ???getting different chip names??? sometimes good sometimes shit
-            InfoRow("Chipset", prettifyGNSSModelName(info.modelName))
             InfoRow("Hardware Year", info.hardwareYear?.toString() ?: "Unknown")
-            Spacer(Modifier.height(8.dp))
-            Text("Model name including vendor and hardware/software version", style = MaterialTheme.typography.bodyMedium)
-            Text(info.modelName.toString(), style = MaterialTheme.typography.bodyMedium, color = ValueText)
+            InfoRow("Model", Build.MODEL.ifBlank { "Unknown" })
+            InfoRow("Manufacturer", Build.MANUFACTURER.ifBlank { "Unknown" })
+
+            Spacer(Modifier.Companion.height(8.dp))
+            Text(
+                "Model name including vendor and hardware/software version",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                info.modelName.toString(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = ValueText
+            )
         }
     }
 }
@@ -64,17 +79,17 @@ fun GNSSChipsetCapabilitiesCard(
         modifier = modifier
             .padding(4.dp)
             .fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.Companion.padding(12.dp)) {
             if (info.capabilities != null) {
                 Text(
                     "Capabilities",
                     style = MaterialTheme.typography.titleMedium,
                     fontSize = 20.sp
                 )
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.Companion.height(8.dp))
 
                 val caps = info.capabilities
 
@@ -109,7 +124,7 @@ fun GNSSChipsetCapabilitiesCard(
                     )
 
                     // Display each capability with icon
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.Companion.height(4.dp))
                     capabilitiesMap.forEach { (label, supported) ->
                         CapabilityRow(label, supported)
                     }
@@ -117,7 +132,7 @@ fun GNSSChipsetCapabilitiesCard(
                     // GNSS signal types
                     val signals = caps.gnssSignalTypes
                     if (signals.isNotEmpty()) {
-                        Spacer(Modifier.height(8.dp))
+                        Spacer(Modifier.Companion.height(8.dp))
                         Text(
                             "Supported Signal Types:",
                             style = MaterialTheme.typography.titleSmall
@@ -126,7 +141,7 @@ fun GNSSChipsetCapabilitiesCard(
                             Text(
                                 text = "• ${sig.constellationType} (${sig.carrierFrequencyHz / 1_000_000} MHz)",
                                 style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(start = 16.dp, top = 2.dp)
+                                modifier = Modifier.Companion.padding(start = 16.dp, top = 2.dp)
                             )
                         }
                     }
@@ -139,14 +154,14 @@ fun GNSSChipsetCapabilitiesCard(
                         "Navigation Messages" to caps.hasNavigationMessages()
                     )
 
-                    Spacer(Modifier.height(4.dp))
+                    Spacer(Modifier.Companion.height(4.dp))
                     capabilitiesMap.forEach { (label, supported) ->
                         CapabilityRow(label, supported)
                     }
 
                     // Below Android 12
                 } else {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.Companion.height(8.dp))
                     Text(
                         "GNSS capability details not available on this Android version.",
                         style = MaterialTheme.typography.bodySmall,
@@ -154,20 +169,19 @@ fun GNSSChipsetCapabilitiesCard(
                     )
                 }
             } else {
-                Text("No specific capabilities detected", style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    "No specific capabilities detected",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }
 }
 
-private fun prettifyGNSSModelName(
+private fun tryToGetSOCManufacturer(
     rawName: String?,
 ): String {
-    val hardware = Build.MODEL.ifBlank { "Unknown" }
-
-    if (rawName.isNullOrBlank()) return "Unknown GNSS Chipset ($hardware)"
-
-    Log.d("chipset", "$rawName $hardware")
+    if (rawName.isNullOrBlank()) return "Unknown SOC Manufacturer"
 
     val vendor = when {
         rawName.contains("mediatek", true) || rawName.contains("mtk", true) -> "MediaTek"
@@ -176,8 +190,8 @@ private fun prettifyGNSSModelName(
         rawName.contains("u-blox", true) || rawName.contains("ublox", true) -> "u-blox"
         rawName.contains("samsung", true) || rawName.contains("exynos", true) -> "Samsung"
         rawName.contains("hisilicon", true) || rawName.contains("kirin", true) -> "HiSilicon"
-        else -> null
+        else -> "Unknown SOC Manufacturer"
     }
 
-    return "$vendor $hardware"
+    return vendor
 }

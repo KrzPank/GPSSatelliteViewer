@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.ui.component.menu
+package com.example.gpssatelliteviewer.scene3d.ui.menu
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,24 +17,21 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.ui.theme.DarkBackground
+import com.example.gpssatelliteviewer.app.theme.DarkBackground
 import com.example.gpssatelliteviewer.utils.CustomCheckbox
 import com.example.gpssatelliteviewer.utils.ParameterSection
 import com.example.gpssatelliteviewer.utils.InfoRow
-import com.example.gpssatelliteviewer.ui.theme.DarkSurface
-import com.example.gpssatelliteviewer.ui.theme.DarkSurfaceVariant
-import com.example.gpssatelliteviewer.ui.theme.GreenLight
-import com.example.gpssatelliteviewer.ui.theme.TextLabel
-import com.example.gpssatelliteviewer.ui.theme.TextSecondary
-import com.example.gpssatelliteviewer.ui.theme.GreenPrimary
-import com.example.gpssatelliteviewer.ui.theme.StatusError
-import com.example.gpssatelliteviewer.ui.theme.OutlineColor
+import com.example.gpssatelliteviewer.app.theme.DarkSurfaceVariant
+import com.example.gpssatelliteviewer.app.theme.TextLabel
+import com.example.gpssatelliteviewer.app.theme.TextSecondary
+import com.example.gpssatelliteviewer.app.theme.GreenPrimary
+import com.example.gpssatelliteviewer.app.theme.StatusError
+import com.example.gpssatelliteviewer.app.theme.OutlineColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

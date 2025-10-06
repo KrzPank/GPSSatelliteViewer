@@ -1,7 +1,5 @@
-package com.example.gpssatelliteviewer.ui.component.card
+package com.example.gpssatelliteviewer.mainscreen.screen.satelliteinfo
 
-import androidx.compose.runtime.Composable
-import com.example.gpssatelliteviewer.data.GNSSStatusData
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,10 +15,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.utils.InfoRow
 
 @Composable
@@ -32,22 +32,22 @@ fun ConstellationCard(
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        modifier = Modifier
+        modifier = Modifier.Companion
             .fillMaxWidth()
             .clickable { onClick() },
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .fillMaxWidth()
                 .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Companion.CenterVertically
         ) {
             Text(
                 text = "$constellation ($satellitesCount)",
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Companion.Medium
             )
             Icon(
                 imageVector = if (expanded) Icons.Default.KeyboardArrowDown
@@ -61,13 +61,13 @@ fun ConstellationCard(
 @Composable
 fun SatelliteInfoCard(satellite: GNSSStatusData) {
     Card(
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        modifier = Modifier.Companion
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 1.dp),
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.Companion.padding(12.dp)) {
             InfoRow("PRN", satellite.prn.toString())
             InfoRow("SNR", "${satellite.snr} dBHz")
             InfoRow("Used in Fix", satellite.usedInFix.toString())

@@ -1,7 +1,6 @@
 package com.example.gpssatelliteviewer.utils
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,20 +40,19 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.ui.theme.SNRDarkerGreen
-import com.example.gpssatelliteviewer.ui.theme.SNRLightGreen
-import com.example.gpssatelliteviewer.ui.theme.SNROrange
-import com.example.gpssatelliteviewer.ui.theme.SNRRed
-import com.example.gpssatelliteviewer.ui.theme.SNRYellow
-import com.example.gpssatelliteviewer.ui.theme.GPSExcellent
-import com.example.gpssatelliteviewer.ui.theme.GPSGood
-import com.example.gpssatelliteviewer.ui.theme.GPSFair
-import com.example.gpssatelliteviewer.ui.theme.GPSPoor
-import com.example.gpssatelliteviewer.ui.theme.GPSNoFix
-import com.example.gpssatelliteviewer.ui.theme.GPSSearching
-import com.example.gpssatelliteviewer.ui.theme.GPSDisabled
-import com.example.gpssatelliteviewer.ui.theme.TextPrimary
-
+import com.example.gpssatelliteviewer.app.theme.SNRDarkerGreen
+import com.example.gpssatelliteviewer.app.theme.SNRLightGreen
+import com.example.gpssatelliteviewer.app.theme.SNROrange
+import com.example.gpssatelliteviewer.app.theme.SNRRed
+import com.example.gpssatelliteviewer.app.theme.SNRYellow
+import com.example.gpssatelliteviewer.app.theme.GPSExcellent
+import com.example.gpssatelliteviewer.app.theme.GPSGood
+import com.example.gpssatelliteviewer.app.theme.GPSFair
+import com.example.gpssatelliteviewer.app.theme.GPSPoor
+import com.example.gpssatelliteviewer.app.theme.GPSNoFix
+import com.example.gpssatelliteviewer.app.theme.GPSSearching
+import com.example.gpssatelliteviewer.app.theme.GPSDisabled
+import com.example.gpssatelliteviewer.app.theme.TextPrimary
 
 sealed class GPSStatusState {
     object Excellent : GPSStatusState()      // Strong signal, many satellites, high accuracy
@@ -68,14 +66,15 @@ sealed class GPSStatusState {
 
 class GPSStatus(
     private val satellites: List<GNSSStatusData>,
-    private val hasLocation: Boolean
+    private val hasLocation: Boolean,
+    private val isLocationEnabled: Boolean
 ) {
     val averageSNRByConstellation = calculateAverageSNRByConstellation(satellites)
     val averageSNRInFix = calculateAverageSNRInFix(satellites)
     val gpsStatusState = determineGPSStatusState()
 
     private fun determineGPSStatusState(): GPSStatusState {
-        if (!hasLocation && satellites.isEmpty()) {
+        if (!isLocationEnabled) {
             return GPSStatusState.Disabled
         }
 

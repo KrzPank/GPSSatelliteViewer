@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.ui.theme
+package com.example.gpssatelliteviewer.app.theme
 
 import androidx.compose.ui.graphics.Color
 

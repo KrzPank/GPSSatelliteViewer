@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Surface
-import com.example.gpssatelliteviewer.ui.theme.GPSSatelliteViewerTheme
+import com.example.gpssatelliteviewer.app.theme.GPSSatelliteViewerTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,9 +35,9 @@ import androidx.navigation.compose.rememberNavController
 import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
-import com.example.gpssatelliteviewer.ui.screen.LocationDenyScreen
-import com.example.gpssatelliteviewer.ui.screen.MainScreen
-import com.example.gpssatelliteviewer.ui.screen.Satellite3DScreen
+import com.example.gpssatelliteviewer.locationdeny.LocationDenyScreen
+import com.example.gpssatelliteviewer.mainscreen.MainScreen
+import com.example.gpssatelliteviewer.scene3d.ui.Satellite3DScreen
 import com.example.gpssatelliteviewer.utils.SetupDarkSystemUI
 
 class MainActivity : ComponentActivity() {
@@ -137,7 +137,6 @@ fun AppNavigation(
         ) {
             composable("LocationDenyScreen") {
                 LocationDenyScreen(
-                    navController = navController,
                     onRequestPermission = {
                         permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                     }

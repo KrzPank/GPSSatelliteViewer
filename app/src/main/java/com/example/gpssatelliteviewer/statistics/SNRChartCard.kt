@@ -1,30 +1,31 @@
-package com.example.gpssatelliteviewer.ui.component.card
+package com.example.gpssatelliteviewer.statistics
 
 import android.icu.text.SimpleDateFormat
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.gpssatelliteviewer.app.theme.ChartBeoDou
+import com.example.gpssatelliteviewer.app.theme.ChartGLONASS
+import com.example.gpssatelliteviewer.app.theme.ChartGPS
+import com.example.gpssatelliteviewer.app.theme.ChartGalileo
+import com.example.gpssatelliteviewer.app.theme.ChartIRNSS
+import com.example.gpssatelliteviewer.app.theme.ChartQZSS
+import com.example.gpssatelliteviewer.app.theme.ChartSBAS
+import com.example.gpssatelliteviewer.app.theme.TextPrimary
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
-import com.example.gpssatelliteviewer.ui.theme.ChartBeoDou
-import com.example.gpssatelliteviewer.ui.theme.ChartGLONASS
-import com.example.gpssatelliteviewer.ui.theme.ChartGPS
-import com.example.gpssatelliteviewer.ui.theme.ChartGalileo
-import com.example.gpssatelliteviewer.ui.theme.ChartIRNSS
-import com.example.gpssatelliteviewer.ui.theme.ChartQZSS
-import com.example.gpssatelliteviewer.ui.theme.ChartSBAS
-import com.example.gpssatelliteviewer.ui.theme.TextPrimary
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.XAxis
@@ -41,7 +42,7 @@ fun SNRChartCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(12.dp),
         modifier = modifier
             .fillMaxSize()
             .padding(vertical = 4.dp),
@@ -52,7 +53,7 @@ fun SNRChartCard(
             style = MaterialTheme.typography.titleMedium,
             fontSize = 20.sp
         )
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.Companion.height(6.dp))
 
         AndroidView(
             modifier = modifier
@@ -76,7 +77,8 @@ fun SNRChartCard(
                         textSize = 10f
                         valueFormatter = object : ValueFormatter() {
                             override fun getFormattedValue(value: Float): String {
-                                val secondsAgo = (50 - value.toInt()) * 1 // assuming 1 second per entry
+                                val secondsAgo =
+                                    (50 - value.toInt()) * 1 // assuming 1 second per entry
                                 val timestampMillis = System.currentTimeMillis() - secondsAgo * 1000
                                 val date = Date(timestampMillis)
                                 val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
@@ -100,26 +102,29 @@ fun SNRChartCard(
                 }
             },
             update = { lineChart ->
-                val dataSets = snrHistory.entries.mapIndexedNotNull { index, (constellation, snrList) ->
-                    val clipped = if (snrList.size > CHART_UPDATE_WINDOW) snrList.takeLast(CHART_UPDATE_WINDOW) else snrList
+                val dataSets =
+                    snrHistory.entries.mapIndexedNotNull { index, (constellation, snrList) ->
+                        val clipped = if (snrList.size > CHART_UPDATE_WINDOW) snrList.takeLast(
+                            CHART_UPDATE_WINDOW
+                        ) else snrList
 
-                    if (clipped.isEmpty()) return@mapIndexedNotNull null // skip empty series
+                        if (clipped.isEmpty()) return@mapIndexedNotNull null // skip empty series
 
-                    val startX = (CHART_UPDATE_WINDOW - clipped.size).coerceAtLeast(0)
-                    val entries = clipped.mapIndexedNotNull { i, snr ->
-                        if (snr != 0f) {
-                            Entry(startX + i.toFloat(), snr)
-                        } else null
+                        val startX = (CHART_UPDATE_WINDOW - clipped.size).coerceAtLeast(0)
+                        val entries = clipped.mapIndexedNotNull { i, snr ->
+                            if (snr != 0f) {
+                                Entry(startX + i.toFloat(), snr)
+                            } else null
+                        }
+
+                        LineDataSet(entries, constellation).apply {
+                            color = getConstellationColor(constellation).toArgb()
+                            setDrawCircles(false)
+                            lineWidth = 2f
+                            setDrawValues(false)
+                            mode = LineDataSet.Mode.LINEAR
+                        }
                     }
-
-                    LineDataSet(entries, constellation).apply {
-                        color = getConstellationColor(constellation).toArgb()
-                        setDrawCircles(false)
-                        lineWidth = 2f
-                        setDrawValues(false)
-                        mode = LineDataSet.Mode.LINEAR
-                    }
-                }
 
                 lineChart.data = LineData(dataSets)
                 lineChart.setVisibleXRangeMaximum(CHART_UPDATE_WINDOW.toFloat())
@@ -138,6 +143,6 @@ private fun getConstellationColor(constellation: String): Color {
         "QZSS" -> ChartQZSS
         "IRNSS" -> ChartIRNSS
         "SBAS" -> ChartSBAS
-        else -> Color.LightGray
+        else -> Color.Companion.LightGray
     }
 }

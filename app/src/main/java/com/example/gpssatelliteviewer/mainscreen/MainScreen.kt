@@ -1,9 +1,7 @@
-package com.example.gpssatelliteviewer.ui.screen
+package com.example.gpssatelliteviewer.mainscreen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -11,15 +9,19 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.remember
+import com.example.gpssatelliteviewer.mainscreen.screen.chipsetinfo.GNSSChipsetInfoScreen
+import com.example.gpssatelliteviewer.mainscreen.screen.livenmea.LiveNMEADataScreen
+import com.example.gpssatelliteviewer.mainscreen.screen.locationinfo.LocationInfoScreen
+import com.example.gpssatelliteviewer.mainscreen.screen.satelliteinfo.SatelliteInfoScreen
 import com.example.gpssatelliteviewer.utils.NavigationTopAppBar
+import androidx.compose.runtime.getValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.R)
@@ -59,7 +61,7 @@ fun MainScreen(
     ) { innerPadding ->
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier
+            modifier = Modifier.Companion
                 .padding(innerPadding),
             beyondViewportPageCount = 3
         ) { page ->

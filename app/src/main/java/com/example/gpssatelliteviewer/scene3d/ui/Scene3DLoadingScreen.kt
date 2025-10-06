@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.ui.component
+package com.example.gpssatelliteviewer.scene3d.ui
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -26,13 +25,14 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.getValue
 
 @Composable
 fun Scene3DLoadingScreen(
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "loading")
-    
+
     // Rotation animation for orbital rings
     val orbitalRotation by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -46,73 +46,73 @@ fun Scene3DLoadingScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black),
-        contentAlignment = Alignment.Center
+            .background(Color.Companion.Black),
+        contentAlignment = Alignment.Companion.Center
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.Companion.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             // App Title with pulsing animation
             Text(
                 text = "GNSS Monitor",
-                color = Color.White,
+                color = Color.Companion.White,
                 fontSize = 32.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Companion.Bold
             )
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
+
+            Spacer(modifier = Modifier.Companion.height(32.dp))
+
             // Animated satellite constellation representation
             Box(
-                modifier = Modifier.size(120.dp),
-                contentAlignment = Alignment.Center
+                modifier = Modifier.Companion.size(120.dp),
+                contentAlignment = Alignment.Companion.Center
             ) {
                 // Central Earth representation
                 Box(
-                    modifier = Modifier
+                    modifier = Modifier.Companion
                         .size(24.dp)
-                        .background(Color.Blue, CircleShape)
+                        .background(Color.Companion.Blue, CircleShape)
                 )
-                
+
                 // Orbital rings with rotation
                 repeat(2) { ring ->
                     val ringSize = 60.dp + (ring * 30).dp
                     CircularProgressIndicator(
-                        modifier = Modifier
+                        modifier = Modifier.Companion
                             .size(ringSize)
                             .graphicsLayer(rotationZ = orbitalRotation + (ring * 45f)),
-                        color = Color.Green.copy(alpha = 0.3f),
+                        color = Color.Companion.Green.copy(alpha = 0.3f),
                         strokeWidth = 2.dp,
                         progress = 0.75f
                     )
                 }
             }
-            
-            Spacer(modifier = Modifier.height(24.dp))
-            
+
+            Spacer(modifier = Modifier.Companion.height(24.dp))
+
             // Main progress indicator
             CircularProgressIndicator(
-                modifier = Modifier.size(48.dp),
-                color = Color.Green,
+                modifier = Modifier.Companion.size(48.dp),
+                color = Color.Companion.Green,
                 strokeWidth = 4.dp
             )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
+
+            Spacer(modifier = Modifier.Companion.height(16.dp))
+
             // Loading text with animated dots
             Row(
                 horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Companion.CenterVertically
             ) {
                 Text(
                     text = "Initializing 3D Scene...",
-                    color = Color.White,
+                    color = Color.Companion.White,
                     fontSize = 18.sp
                 )
             }
-            
-            Spacer(modifier = Modifier.height(32.dp))
+
+            Spacer(modifier = Modifier.Companion.height(32.dp))
         }
     }
 }
