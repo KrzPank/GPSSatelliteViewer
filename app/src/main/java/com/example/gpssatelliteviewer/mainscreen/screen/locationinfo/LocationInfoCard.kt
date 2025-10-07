@@ -227,28 +227,3 @@ fun AndroidApiLocationCard(
         }
     }
 }
-
-@Composable
-fun LoadingLocationTextCard(
-    modifier: Modifier = Modifier
-) {
-    Card(
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-        modifier = modifier
-            .fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(4.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 24.dp, horizontal = 16.dp), // Inner padding
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                "Waiting for location...",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}

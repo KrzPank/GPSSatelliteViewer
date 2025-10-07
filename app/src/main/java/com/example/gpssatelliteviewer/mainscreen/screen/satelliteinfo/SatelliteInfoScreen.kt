@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SatelliteAlt
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -20,6 +22,7 @@ import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import com.example.gpssatelliteviewer.mainscreen.screen.satelliteinfo.ConstellationCard
 import com.example.gpssatelliteviewer.mainscreen.screen.satelliteinfo.SatelliteInfoCard
 import androidx.compose.runtime.getValue
+import com.example.gpssatelliteviewer.utils.EmptyStateCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.R)
@@ -59,7 +62,12 @@ fun SatelliteInfoScreen(
                 }
             }
         } else {
-            //TODO add a card to tell no info has been received
+            item {
+                EmptyStateCard(
+                    message = "No satellite information received yet.",
+                    icon = Icons.Default.SatelliteAlt
+                )
+            }
         }
     }
 }

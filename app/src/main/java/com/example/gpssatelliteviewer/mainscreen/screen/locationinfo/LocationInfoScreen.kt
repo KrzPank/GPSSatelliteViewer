@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -20,10 +22,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.gpssatelliteviewer.mainscreen.screen.locationinfo.AndroidApiLocationCard
-import com.example.gpssatelliteviewer.mainscreen.screen.locationinfo.LoadingLocationTextCard
-import com.example.gpssatelliteviewer.mainscreen.screen.locationinfo.NMEALocationCard
-import com.example.gpssatelliteviewer.mainscreen.screen.locationinfo.GPSStatusCard
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,6 +30,8 @@ import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
 import com.example.gpssatelliteviewer.app.theme.DarkBackground
+import com.example.gpssatelliteviewer.data.LOCATION_IS_LOCATION_ENABLED_TIMER
+import com.example.gpssatelliteviewer.utils.EmptyStateCard
 import kotlinx.coroutines.delay
 import java.sql.Date
 import java.util.Locale
@@ -56,7 +56,7 @@ fun LocationInfoScreen(
     val locationType = when {
         hasLocationNMEA -> "NMEA"
         hasLocationAndroidApi -> "Location Listener"
-        else -> "Loading text"
+        else -> "Waiting for location..."
     }
 
     var selectedLocationType by remember { mutableStateOf(locationType) }
@@ -73,7 +73,7 @@ fun LocationInfoScreen(
     LaunchedEffect(Unit) {
         while (true) {
             locationViewModel.checkLocationEnabled()
-            delay(10000L) // 10 seconds
+            delay(LOCATION_IS_LOCATION_ENABLED_TIMER)
         }
     }
 
@@ -110,7 +110,10 @@ fun LocationInfoScreen(
                     userHasSelectedType = true
                 }
 
-                "Loading text" -> LoadingLocationTextCard()
+                "Waiting for location..." -> EmptyStateCard(
+                    message = "Waiting for location...",
+                    icon = Icons.Default.LocationOn
+                )
             }
         }
 

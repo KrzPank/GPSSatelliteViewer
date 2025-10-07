@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.SignalCellularNodata
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -20,6 +22,7 @@ import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import com.example.gpssatelliteviewer.utils.EmptyStateCard
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.R)
@@ -87,7 +90,12 @@ fun LiveNMEADataScreen(
                     )
                 }
             } else {
-                //TODO add a card to tell no info has been received
+                item {
+                    EmptyStateCard(
+                        message = "No NMEA data received yet.",
+                        icon = Icons.Default.SignalCellularNodata
+                    )
+                }
             }
         }
     }

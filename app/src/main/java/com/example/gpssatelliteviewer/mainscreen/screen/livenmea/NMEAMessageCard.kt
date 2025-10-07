@@ -114,7 +114,7 @@ private fun RenderGSVInfo(gsv: NMEAMessage.GSV) {
     InfoRow("Msg #${gsv.messageNumber}/${gsv.totalMessages}", "")
     InfoRow("SV in view", gsv.satellitesInView.toString())
     gsv.satellitesInfo.forEach { sat ->
-        InfoRow("PRN ${sat.prn}", "E:${sat.elevation}° Az:${sat.azimuth}° SNR:${sat.snr}")
+        InfoRow("PRN ${sat.prn}", "Az:${sat.azimuth}° E:${sat.elevation}° SNR:${sat.snr}")
     }
     Spacer(modifier = Modifier.Companion.height(8.dp))
 }
@@ -143,10 +143,7 @@ fun RenderGSVInfo(
                     InfoRow("Message", "${message.messageNumber}/${message.totalMessages}")
                     InfoRow("SV in view", message.satellitesInView.toString())
                     message.satellitesInfo.forEach { sat ->
-                        InfoRow(
-                            "PRN ${sat.prn}",
-                            "E:${sat.elevation}° Az:${sat.azimuth}° SNR:${sat.snr}"
-                        )
+                        InfoRow("PRN ${sat.prn}", "Az:${sat.azimuth}° E:${sat.elevation}° SNR:${sat.snr}")
                     }
                     Spacer(modifier = Modifier.Companion.height(10.dp))
                 }

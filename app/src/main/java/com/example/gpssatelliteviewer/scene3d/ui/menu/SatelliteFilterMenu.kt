@@ -27,6 +27,7 @@ import com.example.gpssatelliteviewer.utils.CustomCheckbox
 import com.example.gpssatelliteviewer.utils.ParameterSection
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.app.theme.DarkSurfaceVariant
+import com.example.gpssatelliteviewer.app.theme.GPSDisabled
 import com.example.gpssatelliteviewer.app.theme.TextLabel
 import com.example.gpssatelliteviewer.app.theme.TextSecondary
 import com.example.gpssatelliteviewer.app.theme.GreenPrimary
@@ -65,27 +66,25 @@ fun SatelliteFilterMenu(
 
         HorizontalDivider(thickness = 1.dp, color = OutlineColor)
 
-        // Control buttons
-        Row(
-            modifier = Modifier.Companion.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Button(
-                onClick = { navController.navigate("MainScreen") },
-                modifier = Modifier.weight(1f),
-                colors = ButtonDefaults.buttonColors(containerColor = DarkSurfaceVariant)
-            ) {
-                Text("Location Info", color = TextLabel, fontSize = 12.sp)
-            }
-        }
-
         // Info Section
         ParameterSection("Navigation") {
             Text(
-                text = "Double tap to open/close menu",
+                text = "Double on scene to open/close menu",
                 color = TextSecondary,
                 fontSize = 14.sp
             )
+            Row(
+                modifier = Modifier.Companion.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = { navController.navigate("MainScreen") },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = GPSDisabled)
+                ) {
+                    Text("Main screen", color = TextLabel, fontSize = 12.sp)
+                }
+            }
         }
 
         // Constellation Filter Section

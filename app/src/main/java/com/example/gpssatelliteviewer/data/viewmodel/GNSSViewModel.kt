@@ -8,6 +8,7 @@ import com.example.gpssatelliteviewer.data.GNSSStatusData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
 import com.example.gpssatelliteviewer.data.GnssHardwareInfo
@@ -58,6 +59,8 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                         GnssStatus.CONSTELLATION_UNKNOWN -> "Unknown"
                         else -> "Other"
                     }
+
+                    if (status.getSvid(i) == 13 && constellation == "GPS") Log.d("az/el_test", "${status.getAzimuthDegrees(i)}, ${status.getElevationDegrees(i)}")
 
                     list.add(
                         GNSSStatusData(

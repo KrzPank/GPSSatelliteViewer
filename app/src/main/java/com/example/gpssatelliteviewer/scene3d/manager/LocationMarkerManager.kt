@@ -16,20 +16,24 @@ class LocationMarkerManager(
     private var locationMarkerNode: ModelNode = createLocationMarker()
     private var isVisible: Boolean = true
 
-    fun createLocationMarker(): ModelNode {
+    private fun createLocationMarker(): ModelNode {
         val markerInstance = modelLoader.createModelInstance(parameters.locationMarkerModelPath)
         val node = ModelNode(
             modelInstance = markerInstance,
             scaleToUnits = parameters.locationMarkerScale
         ).also {
             centerNode.addChildNode(it)
-            // Set initial position to origin (will be updated when location is available)
             it.position = Float3(0f, 0f, 0f)
         }
         return node
     }
 
     fun updateLocationMarker(userLocation: Triple<Float, Float, Float>) {
+        if (userLocation == Triple(0f, 0f, 0f)) {
+            setVisible(false)
+            return
+        }
+
         val (lat, lon, alt) = userLocation
         val ecefPosition = CoordinateConverter.geodeticToECEF(
             lat.toDouble(),
@@ -40,7 +44,7 @@ class LocationMarkerManager(
 
         locationMarkerNode.position = scenePosition
     }
-    
+
     fun setVisible(visible: Boolean) {
         isVisible = visible
         if (visible) {

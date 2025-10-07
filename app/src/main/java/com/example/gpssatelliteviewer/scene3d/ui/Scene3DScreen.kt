@@ -81,6 +81,7 @@ fun Satellite3DScreen(
 
     val satelliteList by gnssViewModel.satelliteList.collectAsState()
 
+    // in scope of app user location will not change in meaningfull way to keep location
     val userLocation: Triple<Float, Float, Float> =
         Triple(
             CoordinateConverter.nmeaCoordinateToDecimal(
@@ -93,37 +94,6 @@ fun Satellite3DScreen(
             ).toFloat(),
             locationNMEA.altitude.toFloat()
         )
-
-    // SceneView parameters init
-    val engine = rememberEngine()
-    val modelLoader = rememberModelLoader(engine)
-    val environmentLoader = rememberEnvironmentLoader(engine)
-    val view = rememberView(engine)
-    val parametersState = remember { Scene3DParametersState() }
-
-    var isSceneReady by remember { mutableStateOf(false) }
-    val scene = remember {
-        Scene3D(
-            modifier = Modifier.Companion.fillMaxSize(),
-            environmentLoader = environmentLoader,
-            modelLoader = modelLoader,
-            engine = engine,
-            view = view,
-            parameters = parametersState.parameters
-        )
-    }
-
-    LaunchedEffect(scene) {
-        scene.initializeScene()
-
-        while (!scene.isReady()) {
-            delay(50)
-        }
-
-        // Smooth transition not wanted but i don't know other way
-        delay(200)
-        isSceneReady = true
-    }
 
     // Satellite filtering
     val selectedConstellations = remember { mutableStateListOf<String>() }
@@ -145,36 +115,68 @@ fun Satellite3DScreen(
     val safeInsets = WindowInsets.Companion.safeDrawing.asPaddingValues()
     val totalMenuWidth = menuWidth + safeInsets.calculateLeftPadding(LayoutDirection.Ltr)
     val menuAnimationDuration = 300
-    val sceneOffsetX by animateDpAsState(
-        targetValue = if (scene.isMenuVisible()) totalMenuWidth else 0.dp,
-    )
-
-    // Handle location marker visibility changes
-    var showLocationMarker by remember { mutableStateOf(true) }
-    LaunchedEffect(showLocationMarker) {
-        if (isSceneReady) {
-            scene.setLocationMarkerVisible(showLocationMarker)
-        }
-    }
-
-    // clicked satellite card magic
-    var clickedSatelliteKey by remember { mutableStateOf<Pair<String, Int>?>(null) }
-    scene.satellites.onSatelliteClick = { sat ->
-        clickedSatelliteKey = sat.constellation to sat.prn
-    }
-    val liveClickedSatellite by remember(clickedSatelliteKey, satelliteList) {
-        derivedStateOf {
-            clickedSatelliteKey?.let { (constellation, prn) ->
-                satelliteList.find { it.constellation == constellation && it.prn == prn }
-            }
-        }
-    }
 
     Box(
         modifier = Modifier.Companion
             .fillMaxSize()
             .background(DarkBackground)
     ) {
+        // SceneView parameters init
+        val engine = rememberEngine()
+        val modelLoader = rememberModelLoader(engine)
+        val environmentLoader = rememberEnvironmentLoader(engine)
+        val view = rememberView(engine)
+        val parametersState = remember { Scene3DParametersState() }
+
+        var isSceneReady by remember { mutableStateOf(false) }
+        val scene = remember {
+            Scene3D(
+                modifier = Modifier.fillMaxSize(),
+                environmentLoader = environmentLoader,
+                modelLoader = modelLoader,
+                engine = engine,
+                view = view,
+                parameters = parametersState.parameters
+            )
+        }
+
+        LaunchedEffect(scene) {
+            scene.initializeScene()
+
+            while (!scene.isReady()) {
+                delay(50)
+            }
+
+            // Smooth transition not wanted but i don't know other way
+            delay(200)
+            isSceneReady = true
+        }
+
+        // Handle location marker visibility changes
+        var showLocationMarker by remember { mutableStateOf(scene.isLocationMarkerVisible()) }
+        LaunchedEffect(showLocationMarker, userLocation) {
+            if (isSceneReady) {
+                scene.setLocationMarkerVisible(showLocationMarker)
+            }
+        }
+
+        // clicked satellite card magic
+        var clickedSatelliteKey by remember { mutableStateOf<Pair<String, Int>?>(null) }
+        scene.satellites.onSatelliteClick = { sat ->
+            clickedSatelliteKey = sat.constellation to sat.prn
+        }
+        val liveClickedSatellite by remember(clickedSatelliteKey, satelliteList) {
+            derivedStateOf {
+                clickedSatelliteKey?.let { (constellation, prn) ->
+                    satelliteList.find { it.constellation == constellation && it.prn == prn }
+                }
+            }
+        }
+
+        val sceneOffsetX by animateDpAsState(
+            targetValue = if (scene.isMenuVisible()) totalMenuWidth else 0.dp,
+        )
+
         AnimatedVisibility(
             visible = !isSceneReady,
             exit = fadeOut(
@@ -197,50 +199,9 @@ fun Satellite3DScreen(
                     .fillMaxSize()
                     .offset(x = sceneOffsetX / 2)
             ) {
-                LaunchedEffect(filteredSatellites) {
-                    if (!isSceneReady) return@LaunchedEffect
-
-                    snapshotFlow { satelliteList to userLocation }
-                        .collect { (sats, loc) ->
-                            // Filter after we get the flow to ensure reactivity on value change
-                            val filtered = sats.filter { sat ->
-                                selectedConstellations.contains(sat.constellation) &&
-                                        (!onlyUsedInFix || sat.usedInFix)
-                            }
-
-                            scene.updateScene(filtered, loc)
-                        }
-                }
                 scene.Render()
-
-                liveClickedSatellite?.let { sat ->
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = 50.dp)
-                    ) {
-                        Card(
-                            modifier = Modifier.padding(8.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color.Black.copy(alpha = 0.7f)
-                            )
-                        ) {
-                            Column(Modifier.padding(8.dp)) {
-                                Text(
-                                    "${sat.constellation} PRN ${sat.prn}",
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                                Text("SNR: ${sat.snr}", color = Color.White)
-                                Text("Used in fix: ${sat.usedInFix}", color = Color.White)
-                                Text(
-                                    "Azimuth: ${sat.azimuth}, Elevation: ${sat.elevation}",
-                                    color = Color.White
-                                )
-                            }
-                        }
-                    }
-                }
+                scene.updateScene(filteredSatellites, userLocation)
+                SatelliteInfoBox(liveClickedSatellite)
             }
         }
 
