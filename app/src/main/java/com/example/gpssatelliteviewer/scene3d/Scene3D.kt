@@ -39,7 +39,7 @@ class Scene3D(
     }
 
     // Management systems
-    var satellites: SatelliteManager = SatelliteManager(modelLoader, centerNode, parameters)
+    val satellites: SatelliteManager = SatelliteManager(modelLoader, centerNode, parameters)
     private var mainLight: LightHandler = LightHandler(engine, centerNode, cameraNode, parameters)
     private var locationMarker: LocationMarkerManager = LocationMarkerManager(modelLoader, centerNode, parameters)
     private var earthNode: ModelNode? = null
@@ -133,7 +133,7 @@ class Scene3D(
         satellites.updateSatellites(satelliteList, userLocation)
         locationMarker.updateLocationMarker(userLocation)
     }
-    
+
     fun setLocationMarkerVisible(visible: Boolean) {
         locationMarker.setVisible(visible)
     }

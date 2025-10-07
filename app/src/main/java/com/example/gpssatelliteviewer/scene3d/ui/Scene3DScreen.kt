@@ -33,12 +33,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -155,10 +157,17 @@ fun Satellite3DScreen(
         }
     }
 
-    var clickedSatellite by remember { mutableStateOf<GNSSStatusData?>(null) }
-
+    // clicked satellite card magic
+    var clickedSatelliteKey by remember { mutableStateOf<Pair<String, Int>?>(null) }
     scene.satellites.onSatelliteClick = { sat ->
-        clickedSatellite = sat
+        clickedSatelliteKey = sat.constellation to sat.prn
+    }
+    val liveClickedSatellite by remember(clickedSatelliteKey, satelliteList) {
+        derivedStateOf {
+            clickedSatelliteKey?.let { (constellation, prn) ->
+                satelliteList.find { it.constellation == constellation && it.prn == prn }
+            }
+        }
     }
 
     Box(
@@ -188,41 +197,45 @@ fun Satellite3DScreen(
                     .fillMaxSize()
                     .offset(x = sceneOffsetX / 2)
             ) {
-                scene.Render()
-                //scene.updateScene(filteredSatellites, userLocation)
-
                 LaunchedEffect(filteredSatellites) {
-                    if (isSceneReady) {
-                        scene.updateScene(filteredSatellites, userLocation)
-                        Log.d("updateScene", "Updated Scene")
-                    }
-                }
+                    if (!isSceneReady) return@LaunchedEffect
 
-                clickedSatellite?.let { sat ->
+                    snapshotFlow { satelliteList to userLocation }
+                        .collect { (sats, loc) ->
+                            // Filter after we get the flow to ensure reactivity on value change
+                            val filtered = sats.filter { sat ->
+                                selectedConstellations.contains(sat.constellation) &&
+                                        (!onlyUsedInFix || sat.usedInFix)
+                            }
+
+                            scene.updateScene(filtered, loc)
+                        }
+                }
+                scene.Render()
+
+                liveClickedSatellite?.let { sat ->
                     Box(
-                        modifier = Modifier.Companion
-                            .align(Alignment.Companion.TopCenter)
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
                             .padding(top = 50.dp)
                     ) {
                         Card(
-                            modifier = Modifier.Companion.padding(8.dp),
+                            modifier = Modifier.padding(8.dp),
                             colors = CardDefaults.cardColors(
-                                containerColor = Color.Companion.Black.copy(
-                                    alpha = 0.7f
-                                )
+                                containerColor = Color.Black.copy(alpha = 0.7f)
                             )
                         ) {
-                            Column(Modifier.Companion.padding(8.dp)) {
+                            Column(Modifier.padding(8.dp)) {
                                 Text(
                                     "${sat.constellation} PRN ${sat.prn}",
-                                    fontWeight = FontWeight.Companion.Bold,
-                                    color = Color.Companion.White
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
                                 )
-                                Text("SNR: ${sat.snr}", color = Color.Companion.White)
-                                Text("Used in fix: ${sat.usedInFix}", color = Color.Companion.White)
+                                Text("SNR: ${sat.snr}", color = Color.White)
+                                Text("Used in fix: ${sat.usedInFix}", color = Color.White)
                                 Text(
                                     "Azimuth: ${sat.azimuth}, Elevation: ${sat.elevation}",
-                                    color = Color.Companion.White
+                                    color = Color.White
                                 )
                             }
                         }
