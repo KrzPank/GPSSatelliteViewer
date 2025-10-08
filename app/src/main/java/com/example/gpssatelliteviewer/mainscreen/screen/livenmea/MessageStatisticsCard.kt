@@ -32,9 +32,9 @@ fun MessageStatisticsCard(
     statistics: Map<String, Int>,
     isExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
     standardOrder: List<String> = listOf("GGA", "RMC", "GSA", "VTG"),
     gsvOrder: List<String> = listOf("GPGSV", "GLGSV", "GBGSV", "GAGSV", "GQGSV"),
-    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier

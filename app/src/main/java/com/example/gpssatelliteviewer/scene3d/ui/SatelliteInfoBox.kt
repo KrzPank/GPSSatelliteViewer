@@ -1,27 +1,40 @@
 package com.example.gpssatelliteviewer.scene3d.ui
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 
 @Composable
 fun SatelliteInfoBox(
-    liveClickedSatellite: GNSSStatusData?,
+    clickedSatellite: GNSSStatusData?,
+    isMenuVisible: Boolean,
+    safeInsets: PaddingValues,
+    totalMenuWidth: Dp,
     modifier: Modifier = Modifier
 ) {
-    liveClickedSatellite?.let { sat ->
+    val sceneOffsetX by animateDpAsState(
+        targetValue = if (isMenuVisible) totalMenuWidth else safeInsets.calculateLeftPadding(LayoutDirection.Ltr) * 2,
+    )
+    clickedSatellite?.let { sat ->
         Box(
             modifier = modifier
                 .padding(top = 50.dp)
+                .offset(x = sceneOffsetX / 2)
         ) {
             Card(
                 modifier = modifier.padding(8.dp),

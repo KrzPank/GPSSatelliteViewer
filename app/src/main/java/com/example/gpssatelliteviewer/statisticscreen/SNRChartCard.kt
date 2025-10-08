@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.statistics
+package com.example.gpssatelliteviewer.statisticscreen
 
 import android.icu.text.SimpleDateFormat
 import androidx.compose.foundation.layout.Spacer

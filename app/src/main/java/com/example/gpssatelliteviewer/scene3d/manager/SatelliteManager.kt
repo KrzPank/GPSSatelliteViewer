@@ -10,6 +10,11 @@ import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
 
+// Thresholds to avoid tiny jitter updates
+private const val AZIMUTH_THRESHOLD_DEG = 0.1f
+private const val ELEVATION_THRESHOLD_DEG = 0.1f
+private const val ALTITUDE_THRESHOLD_M = 1.0f
+
 /**
  * Manages GNSS satellite positioning, node pooling, and lifecycle
  * Handles efficient satellite visualization with object pooling
@@ -38,12 +43,25 @@ class SatelliteManager(
 
     // Dynamic object pooling for satellite nodes
     private val satelliteNodePool = mutableListOf<ModelNode>() // Reusable nodes from disappeared satellites
-    private val activeSatelliteNodes = mutableMapOf<String, ModelNode>() // "constellation:prn" -> node
+    val activeSatelliteNodes = mutableMapOf<String, ModelNode>() // "constellation:prn" -> node
 
-    var onSatelliteClick: ((GNSSStatusData) -> Unit)? = null
+    // Cache last-known values per satellite so we only update nodes when something meaningful changed
+    private val satelliteCache = mutableMapOf<String, SatelliteCache>()
+
+    // before: var onSatelliteClick: ((GNSSStatusData) -> Unit)? = null
+    var onSatelliteClick: ((String) -> Unit)? = null
 
     private fun satelliteKey(constellation: String, prn: Int) = "$constellation:$prn"
-    private fun satelliteKey(sat: GNSSStatusData) = satelliteKey(sat.constellation, sat.prn)
+    fun satelliteKey(sat: GNSSStatusData) = satelliteKey(sat.constellation, sat.prn)
+
+    private data class SatelliteCache(
+        var lastData: GNSSStatusData,
+        var azimuth: Float,
+        var elevation: Float,
+        var usedInFix: Boolean,
+        var altitude: Float,
+        var lastPos: Float3? = null
+    )
 
     /**
      * Update satellites in the scene
@@ -63,6 +81,8 @@ class SatelliteManager(
                 returnNodeToPool(node)
                 activeSatelliteNodes.remove(key)
             }
+            // Remove cache entry too
+            satelliteCache.remove(key)
         }
 
         // Add or update satellites
@@ -71,15 +91,53 @@ class SatelliteManager(
             val existingNode = activeSatelliteNodes[key]
 
             if (existingNode != null) {
-                updateSatellitePosition(existingNode, sat, userLocation)
+                // Only update node if the satellite data meaningfully changed (to avoid unnecessary rerenders)
+                val cache = satelliteCache[key]
+                val newAltitude = calculateSatelliteAltitude(sat)
+
+                val shouldUpdate = if (cache == null) {
+                    true
+                } else {
+                    val azChanged = kotlin.math.abs(sat.azimuth - cache.azimuth) > AZIMUTH_THRESHOLD_DEG
+                    val elChanged = kotlin.math.abs(sat.elevation - cache.elevation) > ELEVATION_THRESHOLD_DEG
+                    val usedChanged = sat.usedInFix != cache.usedInFix
+                    val altChanged = kotlin.math.abs(newAltitude - cache.altitude) > ALTITUDE_THRESHOLD_M
+                    azChanged || elChanged || usedChanged || altChanged
+                }
+                if (shouldUpdate) {
+                    updateSatellitePosition(existingNode, sat, userLocation)
+                    //Log.d("SatelliteManager", "Updating satellite:${key}")
+                    //Log.d("SatelliteManager", " Info - New:${sat.azimuth}, ${sat.elevation}, ${sat.usedInFix}, ${sat.snr} Old:${cache?.lastData?.azimuth}, ${cache?.lastData?.elevation}, ${cache?.lastData?.usedInFix}, ${cache?.lastData?.snr}")
+                    // update cache (create if missing)
+                    satelliteCache[key] = SatelliteCache(
+                        lastData = sat,
+                        azimuth = sat.azimuth,
+                        elevation = sat.elevation,
+                        usedInFix = sat.usedInFix,
+                        altitude = newAltitude,
+                        lastPos = existingNode.position
+                    )
+                } else {
+                    cache?.lastData = sat
+                }
             } else {
                 // Create or reuse node for new satellite
                 val satelliteNode = getOrCreateSatelliteNode()
                 setupSatelliteNode(satelliteNode, sat, userLocation)
                 activeSatelliteNodes[key] = satelliteNode
+
+                // Initialize cache for this satellite
+                val altitude = calculateSatelliteAltitude(sat)
+                satelliteCache[key] = SatelliteCache(
+                    lastData = sat,
+                    azimuth = sat.azimuth,
+                    elevation = sat.elevation,
+                    usedInFix = sat.usedInFix,
+                    altitude = altitude,
+                    lastPos = satelliteNode.position
+                )
             }
         }
-
         //Log.d("SatelliteManager", "Active satellites: ${activeSatelliteNodes.size}, Pooled nodes: ${satelliteNodePool.size}")
     }
 
@@ -132,6 +190,9 @@ class SatelliteManager(
         // Reset node state before returning to pool
         node.position = Float3(0f, 0f, 0f)
         node.rotation = Float3(0f, 0f, 0f)
+        // clear click handler to avoid capturing stale references
+        node.onSingleTapUp = null
+        node.name = ""
 
         satelliteNodePool.add(node)
     }
@@ -142,12 +203,15 @@ class SatelliteManager(
     private fun setupSatelliteNode(node: ModelNode, sat: GNSSStatusData, userLocation: Triple<Float, Float, Float>) {
         updateSatellitePosition(node, sat, userLocation)
         centerNode.addChildNode(node)
+
         node.name = satelliteKey(sat)
-        node.onSingleTapUp = { _ ->
-            Log.d("satelliteNode", "Tapped node: ${node.name}")
-            onSatelliteClick?.invoke(sat)
+        node.onSingleTapUp = {
+            // node.name is "CONSTELLATION:PRN"
+            val key = node.name
+            onSatelliteClick?.invoke(key.toString())
             true
         }
+
     }
 
     /**
@@ -198,6 +262,7 @@ class SatelliteManager(
                 node.destroy()
             }
             satelliteNodePool.clear()
+            satelliteCache.clear()
 
         } catch (e: Exception) {
             Log.e("SatelliteManager", "Failed to update satellite models: ${e.message}")
@@ -220,6 +285,8 @@ class SatelliteManager(
             node.destroy()
         }
         satelliteNodePool.clear()
+
+        satelliteCache.clear()
 
         //Log.d("SatelliteManager", "Satellite cleanup completed")
     }

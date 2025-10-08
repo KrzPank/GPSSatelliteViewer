@@ -57,7 +57,7 @@ class LightHandler(
             centerNode.addChildNode(this)
         }
 
-        Log.d("Scene3D", "Sun light created from behind camera - color: ${lightParams.color.x}, ${lightParams.color.y}, ${lightParams.color.z}, direction: ${lightDirection.x}, ${lightDirection.y}, ${lightDirection.z}")
+        //Log.d("Scene3D", "Sun light created from behind camera - color: ${lightParams.color.x}, ${lightParams.color.y}, ${lightParams.color.z}, direction: ${lightDirection.x}, ${lightDirection.y}, ${lightDirection.z}")
         isLightBeingRecreated = false
         return lightNode
     }
@@ -67,7 +67,7 @@ class LightHandler(
      */
     private fun recreateSunLight(lightParams: LightParameters = currentLightParameters) {
         if (isLightBeingRecreated) {
-            Log.d("Scene3D", "Light recreation already in progress, skipping")
+            //Log.d("Scene3D", "Light recreation already in progress, skipping")
             return
         }
         isLightBeingRecreated = true
@@ -108,7 +108,7 @@ class LightHandler(
 
             recreateSunLight()
 
-            Log.d("Scene3D", "Updated sun light direction due to camera movement, frameCount $frameCount")
+            //Log.d("Scene3D", "Updated sun light direction due to camera movement, frameCount $frameCount")
         }
     }
 
@@ -117,24 +117,24 @@ class LightHandler(
 
         // Check if light parameters have actually changed
         if (currentLightParameters == newLightParameters) {
-            Log.d("Scene3D", "Light parameters unchanged, skipping recreation")
+            //Log.d("Scene3D", "Light parameters unchanged, skipping recreation")
             return
         }
 
         // Prevent rapid recreation while already recreating
         if (isLightBeingRecreated) {
-            Log.d("Scene3D", "Skipping updateParameters - light already being recreated")
+            //Log.d("Scene3D", "Skipping updateParameters - light already being recreated")
             return
         }
 
         // Time-based throttling to prevent too frequent recreations
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastRecreationTime < minRecreationInterval) {
-            Log.d("Scene3D", "Skipping updateParameters - too soon (${currentTime - lastRecreationTime}ms < ${minRecreationInterval}ms)")
+            //Log.d("Scene3D", "Skipping updateParameters - too soon (${currentTime - lastRecreationTime}ms < ${minRecreationInterval}ms)")
             return
         }
 
-        Log.d("Scene3D", "Light parameters changed - recreating light with intensity: ${newLightParameters.intensity}, color: ${newLightParameters.color}")
+        //Log.d("Scene3D", "Light parameters changed - recreating light with intensity: ${newLightParameters.intensity}, color: ${newLightParameters.color}")
         lastRecreationTime = currentTime
         currentLightParameters = newLightParameters
 

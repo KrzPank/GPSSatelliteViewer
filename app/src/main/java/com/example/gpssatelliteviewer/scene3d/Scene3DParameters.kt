@@ -60,9 +60,6 @@ data class Scene3DParameters(
     var screenSpaceReflectionsEnabled: Boolean = false, // Disabled for better performance
     var temporalAntiAliasingEnabled: Boolean = false
 ) {
-    /**
-     * Extract light parameters for LightHandler
-     */
     fun getLightParameters(): LightParameters {
         return LightParameters(
             intensity = lightIntensity,

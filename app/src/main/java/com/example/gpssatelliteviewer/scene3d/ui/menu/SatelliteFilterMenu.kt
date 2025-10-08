@@ -69,7 +69,12 @@ fun SatelliteFilterMenu(
         // Info Section
         ParameterSection("Navigation") {
             Text(
-                text = "Double on scene to open/close menu",
+                text = "Double tap on scene to open/close menu",
+                color = TextSecondary,
+                fontSize = 14.sp
+            )
+            Text(
+                text = "Click on satellite to show info",
                 color = TextSecondary,
                 fontSize = 14.sp
             )

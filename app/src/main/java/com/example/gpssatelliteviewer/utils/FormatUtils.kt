@@ -132,7 +132,6 @@ fun NavigationTopAppBar(
     )
 }
 
-
 @Composable
 fun EmptyStateCard(
     message: String,

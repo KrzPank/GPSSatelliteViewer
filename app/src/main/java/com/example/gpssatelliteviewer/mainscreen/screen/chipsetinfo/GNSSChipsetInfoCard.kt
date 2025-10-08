@@ -18,14 +18,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.app.theme.ValueText
-import com.example.gpssatelliteviewer.data.GnssHardwareInfo
+import com.example.gpssatelliteviewer.data.GNSSHardwareInfo
 import com.example.gpssatelliteviewer.utils.CapabilityRow
 import com.example.gpssatelliteviewer.utils.InfoRow
 
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun GNSSChipsetInfoCard(
-    info: GnssHardwareInfo,
+    info: GNSSHardwareInfo,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -43,6 +43,7 @@ fun GNSSChipsetInfoCard(
             )
             Spacer(Modifier.Companion.height(8.dp))
 
+            // mediatek ???getting different chip names??? sometimes good sometimes shit
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 InfoRow("SOC Manufacturer", Build.SOC_MANUFACTURER)
                 InfoRow("SOC Model", Build.SOC_MODEL)
@@ -51,10 +52,7 @@ fun GNSSChipsetInfoCard(
                 InfoRow("SOC Model", Build.HARDWARE.ifBlank { "Unknown" })
             }
 
-            // mediatek ???getting different chip names??? sometimes good sometimes shit
             InfoRow("Hardware Year", info.hardwareYear?.toString() ?: "Unknown")
-            InfoRow("Model", Build.MODEL.ifBlank { "Unknown" })
-            InfoRow("Manufacturer", Build.MANUFACTURER.ifBlank { "Unknown" })
 
             Spacer(Modifier.Companion.height(8.dp))
             Text(
@@ -72,7 +70,7 @@ fun GNSSChipsetInfoCard(
 
 @Composable
 fun GNSSChipsetCapabilitiesCard(
-    info: GnssHardwareInfo,
+    info: GNSSHardwareInfo,
     modifier: Modifier = Modifier
 ) {
     Card(

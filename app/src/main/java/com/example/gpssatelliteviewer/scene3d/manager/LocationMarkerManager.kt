@@ -24,6 +24,7 @@ class LocationMarkerManager(
         ).also {
             centerNode.addChildNode(it)
             it.position = Float3(0f, 0f, 0f)
+            it.name = "Location marker"
         }
         return node
     }

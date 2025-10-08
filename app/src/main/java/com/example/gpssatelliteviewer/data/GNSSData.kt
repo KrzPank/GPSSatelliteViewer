@@ -11,7 +11,7 @@ data class GNSSStatusData(
     val elevation: Float
 )
 
-data class GnssHardwareInfo(
+data class GNSSHardwareInfo(
     val modelName: String? = null,
     val hardwareYear: Int? = null,
     val capabilities: GnssCapabilities? = null

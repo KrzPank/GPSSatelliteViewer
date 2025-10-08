@@ -11,7 +11,7 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
-import com.example.gpssatelliteviewer.data.GnssHardwareInfo
+import com.example.gpssatelliteviewer.data.GNSSHardwareInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -33,8 +33,8 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val _snrHistory = MutableStateFlow<Map<String, MutableList<Float>>>(emptyMap())
     val snrHistory: StateFlow<Map<String, List<Float>>> = _snrHistory
 
-    private val _gnssHardwareInfo = MutableStateFlow(GnssHardwareInfo())
-    val gnssHardwareInfo: StateFlow<GnssHardwareInfo> = _gnssHardwareInfo
+    private val _gnssHardwareInfo = MutableStateFlow(GNSSHardwareInfo())
+    val gnssHardwareInfo: StateFlow<GNSSHardwareInfo> = _gnssHardwareInfo
 
     // Keep reference to last parsing job
     private var parseJob: Job? = null
@@ -117,7 +117,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                 null
             }
 
-        _gnssHardwareInfo.value = GnssHardwareInfo(
+        _gnssHardwareInfo.value = GNSSHardwareInfo(
             modelName = model,
             hardwareYear = year,
             capabilities = caps
