@@ -16,6 +16,8 @@ data class LightParameters(
     val type: LightManager.Type
 )
 
+// TODO make earth, satellite, marker and render quality specific parameters extraction like for light
+
 /**
  * Data class containing all configurable parameters for Scene3D
  */

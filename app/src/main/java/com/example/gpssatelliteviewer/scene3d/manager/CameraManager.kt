@@ -1,9 +1,6 @@
 package com.example.gpssatelliteviewer.scene3d.manager
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.google.android.filament.Engine
 import com.google.android.filament.View
