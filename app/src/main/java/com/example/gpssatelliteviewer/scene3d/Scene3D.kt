@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.scene3d.manager.CameraManager
+import com.example.gpssatelliteviewer.scene3d.manager.EarthManager
 import com.example.gpssatelliteviewer.scene3d.manager.LightHandler
 import com.example.gpssatelliteviewer.scene3d.manager.LocationMarkerManager
 import com.example.gpssatelliteviewer.scene3d.manager.SatelliteManager
@@ -22,14 +23,8 @@ import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.Scene
 import io.github.sceneview.loaders.EnvironmentLoader
 import io.github.sceneview.loaders.ModelLoader
-import io.github.sceneview.node.CameraNode
-import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
-import io.github.sceneview.rememberCameraManipulator
 import io.github.sceneview.rememberOnGestureListener
-import io.github.sceneview.rememberRenderer
-import io.github.sceneview.rememberScene
-import io.github.sceneview.rememberView
 
 class Scene3D(
     private val engine: Engine,
@@ -43,13 +38,12 @@ class Scene3D(
 ) {
     private val centerNode = Node(engine)
 
-    private val cameraManager: CameraManager = CameraManager(engine, view, centerNode)
-
     // Management systems
-    val satellites: SatelliteManager = SatelliteManager(modelLoader, centerNode, parameters)
-    private var mainLight: LightHandler = LightHandler(engine, centerNode, cameraManager.getCameraNode(), parameters)
+    private val camera: CameraManager = CameraManager(engine, view, centerNode)
+    private var mainLight: LightHandler = LightHandler(engine, centerNode, camera.getCameraNode(), parameters)
     private var locationMarker: LocationMarkerManager = LocationMarkerManager(modelLoader, centerNode, parameters)
-    private var earthNode: ModelNode? = null
+    private var earth: EarthManager = EarthManager(modelLoader, centerNode, parameters)
+    val satellites: SatelliteManager = SatelliteManager(modelLoader, centerNode, parameters)
 
     // Menu on/off
     private var _menuVisible by mutableStateOf(true)
@@ -63,11 +57,10 @@ class Scene3D(
     private var _isSatelliteInfoBoxVisible by mutableStateOf(false)
     fun isSatelliteInfoBoxVisible() = _isSatelliteInfoBoxVisible
 
-    private var _satelliteClicked = false
+    private var _isEarthInfoBoxVisible by mutableStateOf(false)
+    fun isEarthInfoBoxVisible() = _isEarthInfoBoxVisible
 
     private fun onSceneDoubleTap() {
-        if (_satelliteClicked) _isSatelliteInfoBoxVisible = true
-        Log.d("clickingstuff", "double tap: satellite box:${_isSatelliteInfoBoxVisible}")
         toggleMenu()
     }
 
@@ -76,15 +69,20 @@ class Scene3D(
             val key = node.name
             if (key != null) {
                 Log.d("clickingstuff", "Tapped node with satellite key: ${node.name}")
-                _clickedSatelliteKey.value = key
-                _isSatelliteInfoBoxVisible = true
-                _satelliteClicked = true
+                if (key == earth.getEarthNode().name) {
+                    _clickedSatelliteKey.value = null
+                    _isSatelliteInfoBoxVisible = false
+                    _isEarthInfoBoxVisible = true
+                    Log.d("clickingstuff", "Tapped earth node")
+                } else {
+                    _clickedSatelliteKey.value = key
+                    _isSatelliteInfoBoxVisible = true
+                    _isEarthInfoBoxVisible = false
+                }
             } else {
-                // TODO add Earth node click and location variants
                 _isSatelliteInfoBoxVisible = false
                 _clickedSatelliteKey.value = null
-                _satelliteClicked = false
-                Log.d("clickingstuff", "Tapped node with no satellite key: ${node.name}")
+                _isEarthInfoBoxVisible = false
             }
             return
         }
@@ -92,8 +90,8 @@ class Scene3D(
         // genuine empty-scene single tap -> close the info box
         Log.d("clickingstuff", "Single-tap (empty scene): closing InfoBox")
         _isSatelliteInfoBoxVisible = false
+        _isEarthInfoBoxVisible = false
         _clickedSatelliteKey.value = null
-        _satelliteClicked = false
     }
 
     fun resolveClickedSatelliteByKey(key: String?, satelliteList: List<GNSSStatusData>): GNSSStatusData? {
@@ -105,10 +103,12 @@ class Scene3D(
         return satelliteList.find { it.constellation == constellation && it.prn == prn }
     }
 
+
     // Scene initialization
     private var _isSceneReady by mutableStateOf(false)
     fun isSceneReady(): Boolean = _isSceneReady
 
+    // TODO this initializeScene is not needed for code but needed for LoadingScreen
     private var hasInitialized = false
     private var isInitializing = false
     fun initializeScene() {
@@ -127,13 +127,7 @@ class Scene3D(
 
     private fun setupScene() {
         try {
-            earthNode = ModelNode(
-                modelInstance = modelLoader.createModelInstance(parameters.earthModelPath),
-                scaleToUnits = parameters.earthScale
-            ).also {
-                centerNode.addChildNode(it)
-            it.name = "Earth node"
-            }
+            //hmm
         } catch (e: Exception) {
             Log.e("Scene3D", "Failed to load Earth model: ${e.message}")
         }
@@ -148,12 +142,12 @@ class Scene3D(
             renderer = renderer,
             scene = scene,
             modelLoader = modelLoader,
-            cameraNode = cameraManager.getCameraNode(),
-            cameraManipulator = cameraManager.getCameraManipulator(),
+            cameraNode = camera.getCameraNode(),
+            cameraManipulator = camera.getCameraManipulator(),
             childNodes = listOf(centerNode),
             environment = environmentLoader.createHDREnvironment(parameters.environmentPath)!!,
             onFrame = {
-                cameraManager.updateLookAt(satellites, locationMarker)
+                camera.onFrame(satellites, locationMarker)
                 mainLight.onFrame()
             },
             mainLightNode = mainLight.getSunLightNode(),
@@ -169,18 +163,19 @@ class Scene3D(
                 // sometimes prevents camera PAN ??
                 onMove = { _, event, _ ->
                     if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                    cameraManager.getCameraGestureDetector().onTouchEvent(event)
+                    camera.getCameraGestureDetector().onTouchEvent(event)
                 },
                 onMoveBegin = { _, event, _ ->
                     if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                    cameraManager.getCameraGestureDetector().onTouchEvent(event)
+                    camera.getCameraGestureDetector().onTouchEvent(event)
                 },
                 onMoveEnd = { _, event, _ ->
                     if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                    cameraManager.getCameraGestureDetector().onTouchEvent(event)
+                    camera.getCameraGestureDetector().onTouchEvent(event)
                 },
             ),
         )
+        _isSceneReady = true
     }
 
     fun updateScene(satelliteList: List<GNSSStatusData>, userLocation: Float3) {
@@ -188,57 +183,28 @@ class Scene3D(
         locationMarker.updateLocationMarker(userLocation)
     }
 
-    fun setLocationMarkerVisible(visible: Boolean) {
-        locationMarker.setVisible(visible)
-    }
+    fun setLocationMarkerVisible(visible: Boolean) { locationMarker.setVisible(visible) }
 
     fun isLocationMarkerVisible() = locationMarker.isLocationMarkerVisible()
 
     fun updateParameters(newParameters: Scene3DParameters) {
         Log.d("Scene3D", "updateParameters called - intensity: ${newParameters.lightIntensity}, color: ${newParameters.lightColor}")
-
-        val oldParameters = parameters
         parameters = newParameters
 
         mainLight.updateParameters(newParameters)
-
         satellites.updateParameters(newParameters)
+        earth.updateEarthParameters(newParameters)
 
-        // Handle earth model path changes
-        if (oldParameters.earthModelPath != newParameters.earthModelPath) {
-            updateEarthModel()
-            Log.d("Scene3D", "Updated earth model")
-        }
-    }
-
-    private fun updateEarthModel() {
-        try {
-            earthNode?.let { centerNode.removeChildNode(it) }
-            earthNode?.destroy()
-
-            earthNode = ModelNode(
-                modelInstance = modelLoader.createModelInstance(parameters.earthModelPath),
-                scaleToUnits = parameters.earthScale
-            ).also { centerNode.addChildNode(it) }
-        } catch (e: Exception) {
-            Log.e("Scene3D", "Failed to update earth model: ${e.message}")
-            // Fall back to default if loading fails
-            earthNode = ModelNode(
-                modelInstance = modelLoader.createModelInstance(Scene3DParameters().earthModelPath),
-                scaleToUnits = parameters.earthScale
-            ).also { centerNode.addChildNode(it) }
-        }
     }
 
     fun cleanup() {
         satellites.cleanup()
-
-        earthNode?.destroy()
         locationMarker.cleanup()
+        earth.cleanup()
 
         mainLight.cleanup()
 
-        cameraManager.cleanup()
+        camera.cleanup()
         centerNode.destroy()
     }
 }

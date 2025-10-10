@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.scene3d.ui
+package com.example.gpssatelliteviewer.scene3d.ui.infobox
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Box
@@ -12,25 +12,28 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.example.gpssatelliteviewer.data.GNSSStatusData
+import com.example.gpssatelliteviewer.app.theme.CardBackground
+import com.example.gpssatelliteviewer.utils.CoordinateConverter
+import dev.romainguy.kotlin.math.Float3
 
 @Composable
-fun SatelliteInfoBox(
-    clickedSatellite: GNSSStatusData?,
+fun EarthInfoBox(
+    userLocation: Float3?,
     isMenuVisible: Boolean,
     safeInsets: PaddingValues,
     totalMenuWidth: Dp,
     modifier: Modifier = Modifier
 ) {
     val sceneOffsetX by animateDpAsState(
-        targetValue = if (isMenuVisible) totalMenuWidth else safeInsets.calculateLeftPadding(LayoutDirection.Ltr) * 2,
+        targetValue = if (isMenuVisible) totalMenuWidth else safeInsets.calculateLeftPadding(
+            LayoutDirection.Ltr
+        ) * 2,
     )
-    clickedSatellite?.let { sat ->
+    userLocation?.let { sat ->
         Box(
             modifier = modifier
                 .padding(top = 50.dp)
@@ -39,21 +42,32 @@ fun SatelliteInfoBox(
             Card(
                 modifier = modifier.padding(8.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color.Black.copy(alpha = 0.7f)
+                    containerColor = CardBackground.copy(alpha = 0.4f)
                 )
             ) {
                 Column(modifier.padding(8.dp)) {
+                    Text("Earth", fontWeight = FontWeight.Bold)
+                    Text("Current location: ")
+                    val latHem = if (userLocation.x >= 0) 'N' else 'S'
+                    val lonHem = if (userLocation.y >= 0) 'E' else 'W'
+
                     Text(
-                        "${sat.constellation} PRN ${sat.prn}",
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        "Latitude: ${
+                            CoordinateConverter.decimalToDMS(
+                                userLocation.x.toDouble(),
+                                latHem
+                            )
+                        }"
                     )
-                    Text("SNR: ${sat.snr}", color = Color.White)
-                    Text("Used in fix: ${sat.usedInFix}", color = Color.White)
                     Text(
-                        "Azimuth: ${sat.azimuth}, Elevation: ${sat.elevation}",
-                        color = Color.White
+                        "Longitude: ${
+                            CoordinateConverter.decimalToDMS(
+                                userLocation.y.toDouble(),
+                                lonHem
+                            )
+                        }"
                     )
+                    Text("Altitude: ${userLocation.z.let { "%.1f m".format(it) }}")
                 }
             }
         }

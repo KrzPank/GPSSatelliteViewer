@@ -1,6 +1,9 @@
 package com.example.gpssatelliteviewer.scene3d.manager
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.google.android.filament.Engine
 import com.google.android.filament.View
@@ -9,6 +12,7 @@ import io.github.sceneview.gesture.CameraGestureDetector
 import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.Node
 import kotlin.apply
+import kotlin.math.sqrt
 
 class CameraManager(
     private val engine: Engine,
@@ -22,6 +26,11 @@ class CameraManager(
     private val cameraGestureDetector = createCameraGestureDetector()
     fun getCameraManipulator() = cameraGestureDetector.cameraManipulator
     fun getCameraGestureDetector() = cameraGestureDetector
+
+    private var frameCount = 0
+    private val lookAtUpdateInterval = 2
+    private var lastCameraPosition = Float3(0.0f, 0.0f, 0.0f)
+    private val updateThreshold = 0.08f
 
     private fun createCameraGestureDetector(): CameraGestureDetector {
         // does not disable camera pan???
@@ -38,6 +47,25 @@ class CameraManager(
         return cameraGD
     }
 
+    private fun shouldUpdateLookAt(satellites: SatelliteManager, locationMarker: LocationMarkerManager) {
+        frameCount++
+
+        val frameIntervalMet = frameCount >= lookAtUpdateInterval
+        val cameraMoved = (cameraNode.worldPosition - lastCameraPosition).length()
+        val shouldUpdate = frameIntervalMet && cameraMoved  > updateThreshold
+
+        if (shouldUpdate) {
+            lastCameraPosition = cameraNode.worldPosition
+            frameCount = 0
+
+            cameraNode.lookAt(centerNode)
+            satellites.updateLookAt(cameraNode)
+            locationMarker.updateLookAt(cameraNode)
+
+            Log.d("update look at", "updated look at")
+        }
+    }
+
     private fun createCamera(startingLocation: Float3?): CameraNode {
         val location = startingLocation ?: parameters.startingCameraLocation
         val camera = CameraNode(engine).apply {
@@ -50,11 +78,11 @@ class CameraManager(
         return camera
     }
 
-    // TODO Optimisation call updateLookAt only when camera moves not every frame
-    fun updateLookAt(satellites: SatelliteManager, locationMarker: LocationMarkerManager) {
-        cameraNode.lookAt(centerNode)
-        satellites.updateLookAt(cameraNode)
-        locationMarker.updateLookAt(cameraNode)
+    fun onFrame(satellites: SatelliteManager, locationMarker: LocationMarkerManager) {
+        shouldUpdateLookAt(
+            satellites = satellites,
+            locationMarker = locationMarker
+        )
     }
 
     private fun applyVisualEffects() {
@@ -126,5 +154,9 @@ class CameraManager(
             centerNode.removeChildNode(it)
             it.destroy()
         }
+    }
+
+    private fun Float3.length(): Float {
+        return sqrt(x * x + y * y + z * z)
     }
 }

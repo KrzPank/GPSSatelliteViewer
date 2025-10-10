@@ -115,7 +115,7 @@ object CoordinateConverter {
         val minutes = minutesDecimal.toInt()
         val seconds = (minutesDecimal - minutes) * 60
 
-        return String.format("%d°%02d'%06.2f\" %c", degrees, minutes, seconds, hemisphere)
+        return String.format("%d°%02d'%06.2f\" %c", abs(degrees), minutes, seconds, hemisphere)
     }
 
     @SuppressLint("DefaultLocale")
@@ -127,7 +127,7 @@ object CoordinateConverter {
         val minutesDecimal = abs((value - degrees) * 60)
         val minutes = minutesDecimal.toInt()
         val seconds = ((minutesDecimal - minutes) * 60)
-        return String.format("%d°%d'%.2f\" %c", degrees, minutes, seconds, hemisphere)
+        return String.format("%d°%d'%.2f\" %c", abs(degrees), minutes, seconds, hemisphere)
     }
 
     @SuppressLint("DefaultLocale")

@@ -53,6 +53,8 @@ import com.example.gpssatelliteviewer.scene3d.ui.menu.Scene3DParametersMenu
 import com.example.gpssatelliteviewer.app.theme.DarkBackground
 import com.example.gpssatelliteviewer.app.theme.GreenPrimary
 import com.example.gpssatelliteviewer.app.theme.TextLabel
+import com.example.gpssatelliteviewer.scene3d.ui.infobox.EarthInfoBox
+import com.example.gpssatelliteviewer.scene3d.ui.infobox.SatelliteInfoBox
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.HideSystemUI
 import com.example.gpssatelliteviewer.utils.LockOrientationLandscape
@@ -82,7 +84,7 @@ fun Satellite3DScreen(
 
     val satelliteList by gnssViewModel.satelliteList.collectAsState()
 
-    val userLocation = remember { mutableStateOf(Float3(
+    val userLocation = Float3(
         CoordinateConverter.nmeaCoordinateToDecimal(
             locationNMEA.latitude,
             locationNMEA.latHemisphere
@@ -92,45 +94,7 @@ fun Satellite3DScreen(
             locationNMEA.lonHemisphere
         ).toFloat(),
         locationNMEA.altitude.toFloat()
-    ))}
-
-    // SceneView parameters init
-    val engine = rememberEngine()
-    val modelLoader = rememberModelLoader(engine)
-    val environmentLoader = rememberEnvironmentLoader(engine)
-    val view = rememberView(engine)
-    val renderer = rememberRenderer(engine)
-    val coreScene = rememberScene(engine)
-    val parametersState by remember { mutableStateOf(Scene3DParametersState()) }
-    parametersState.updateLocation(userLocation.value)
-    Log.d("user location", "${parametersState.parameters.location}")
-
-    val scene = remember {
-        Scene3D(
-            engine = engine,
-            view = view,
-            renderer = renderer,
-            scene = coreScene,
-            modelLoader = modelLoader,
-            environmentLoader = environmentLoader,
-            modifier = Modifier.fillMaxSize(),
-            parameters = parametersState.parameters
-        )
-    }
-    var isSceneReady by remember { mutableStateOf(scene.isSceneReady()) }
-
-    LaunchedEffect(scene) {
-        scene.initializeScene()
-
-        while (!scene.isSceneReady()) {
-            delay(50)
-        }
-
-        // Smooth transition not wanted but i don't know other way
-        // it is feels more responsive with 200 ms delay???
-        delay(200)
-        isSceneReady = true
-    }
+    )
 
     // Satellite filtering
     val selectedConstellations = remember { mutableStateListOf<String>() }
@@ -148,10 +112,51 @@ fun Satellite3DScreen(
 
     //  menu stuff
     var selectedTab by remember { mutableIntStateOf(0) }
+
     val menuWidth = 300.dp
     val safeInsets = WindowInsets.Companion.safeDrawing.asPaddingValues()
-    val totalMenuWidth = menuWidth + safeInsets.calculateLeftPadding(LayoutDirection.Ltr)
+    val totalMenuWidth = remember { menuWidth + safeInsets.calculateLeftPadding(LayoutDirection.Ltr) }
     val menuAnimationDuration = 300
+
+    // SceneView parameters init
+    val engine = rememberEngine()
+    val modelLoader = rememberModelLoader(engine)
+    val environmentLoader = rememberEnvironmentLoader(engine)
+    val view = rememberView(engine)
+    val renderer = rememberRenderer(engine)
+    val coreScene = rememberScene(engine)
+    val parametersState by remember { mutableStateOf(Scene3DParametersState()) }
+    parametersState.updateLocation(userLocation)
+    //Log.d("user location", "${parametersState.parameters.location}")
+
+    val scene = remember {
+        Scene3D(
+            engine = engine,
+            view = view,
+            renderer = renderer,
+            scene = coreScene,
+            modelLoader = modelLoader,
+            environmentLoader = environmentLoader,
+            modifier = Modifier.fillMaxSize(),
+            parameters = parametersState.parameters
+        )
+    }
+    var isSceneReady by remember { mutableStateOf(scene.isSceneReady()) }
+
+    // TODO do something about loading screen right now initializeScreen is useless except for loading screen
+    LaunchedEffect(scene) {
+        //scene.initializeScene()
+
+        while (!scene.isSceneReady()) {
+            delay(50)
+            isSceneReady = true
+        }
+
+        // Smooth transition not wanted but i don't know other way
+        // it is feels more responsive with 200 ms delay???
+        delay(200)
+        isSceneReady = true
+    }
 
     Box(
         modifier = Modifier.Companion
@@ -168,10 +173,6 @@ fun Satellite3DScreen(
                 modifier = Modifier.Companion.fillMaxSize()
             )
         }
-
-        val sceneOffsetX by animateDpAsState(
-            targetValue = if (scene.isMenuVisible()) totalMenuWidth else 0.dp,
-        )
 
         // Handle location marker visibility changes
         var showLocationMarker by remember { mutableStateOf(scene.isLocationMarkerVisible()) }
@@ -198,10 +199,10 @@ fun Satellite3DScreen(
             Box(
                 modifier = Modifier.Companion
                     .fillMaxSize()
-                    .offset(x = sceneOffsetX / 2)
+                    .offset(x = if (scene.isMenuVisible()) totalMenuWidth/2 else 0.dp)
             ) {
                 scene.Render()
-                scene.updateScene(filteredSatellites, userLocation.value)
+                scene.updateScene(filteredSatellites, userLocation)
                 AnimatedVisibility(
                     visible = scene.isSatelliteInfoBoxVisible(),
                     enter = slideInHorizontally(
@@ -215,6 +216,25 @@ fun Satellite3DScreen(
                 ) {
                     SatelliteInfoBox(
                         clickedSatellite = clickedSatellite,
+                        isMenuVisible = scene.isMenuVisible(),
+                        safeInsets = safeInsets,
+                        totalMenuWidth = totalMenuWidth
+                    )
+                }
+                //*  Box for earth info on click
+                AnimatedVisibility(
+                    visible = scene.isEarthInfoBoxVisible(),
+                    enter = slideInHorizontally(
+                        initialOffsetX = { -it },
+                        animationSpec = tween(menuAnimationDuration/2)
+                    ),
+                    exit = slideOutHorizontally(
+                        targetOffsetX = { -it },
+                        animationSpec = tween(menuAnimationDuration/2)
+                    )
+                ) {
+                    EarthInfoBox(
+                        userLocation = userLocation,
                         isMenuVisible = scene.isMenuVisible(),
                         safeInsets = safeInsets,
                         totalMenuWidth = totalMenuWidth

@@ -1,5 +1,6 @@
 package com.example.gpssatelliteviewer.scene3d.manager
 
+import android.util.Log
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import dev.romainguy.kotlin.math.Float3
@@ -17,9 +18,8 @@ class LocationMarkerManager(
     private var isVisible: Boolean = true
 
     private fun createLocationMarker(): ModelNode {
-        val markerInstance = modelLoader.createModelInstance(parameters.locationMarkerModelPath)
         val node = ModelNode(
-            modelInstance = markerInstance,
+            modelInstance = modelLoader.createModelInstance(parameters.locationMarkerModelPath),
             scaleToUnits = parameters.locationMarkerScale
         ).also {
             centerNode.addChildNode(it)
@@ -44,6 +44,7 @@ class LocationMarkerManager(
         val scenePosition = CoordinateConverter.ecefToScenePos(ecefPosition)
 
         locationMarkerNode.position = scenePosition
+        Log.d("LocationMarkerPos", "${scenePosition}")
     }
 
     fun setVisible(visible: Boolean) {

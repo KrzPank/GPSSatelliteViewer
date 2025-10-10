@@ -182,7 +182,7 @@ class SatelliteManager(
     private fun returnNodeToPool(node: ModelNode) {
         // Reset node state before returning to pool
         node.position = Float3(0f, 0f, 0f)
-        node.rotation = Float3(0f, 0f, 0f)
+        //node.rotation = Float3(0f, 0f, 0f)
         // clear click handler to avoid capturing stale references
         node.onSingleTapUp = null
         node.name = ""
@@ -197,14 +197,12 @@ class SatelliteManager(
         updateSatellitePosition(node, sat, userLocation)
         centerNode.addChildNode(node)
 
+        // "CONSTELLATION:PRN"
         node.name = satelliteKey(sat)
         node.onSingleTapUp = {
-            // node.name is "CONSTELLATION:PRN"
-            val key = node.name
-            onSatelliteClick?.invoke(key.toString())
+            onSatelliteClick?.invoke(node.name.toString())
             true
         }
-
     }
 
     /**

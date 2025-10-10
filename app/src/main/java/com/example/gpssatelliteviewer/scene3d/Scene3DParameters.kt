@@ -40,7 +40,7 @@ data class Scene3DParameters(
     var location: Float3? = null,
 
     // Environment Parameters
-    var environmentPath: String = "envs/8k_stars_milky_way.hdr",
+    var environmentPath: String = "envs/NightSkyHDRI002_2K.hdr",
     var environmentIntensity: Float = 1.0f,
 
     // Camera Parameters - positioned for better Earth view
