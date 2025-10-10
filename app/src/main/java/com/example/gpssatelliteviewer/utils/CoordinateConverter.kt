@@ -75,7 +75,7 @@ object CoordinateConverter {
     fun azElToECEF(
         azimuth: Float,
         elevation: Float,
-        userLocation: Triple<Float, Float, Float>, // lat, lon, alt
+        userLocation: Float3, // lat, lon, alt
         altitude: Float = 0.0f
     ): Float3 {
         val (lat, lon, alt) = userLocation

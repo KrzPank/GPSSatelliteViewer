@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
@@ -31,6 +32,8 @@ import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
 import com.example.gpssatelliteviewer.app.theme.DarkBackground
 import com.example.gpssatelliteviewer.data.LOCATION_IS_LOCATION_ENABLED_TIMER
+import com.example.gpssatelliteviewer.statisticscreen.MeasurementCard
+import com.example.gpssatelliteviewer.statisticscreen.SNRChartCard
 import com.example.gpssatelliteviewer.utils.EmptyStateCard
 import kotlinx.coroutines.delay
 import java.sql.Date
@@ -46,6 +49,8 @@ fun LocationInfoScreen(
 ) {
     val satellites by gnssStatusViewModel.satelliteList.collectAsState()
     //val snrHistory by gnssStatusViewModel.snrHistory.collectAsState()
+
+    val measurements by gnssStatusViewModel.gnssMeasurements.collectAsState()
 
     val locationNMEA by nmeaViewModel.locationNMEA.collectAsState()
     val hasLocationNMEA by nmeaViewModel.hasLocationNMEA.collectAsState()
@@ -127,6 +132,10 @@ fun LocationInfoScreen(
             GPSStatusCard(satellites, hasLocation, isLocationEnabled)
         }
 
+        items(measurements) { measurement ->
+            MeasurementCard(measurement)
+        }
+
         // --- SNR Line Chart ---
         //item {
         //SNRChartCard(
@@ -138,6 +147,8 @@ fun LocationInfoScreen(
         //}
     }
     // Dialog to choose location type
+
+    // TODO move to different card
     if (showPicker) {
         AlertDialog(
             onDismissRequest = { showPicker = false },
@@ -170,3 +181,5 @@ fun LocationInfoScreen(
         )
     }
 }
+
+

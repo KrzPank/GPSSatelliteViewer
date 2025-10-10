@@ -1,6 +1,7 @@
 package com.example.gpssatelliteviewer.data.viewmodel
 
 import android.app.Application
+import android.location.GnssMeasurementsEvent
 import android.location.GnssStatus
 import android.location.LocationManager
 import androidx.lifecycle.AndroidViewModel
@@ -21,6 +22,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 
+data class GNSSMeasurementData(
+    val svid: Int,
+    val constellation: String,
+    val cn0DbHz: Double?,
+    val snrInDb: Double?,
+    val accumulatedDeltaRangeMeters: Double?,
+    val pseudorangeRateMetersPerSecond: Double?,
+    val accumulatedDeltaRangeUncertaintyMeters: Double?,
+    val timeOffsetNanos: Double?
+)
+
 @RequiresApi(Build.VERSION_CODES.R)
 class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
@@ -29,6 +41,11 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _satelliteList = MutableStateFlow<List<GNSSStatusData>>(listOf())
     val satelliteList: StateFlow<List<GNSSStatusData>> = _satelliteList
+
+
+    private val _gnssMeasurements = MutableStateFlow<List<GNSSMeasurementData>>(listOf())
+    val gnssMeasurements: StateFlow<List<GNSSMeasurementData>> = _gnssMeasurements
+
 
     private val _snrHistory = MutableStateFlow<Map<String, MutableList<Float>>>(emptyMap())
     val snrHistory: StateFlow<Map<String, List<Float>>> = _snrHistory
@@ -82,7 +99,46 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-    // is it good?
+
+    // === GNSS Measurements Callback ===
+    private val gnssMeasurementCallback = object : GnssMeasurementsEvent.Callback() {
+        override fun onGnssMeasurementsReceived(event: GnssMeasurementsEvent) {
+            parsingScope.launch {
+                val measurements = event.measurements.map { m ->
+                    val constellation = when (m.constellationType) {
+                        GnssStatus.CONSTELLATION_GPS -> "GPS"
+                        GnssStatus.CONSTELLATION_GLONASS -> "GLONASS"
+                        GnssStatus.CONSTELLATION_BEIDOU -> "BeiDou"
+                        GnssStatus.CONSTELLATION_GALILEO -> "Galileo"
+                        GnssStatus.CONSTELLATION_QZSS -> "QZSS"
+                        GnssStatus.CONSTELLATION_IRNSS -> "IRNSS"
+                        GnssStatus.CONSTELLATION_SBAS -> "SBAS"
+                        else -> "Unknown"
+                    }
+
+                    GNSSMeasurementData(
+                        svid = m.svid,
+                        constellation = constellation,
+                        cn0DbHz = m.cn0DbHz,
+                        snrInDb = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) m.snrInDb else null,
+                        accumulatedDeltaRangeMeters = m.accumulatedDeltaRangeMeters,
+                        pseudorangeRateMetersPerSecond = m.pseudorangeRateMetersPerSecond,
+                        accumulatedDeltaRangeUncertaintyMeters = m.accumulatedDeltaRangeUncertaintyMeters,
+                        timeOffsetNanos = m.timeOffsetNanos
+                    )
+                }
+
+                withContext(Dispatchers.Main) {
+                    _gnssMeasurements.value = measurements
+                }
+            }
+        }
+
+        override fun onStatusChanged(status: Int) {
+            Log.d("GNSS_Measurements", "Status changed: $status")
+        }
+    }
+
     init {
         loadGNSSHardwareInfo()
     }
@@ -91,31 +147,16 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
         try {
             val executor = Executors.newSingleThreadExecutor()
             locationManager.registerGnssStatusCallback(executor, gnssCallback)
+            locationManager.registerGnssMeasurementsCallback(executor, gnssMeasurementCallback)
         } catch (e: SecurityException) {
             e.printStackTrace()
         }
     }
 
     private fun loadGNSSHardwareInfo() {
-        // API 28+
-        val model = try {
-            locationManager.gnssHardwareModelName
-        } catch (_: Exception) {
-            null
-        }
-
-        val year = try {
-            locationManager.gnssYearOfHardware
-        } catch (_: Exception) {
-            null
-        }
-
-        val caps =  // API 30+
-            try {
-                locationManager.gnssCapabilities
-            } catch (_: Exception) {
-                null
-            }
+        val model = try { locationManager.gnssHardwareModelName } catch (_: Exception) { null } // API 28+
+        val year = try { locationManager.gnssYearOfHardware } catch (_: Exception) { null }
+        val caps =   try { locationManager.gnssCapabilities } catch (_: Exception) { null } // API 30+
 
         _gnssHardwareInfo.value = GNSSHardwareInfo(
             modelName = model,
@@ -150,6 +191,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         super.onCleared()
         locationManager.unregisterGnssStatusCallback(gnssCallback)
+        locationManager.unregisterGnssMeasurementsCallback(gnssMeasurementCallback)
         parsingScope.cancel()
     }
 }

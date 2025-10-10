@@ -178,14 +178,8 @@ class LightHandler(
         return lightDirection
     }
 
-    /**
-     * Get the sun light node for scene rendering
-     */
-    fun getSunLightNode(): LightNode = sunLight
+    fun getSunLightNode() = sunLight
 
-    /**
-     * Cleanup resources
-     */
     fun cleanup() {
         centerNode.removeChildNode(sunLight)
         sunLight.destroy()

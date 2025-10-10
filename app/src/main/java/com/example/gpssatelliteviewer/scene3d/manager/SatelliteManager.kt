@@ -42,7 +42,7 @@ class SatelliteManager(
     )
 
     // Dynamic object pooling for satellite nodes
-    private val satelliteNodePool = mutableListOf<ModelNode>() // Reusable nodes from disappeared satellites
+    private val satelliteNodePool = mutableListOf<ModelNode>()
     val activeSatelliteNodes = mutableMapOf<String, ModelNode>() // "constellation:prn" -> node
 
     // Cache last-known values per satellite so we only update nodes when something meaningful changed
@@ -67,21 +67,17 @@ class SatelliteManager(
      * Update satellites in the scene
      * Handles adding, removing, and updating satellite positions
      */
-    fun updateSatellites(satelliteList: List<GNSSStatusData>, userLocation: Triple<Float, Float, Float>) {
-        // Build keys from the incoming (already filtered) list
+    fun updateSatellites(satelliteList: List<GNSSStatusData>, userLocation: Float3) {
         val currentSatelliteKeys = satelliteList.map { satelliteKey(it) }.toSet()
         val activeKeys = activeSatelliteNodes.keys.toSet()
 
-        // Remove satellites that are no longer present in the passed list (return nodes to pool)
         val disappearedKeys = activeKeys - currentSatelliteKeys
         disappearedKeys.forEach { key ->
             activeSatelliteNodes[key]?.let { node ->
-                // ensure node is removed from scene and cleaned up
                 centerNode.removeChildNode(node)
                 returnNodeToPool(node)
                 activeSatelliteNodes.remove(key)
             }
-            // Remove cache entry too
             satelliteCache.remove(key)
         }
 
@@ -121,12 +117,10 @@ class SatelliteManager(
                     cache?.lastData = sat
                 }
             } else {
-                // Create or reuse node for new satellite
                 val satelliteNode = getOrCreateSatelliteNode()
                 setupSatelliteNode(satelliteNode, sat, userLocation)
                 activeSatelliteNodes[key] = satelliteNode
 
-                // Initialize cache for this satellite
                 val altitude = calculateSatelliteAltitude(sat)
                 satelliteCache[key] = SatelliteCache(
                     lastData = sat,
@@ -138,7 +132,6 @@ class SatelliteManager(
                 )
             }
         }
-        //Log.d("SatelliteManager", "Active satellites: ${activeSatelliteNodes.size}, Pooled nodes: ${satelliteNodePool.size}")
     }
 
     /**
@@ -200,7 +193,7 @@ class SatelliteManager(
     /**
      * Setup a satellite node with position and add to scene
      */
-    private fun setupSatelliteNode(node: ModelNode, sat: GNSSStatusData, userLocation: Triple<Float, Float, Float>) {
+    private fun setupSatelliteNode(node: ModelNode, sat: GNSSStatusData, userLocation: Float3) {
         updateSatellitePosition(node, sat, userLocation)
         centerNode.addChildNode(node)
 
@@ -217,7 +210,7 @@ class SatelliteManager(
     /**
      * Update satellite position without recreating the node
      */
-    private fun updateSatellitePosition(node: ModelNode, sat: GNSSStatusData, userLocation: Triple<Float, Float, Float>) {
+    private fun updateSatellitePosition(node: ModelNode, sat: GNSSStatusData, userLocation: Float3) {
         val altitude = calculateSatelliteAltitude(sat)
         val pos = CoordinateConverter.ecefToScenePos(
             CoordinateConverter.azElToECEF(

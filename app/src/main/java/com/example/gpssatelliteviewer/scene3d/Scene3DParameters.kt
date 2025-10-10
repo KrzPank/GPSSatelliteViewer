@@ -37,6 +37,7 @@ data class Scene3DParameters(
     // Location marker Parameters
     var locationMarkerModelPath: String = "models/RedCircle.glb",
     var locationMarkerScale: Float = 0.1f,
+    var location: Float3? = null,
 
     // Environment Parameters
     var environmentPath: String = "envs/8k_stars_milky_way.hdr",
@@ -101,6 +102,10 @@ class Scene3DParametersState {
 
     fun updateLightIntensity(intensity: Float) {
         parameters = parameters.copy(lightIntensity = intensity)
+    }
+
+    fun updateLocation(location: Float3) {
+        parameters = parameters.copy(location = location)
     }
 
     fun updateLightColor(red: Float, green: Float, blue: Float) {

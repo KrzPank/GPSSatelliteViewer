@@ -109,10 +109,6 @@ fun MessageStatisticsCard(
                     sortedEntries.forEach { (messageType, count) ->
                         InfoRow(messageType, count.toString())
                     }
-
-                    if (sortedEntries.isEmpty()) {
-                        InfoRow("No messages", "received yet")
-                    }
                 }
             }
         }
