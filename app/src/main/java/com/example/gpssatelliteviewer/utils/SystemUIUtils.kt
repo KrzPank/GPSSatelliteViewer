@@ -15,7 +15,6 @@ import android.graphics.Color
 import android.os.Build
 import androidx.core.graphics.toColorInt
 
-
 @Composable
 fun HideSystemUI() {
     val activity = LocalActivity.current as? ComponentActivity
@@ -88,7 +87,7 @@ fun LockOrientationLandscape() {
     }
 }
 
-fun Context.findActivity(): Activity? = when (this) {
+private fun Context.findActivity(): Activity? = when (this) {
     is Activity -> this
     is ContextWrapper -> baseContext.findActivity()
     else -> null

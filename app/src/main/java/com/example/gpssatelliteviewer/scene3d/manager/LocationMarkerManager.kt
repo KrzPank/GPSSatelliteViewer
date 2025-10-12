@@ -29,8 +29,8 @@ class LocationMarkerManager(
         return node
     }
 
-    fun updateLocationMarker(userLocation: Float3) {
-        if (userLocation == Float3(0f, 0f, 0f)) {
+    fun updateLocationMarker(userLocation: Float3?) {
+        if (userLocation == null) {
             setVisible(false)
             return
         }

@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.utils
+package com.example.gpssatelliteviewer.mainscreen.screen.locationinfo
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.Canvas
@@ -39,36 +39,38 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.gpssatelliteviewer.data.GNSSStatusData
+import com.example.gpssatelliteviewer.app.theme.GPSDisabled
+import com.example.gpssatelliteviewer.app.theme.GPSExcellent
+import com.example.gpssatelliteviewer.app.theme.GPSFair
+import com.example.gpssatelliteviewer.app.theme.GPSGood
+import com.example.gpssatelliteviewer.app.theme.GPSNoFix
+import com.example.gpssatelliteviewer.app.theme.GPSPoor
+import com.example.gpssatelliteviewer.app.theme.GPSSearching
 import com.example.gpssatelliteviewer.app.theme.SNRDarkerGreen
 import com.example.gpssatelliteviewer.app.theme.SNRLightGreen
 import com.example.gpssatelliteviewer.app.theme.SNROrange
 import com.example.gpssatelliteviewer.app.theme.SNRRed
 import com.example.gpssatelliteviewer.app.theme.SNRYellow
-import com.example.gpssatelliteviewer.app.theme.GPSExcellent
-import com.example.gpssatelliteviewer.app.theme.GPSGood
-import com.example.gpssatelliteviewer.app.theme.GPSFair
-import com.example.gpssatelliteviewer.app.theme.GPSPoor
-import com.example.gpssatelliteviewer.app.theme.GPSNoFix
-import com.example.gpssatelliteviewer.app.theme.GPSSearching
-import com.example.gpssatelliteviewer.app.theme.GPSDisabled
 import com.example.gpssatelliteviewer.app.theme.TextPrimary
-
-sealed class GPSStatusState {
-    object Excellent : GPSStatusState()      // Strong signal, many satellites, high accuracy
-    object Good : GPSStatusState()           // Good signal, adequate satellites
-    object Fair : GPSStatusState()           // Weak signal, few satellites
-    object Poor : GPSStatusState()           // Very weak signal, poor accuracy
-    object NoFix : GPSStatusState()          // No GPS fix available
-    object Searching : GPSStatusState()      // Searching for satellites
-    object Disabled : GPSStatusState()       // GPS is turned off
-}
+import com.example.gpssatelliteviewer.data.GNSSStatusData
+import com.example.gpssatelliteviewer.scene3d.manager.SatelliteManager
 
 class GPSStatus(
     private val satellites: List<GNSSStatusData>,
     private val hasLocation: Boolean,
     private val isLocationEnabled: Boolean
 ) {
+    sealed class GPSStatusState {
+        object Excellent : GPSStatusState()      // Strong signal, many satellites, high accuracy
+        object Good : GPSStatusState()           // Good signal, adequate satellites
+        object Fair : GPSStatusState()           // Weak signal, few satellites
+        object Poor : GPSStatusState()           // Very weak signal, poor accuracy
+        object NoFix : GPSStatusState()          // No GPS fix available
+        object Searching : GPSStatusState()      // Searching for satellites
+        object Disabled : GPSStatusState()       // GPS is turned off
+    }
+
+    val averageSNRByConstellationInFix = calculateAverageSNRByConstellationInFix(satellites)
     val averageSNRByConstellation = calculateAverageSNRByConstellation(satellites)
     val averageSNRInFix = calculateAverageSNRInFix(satellites)
     val gpsStatusState = determineGPSStatusState()
@@ -83,7 +85,7 @@ class GPSStatus(
         }
 
         val satellitesUsedInFix = satellites.count { it.usedInFix }
-        
+
         return when {
             satellitesUsedInFix >= 20 && averageSNRInFix >= 30f -> {
                 GPSStatusState.Excellent
@@ -101,6 +103,21 @@ class GPSStatus(
                 GPSStatusState.Searching
             }
             else -> GPSStatusState.NoFix
+        }
+    }
+
+    private fun calculateAverageSNRByConstellationInFix(satellites: List<GNSSStatusData>): Map<String, Float> {
+        val satellitesInFix = satellites.filter { it.usedInFix }
+        val groupedSatellites = satellitesInFix.groupBy { it.constellation }
+
+        return groupedSatellites.mapValues { (_, sats) ->
+            val valid = sats.filter { it.snr != 0f }
+
+            if (valid.isNotEmpty()) {
+                valid.map { it.snr }.average().toFloat()
+            } else {
+                0f
+            }
         }
     }
 
@@ -161,7 +178,7 @@ class GPSStatus(
             is GPSStatusState.Disabled -> "GPS Disabled"
         }
     }
-    
+
     private fun getStatusColor(gpsStatusState: GPSStatusState): Color {
         return when (gpsStatusState) {
             is GPSStatusState.Excellent -> GPSExcellent
@@ -195,7 +212,7 @@ class GPSStatus(
                     )
                     .background(
                         color = statusColor.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {

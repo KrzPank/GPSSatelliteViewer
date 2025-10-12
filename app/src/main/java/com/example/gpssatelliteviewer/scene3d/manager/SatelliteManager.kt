@@ -15,10 +15,6 @@ private const val AZIMUTH_THRESHOLD_DEG = 0.1f
 private const val ELEVATION_THRESHOLD_DEG = 0.1f
 private const val ALTITUDE_THRESHOLD_M = 1.0f
 
-/**
- * Manages GNSS satellite positioning, node pooling, and lifecycle
- * Handles efficient satellite visualization with object pooling
- */
 class SatelliteManager(
     private val modelLoader: ModelLoader,
     private val centerNode: Node,
@@ -48,6 +44,8 @@ class SatelliteManager(
     // Cache last-known values per satellite so we only update nodes when something meaningful changed
     private val satelliteCache = mutableMapOf<String, SatelliteCache>()
 
+    private var userLocation = parameters.userLocation ?: Float3(0.0f, 0.0f, 0.0f)
+
     // before: var onSatelliteClick: ((GNSSStatusData) -> Unit)? = null
     var onSatelliteClick: ((String) -> Unit)? = null
 
@@ -67,9 +65,10 @@ class SatelliteManager(
      * Update satellites in the scene
      * Handles adding, removing, and updating satellite positions
      */
-    fun updateSatellites(satelliteList: List<GNSSStatusData>, userLocation: Float3) {
+    fun updateSatellites(satelliteList: List<GNSSStatusData>, userLoc: Float3?) {
         val currentSatelliteKeys = satelliteList.map { satelliteKey(it) }.toSet()
         val activeKeys = activeSatelliteNodes.keys.toSet()
+        userLocation = userLoc ?: Float3(0.0f, 0.0f, 0.0f)
 
         val disappearedKeys = activeKeys - currentSatelliteKeys
         disappearedKeys.forEach { key ->
@@ -101,7 +100,7 @@ class SatelliteManager(
                     azChanged || elChanged || usedChanged || altChanged
                 }
                 if (shouldUpdate) {
-                    updateSatellitePosition(existingNode, sat, userLocation)
+                    updateSatellitePosition(existingNode, sat)
                     //Log.d("SatelliteManager", "Updating satellite:${key}")
                     //Log.d("SatelliteManager", " Info - New:${sat.azimuth}, ${sat.elevation}, ${sat.usedInFix}, ${sat.snr} Old:${cache?.lastData?.azimuth}, ${cache?.lastData?.elevation}, ${cache?.lastData?.usedInFix}, ${cache?.lastData?.snr}")
                     // update cache (create if missing)
@@ -118,7 +117,7 @@ class SatelliteManager(
                 }
             } else {
                 val satelliteNode = getOrCreateSatelliteNode()
-                setupSatelliteNode(satelliteNode, sat, userLocation)
+                setupSatelliteNode(satelliteNode, sat)
                 activeSatelliteNodes[key] = satelliteNode
 
                 val altitude = calculateSatelliteAltitude(sat)
@@ -193,8 +192,8 @@ class SatelliteManager(
     /**
      * Setup a satellite node with position and add to scene
      */
-    private fun setupSatelliteNode(node: ModelNode, sat: GNSSStatusData, userLocation: Float3) {
-        updateSatellitePosition(node, sat, userLocation)
+    private fun setupSatelliteNode(node: ModelNode, sat: GNSSStatusData) {
+        updateSatellitePosition(node, sat)
         centerNode.addChildNode(node)
 
         // "CONSTELLATION:PRN"
@@ -208,7 +207,7 @@ class SatelliteManager(
     /**
      * Update satellite position without recreating the node
      */
-    private fun updateSatellitePosition(node: ModelNode, sat: GNSSStatusData, userLocation: Float3) {
+    private fun updateSatellitePosition(node: ModelNode, sat: GNSSStatusData) {
         val altitude = calculateSatelliteAltitude(sat)
         val pos = CoordinateConverter.ecefToScenePos(
             CoordinateConverter.azElToECEF(
@@ -224,6 +223,7 @@ class SatelliteManager(
         }
 
         node.position = pos
+        Log.d("SatelliteuserLocation", "UserLocation: ${userLocation}")
     }
 
     /**

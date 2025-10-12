@@ -2,6 +2,7 @@ package com.example.gpssatelliteviewer.scene3d.manager
 
 import android.util.Log
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
+import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.google.android.filament.Engine
 import com.google.android.filament.View
 import dev.romainguy.kotlin.math.Float3
@@ -15,22 +16,22 @@ class CameraManager(
     private val engine: Engine,
     private val view: View,
     private val centerNode: Node,
-    private val parameters: Scene3DParameters = Scene3DParameters()
+    private val parameters: Scene3DParameters
 ) {
-    private var cameraNode = createCamera(parameters.location)
+    private var cameraNode = createCamera(parameters.userLocation)
     fun getCameraNode() = cameraNode
 
     private val cameraGestureDetector = createCameraGestureDetector()
     fun getCameraManipulator() = cameraGestureDetector.cameraManipulator
-    fun getCameraGestureDetector() = cameraGestureDetector
 
     private var frameCount = 0
     private val lookAtUpdateInterval = 2
     private var lastCameraPosition = Float3(0.0f, 0.0f, 0.0f)
+    // change updateThreshold based on camera zoom and add max zoom in
+    // zoomed in -> smaller
     private val updateThreshold = 0.08f
 
     private fun createCameraGestureDetector(): CameraGestureDetector {
-        // does not disable camera pan???
         val cameraGD = CameraGestureDetector(
             viewHeight = { view.viewport.height },
             cameraManipulator = CameraGestureDetector.DefaultCameraManipulator(
@@ -38,6 +39,7 @@ class CameraManager(
                 targetPosition = centerNode.worldPosition
             )
         ).apply {
+            // does not disable camera pan???
             isPanEnabled = false
         }
 
@@ -55,18 +57,17 @@ class CameraManager(
             lastCameraPosition = cameraNode.worldPosition
             frameCount = 0
 
-            cameraNode.lookAt(centerNode)
             satellites.updateLookAt(cameraNode)
             locationMarker.updateLookAt(cameraNode)
-
-            Log.d("update look at", "updated look at")
         }
     }
 
     private fun createCamera(startingLocation: Float3?): CameraNode {
-        val location = startingLocation ?: parameters.startingCameraLocation
+        Log.d("CameraPos", "Camera starting pos: ${startingLocation}")
+        val pos = calculateCameraStartingPosition(startingLocation) ?: parameters.startingCameraLocation
+        Log.d("CameraPos", "Camera pos: ${pos}")
         val camera = CameraNode(engine).apply {
-            position = location
+            position = pos
             lookAt(centerNode)
             centerNode.addChildNode(this)
         }
@@ -76,10 +77,41 @@ class CameraManager(
     }
 
     fun onFrame(satellites: SatelliteManager, locationMarker: LocationMarkerManager) {
+        cameraNode.lookAt(centerNode)
         shouldUpdateLookAt(
             satellites = satellites,
             locationMarker = locationMarker
         )
+    }
+
+    private fun calculateCameraStartingPosition(
+        userLocation: Float3?,
+        distanceFactor: Float = 10.0f
+    ): Float3? {
+        if (userLocation == null) return null
+        val ecef = CoordinateConverter.geodeticToECEF(
+            userLocation.x.toDouble(),
+            userLocation.y.toDouble(),
+            userLocation.z.toDouble()
+        )
+
+        val userScenePos = CoordinateConverter.ecefToScenePos(ecef)
+
+        val length = userScenePos.length()
+        if (length == 0f) return null
+
+        val dir = userScenePos.normalized(length)
+
+        val cameraDistance = length * distanceFactor
+
+        // +- 1 for better viewing experience
+        val cameraPos = Float3(
+            dir.x * cameraDistance + 1f,
+            dir.y * cameraDistance - 1f,
+            dir.z * cameraDistance + 1f
+        )
+
+        return cameraPos
     }
 
     private fun applyVisualEffects() {
@@ -155,5 +187,13 @@ class CameraManager(
 
     private fun Float3.length(): Float {
         return sqrt(x * x + y * y + z * z)
+    }
+
+    private fun Float3.normalized(length: Float): Float3 {
+        return if (length > 0f) {
+            Float3(x / length, y / length, z / length)
+        } else {
+            Float3(0f, 0f, 0f)
+        }
     }
 }

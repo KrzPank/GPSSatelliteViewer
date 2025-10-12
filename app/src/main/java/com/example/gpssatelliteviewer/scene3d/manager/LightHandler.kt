@@ -96,19 +96,15 @@ class LightHandler(
         // Early exit if light is being recreated
         if (isLightBeingRecreated) return
 
-        // Check if enough frames have passed and camera moved
         val frameIntervalMet = frameCount>= lightUpdateInterval
         val cameraMovement = (cameraNode.worldPosition - lastCameraPosition).length()
         val shouldUpdate = frameIntervalMet && cameraMovement > lightUpdateThreshold
 
         if (shouldUpdate) {
-            // Update tracking variables before recreation
             lastCameraPosition = cameraNode.worldPosition
             frameCount = 0
 
             recreateSunLight()
-
-            //Log.d("Scene3D", "Updated sun light direction due to camera movement, frameCount $frameCount")
         }
     }
 
@@ -117,33 +113,25 @@ class LightHandler(
 
         // Check if light parameters have actually changed
         if (currentLightParameters == newLightParameters) {
-            //Log.d("Scene3D", "Light parameters unchanged, skipping recreation")
             return
         }
 
         // Prevent rapid recreation while already recreating
         if (isLightBeingRecreated) {
-            //Log.d("Scene3D", "Skipping updateParameters - light already being recreated")
             return
         }
 
-        // Time-based throttling to prevent too frequent recreations
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastRecreationTime < minRecreationInterval) {
-            //Log.d("Scene3D", "Skipping updateParameters - too soon (${currentTime - lastRecreationTime}ms < ${minRecreationInterval}ms)")
             return
         }
 
-        //Log.d("Scene3D", "Light parameters changed - recreating light with intensity: ${newLightParameters.intensity}, color: ${newLightParameters.color}")
         lastRecreationTime = currentTime
         currentLightParameters = newLightParameters
 
         recreateSunLight(currentLightParameters)
     }
 
-    /**
-     * Called each frame - update sun light direction when camera moves
-     */
     fun onFrame() {
         updateSunLight()
     }

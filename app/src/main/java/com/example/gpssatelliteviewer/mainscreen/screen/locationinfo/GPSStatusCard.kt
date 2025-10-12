@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.app.theme.TextLabel
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.utils.GPSStatus
 import com.example.gpssatelliteviewer.utils.InfoRow
 
 @Composable
@@ -67,20 +66,39 @@ fun GPSStatusCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Constellation",
+                    text = "Average SNR for satellites in Fix per constellation",
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextLabel,
                     fontSize = 15.sp
                 )
-                Text(
-                    text = "Avg. SNR/in Fix",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextLabel,
-                    fontSize = 15.sp
-                )
+                //Text(
+                //    text = "Avg. SNR/In fix",
+                //    style = MaterialTheme.typography.bodyMedium,
+                //    color = TextLabel,
+                //    fontSize = 15.sp
+                //)
             }
 
             Spacer(modifier = Modifier.Companion.height(4.dp))
+            gpsStatus.averageSNRByConstellationInFix.forEach { (constellation, snr) ->
+                InfoRow(
+                    label = constellation,
+                    value = "${"%.1f".format(snr)} dBHz / ${
+                        gpsStatus.getFixCountByConstellation(
+                            constellation
+                        )
+                    }"
+                )
+                Spacer(Modifier.Companion.height(4.dp))
+            }
+
+            Spacer(Modifier.Companion.height(4.dp))
+            Text(
+                text = "Average SNR per constellation",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextLabel,
+                fontSize = 15.sp
+            )
             gpsStatus.averageSNRByConstellation.forEach { (constellation, snr) ->
                 InfoRow(
                     label = constellation,

@@ -33,15 +33,11 @@ object CoordinateConverter {
     // Scale & remap ECEF → SceneView
     fun ecefToScenePos(
         ecef: Float3,
-        yawDeg: Float = -2f,           // optional prime-meridian texture offset
-        flipLon: Boolean = false       // set true if East/West appears mirrored
+        yawDeg: Float = 0f,            // debug texture offset
     ): Float3 {
         val s = EARTH_RADIUS_WORLD_UNIT / EARTH_RADIUS_METERS
         // Map axes: X→X, Z→Y (north up), Y→Z (east on equator). Negate Z to match RH/Z-forward.
         var v = Float3(ecef.x * s, ecef.z * s, -ecef.y * s)
-
-        // Optional: flip longitude if east/west looks mirrored
-        if (flipLon) v = Float3(v.x, v.y, -v.z)
 
         // Optional: apply a yaw around Y Earth texture’s 0° meridian isn’t aligned
         if (yawDeg != 0f) {

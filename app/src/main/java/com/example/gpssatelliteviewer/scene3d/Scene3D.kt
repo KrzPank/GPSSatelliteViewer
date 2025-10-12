@@ -39,7 +39,7 @@ class Scene3D(
     private val centerNode = Node(engine)
 
     // Management systems
-    private val camera: CameraManager = CameraManager(engine, view, centerNode)
+    private val camera: CameraManager = CameraManager(engine, view, centerNode, parameters)
     private var mainLight: LightHandler = LightHandler(engine, centerNode, camera.getCameraNode(), parameters)
     private var locationMarker: LocationMarkerManager = LocationMarkerManager(modelLoader, centerNode, parameters)
     private var earth: EarthManager = EarthManager(modelLoader, centerNode, parameters)
@@ -65,33 +65,30 @@ class Scene3D(
     }
 
     private fun onSceneSingleTapConfirmed(node: Node?) {
-        if (node != null) {
-            val key = node.name
-            if (key != null) {
-                Log.d("clickingstuff", "Tapped node with satellite key: ${node.name}")
-                if (key == earth.getEarthNode().name) {
-                    _clickedSatelliteKey.value = null
-                    _isSatelliteInfoBoxVisible = false
-                    _isEarthInfoBoxVisible = true
-                    Log.d("clickingstuff", "Tapped earth node")
-                } else {
-                    _clickedSatelliteKey.value = key
-                    _isSatelliteInfoBoxVisible = true
-                    _isEarthInfoBoxVisible = false
-                }
-            } else {
-                _isSatelliteInfoBoxVisible = false
+        val key = node?.name
+        when (key) {
+            null -> {
+                // Empty tap or node without a name → hide everything
+                Log.d("clickingstuff", "Single-tap (empty scene): closing InfoBox")
                 _clickedSatelliteKey.value = null
+                _isSatelliteInfoBoxVisible = false
                 _isEarthInfoBoxVisible = false
             }
-            return
+            earth.getEarthNode().name -> {
+                // Earth tapped
+                Log.d("clickingstuff", "Tapped earth node")
+                _clickedSatelliteKey.value = null
+                _isSatelliteInfoBoxVisible = false
+                _isEarthInfoBoxVisible = true
+            }
+            else -> {
+                // Satellite tapped
+                Log.d("clickingstuff", "Tapped node with satellite key: $key")
+                _clickedSatelliteKey.value = key
+                _isSatelliteInfoBoxVisible = true
+                _isEarthInfoBoxVisible = false
+            }
         }
-
-        // genuine empty-scene single tap -> close the info box
-        Log.d("clickingstuff", "Single-tap (empty scene): closing InfoBox")
-        _isSatelliteInfoBoxVisible = false
-        _isEarthInfoBoxVisible = false
-        _clickedSatelliteKey.value = null
     }
 
     fun resolveClickedSatelliteByKey(key: String?, satelliteList: List<GNSSStatusData>): GNSSStatusData? {
@@ -103,35 +100,9 @@ class Scene3D(
         return satelliteList.find { it.constellation == constellation && it.prn == prn }
     }
 
-
     // Scene initialization
     private var _isSceneReady by mutableStateOf(false)
     fun isSceneReady(): Boolean = _isSceneReady
-
-    // TODO this initializeScene is not needed for code but needed for LoadingScreen
-    private var hasInitialized = false
-    private var isInitializing = false
-    fun initializeScene() {
-        // Synchronous initialization check
-        if (!hasInitialized && !isInitializing) {
-            isInitializing = true
-            try {
-                setupScene()
-                hasInitialized = true
-                _isSceneReady = true
-            } finally {
-                isInitializing = false
-            }
-        }
-    }
-
-    private fun setupScene() {
-        try {
-            //hmm
-        } catch (e: Exception) {
-            Log.e("Scene3D", "Failed to load Earth model: ${e.message}")
-        }
-    }
 
     @Composable
     fun Render() {
@@ -160,27 +131,27 @@ class Scene3D(
                 onSingleTapConfirmed = { event, node ->
                     onSceneSingleTapConfirmed(node)
                 },
-                // sometimes prevents camera PAN ??
-                onMove = { _, event, _ ->
-                    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                    camera.getCameraGestureDetector().onTouchEvent(event)
-                },
-                onMoveBegin = { _, event, _ ->
-                    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                    camera.getCameraGestureDetector().onTouchEvent(event)
-                },
-                onMoveEnd = { _, event, _ ->
-                    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                    camera.getCameraGestureDetector().onTouchEvent(event)
-                },
+                //// sometimes prevents camera PAN ??
+                //onMove = { _, event, _ ->
+                //    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
+                //    camera.getCameraGestureDetector().onTouchEvent(event)
+                //},
+                //onMoveBegin = { _, event, _ ->
+                //    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
+                //    camera.getCameraGestureDetector().onTouchEvent(event)
+                //},
+                //onMoveEnd = { _, event, _ ->
+                //    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
+                //    camera.getCameraGestureDetector().onTouchEvent(event)
+                //},
             ),
         )
         _isSceneReady = true
     }
 
-    fun updateScene(satelliteList: List<GNSSStatusData>, userLocation: Float3) {
-        satellites.updateSatellites(satelliteList, userLocation)
-        locationMarker.updateLocationMarker(userLocation)
+    fun updateScene(satelliteList: List<GNSSStatusData>) {
+        satellites.updateSatellites(satelliteList, parameters.userLocation)
+        locationMarker.updateLocationMarker(parameters.userLocation)
     }
 
     fun setLocationMarkerVisible(visible: Boolean) { locationMarker.setVisible(visible) }
@@ -194,8 +165,9 @@ class Scene3D(
         mainLight.updateParameters(newParameters)
         satellites.updateParameters(newParameters)
         earth.updateEarthParameters(newParameters)
-
     }
+
+    fun updateUserLocation(userLocation: Float3) { parameters.userLocation = userLocation }
 
     fun cleanup() {
         satellites.cleanup()

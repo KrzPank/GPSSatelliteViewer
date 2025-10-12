@@ -127,7 +127,8 @@ fun AppNavigation(
             }
             composable("Satellite3DScreen") {
                 val locationNMEA by nmeaViewModel.locationNMEA.collectAsState()
-                Satellite3DScreen(navController, gnssViewModel, locationNMEA)
+                val locationAndroidApi by locationViewModel.locationAndroidApi.collectAsState()
+                Satellite3DScreen(navController, gnssViewModel, locationNMEA, locationAndroidApi)
             }
         }
     } else {

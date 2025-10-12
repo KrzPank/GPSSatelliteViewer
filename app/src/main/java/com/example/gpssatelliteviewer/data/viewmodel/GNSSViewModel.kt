@@ -13,6 +13,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
 import com.example.gpssatelliteviewer.data.GNSSHardwareInfo
+import com.example.gpssatelliteviewer.data.GNSSMeasurementData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,17 +23,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 
-data class GNSSMeasurementData(
-    val svid: Int,
-    val constellation: String,
-    val cn0DbHz: Double?,
-    val snrInDb: Double?,
-    val accumulatedDeltaRangeMeters: Double?,
-    val pseudorangeRateMetersPerSecond: Double?,
-    val accumulatedDeltaRangeUncertaintyMeters: Double?,
-    val timeOffsetNanos: Double?
-)
-
 @RequiresApi(Build.VERSION_CODES.R)
 class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
@@ -41,7 +31,6 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _satelliteList = MutableStateFlow<List<GNSSStatusData>>(listOf())
     val satelliteList: StateFlow<List<GNSSStatusData>> = _satelliteList
-
 
     private val _gnssMeasurements = MutableStateFlow<List<GNSSMeasurementData>>(listOf())
     val gnssMeasurements: StateFlow<List<GNSSMeasurementData>> = _gnssMeasurements

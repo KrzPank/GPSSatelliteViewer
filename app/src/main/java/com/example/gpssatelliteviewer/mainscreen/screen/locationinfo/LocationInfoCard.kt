@@ -104,7 +104,7 @@ fun NMEALocationCard(
                 value = nmea.mslAltitude.let { "%.1f m".format(it) }
             )
             InfoRow(
-                label = "Accuracy",
+                label = "Accuracy (2D)",
                 value = CoordinateConverter.getAccuracyEstimate(nmea).let { "%.1f m".format(it) }
             )
             val speedkmh = nmea.speedKnots * 1.852
@@ -191,6 +191,11 @@ fun AndroidApiLocationCard(
                     else "%.1f m".format(locationData.accuracy)
             )
             InfoRow(
+                label = "Vertical Accuracy",
+                value = if (locationData.verticalAccuracy == null) "No data"
+                else "%.1f m".format(locationData.verticalAccuracy)
+            )
+            InfoRow(
                 label = "Speed",
                 value = if (locationData.speed == 0f) "No data"
                 else "%.2f m/s".format(locationData.speed)
@@ -199,11 +204,6 @@ fun AndroidApiLocationCard(
                 label = "Provider",
                 value = if (locationData.provider == "") "No data"
                 else locationData.provider
-            )
-            InfoRow(
-                label = "Vertical Accuracy",
-                value = if (locationData.verticalAccuracy == null) "No data"
-                else "%.1f m".format(locationData.verticalAccuracy)
             )
             InfoRow(
                 label = "Speed Accuracy",

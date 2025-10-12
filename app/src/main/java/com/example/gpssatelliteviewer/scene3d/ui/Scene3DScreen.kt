@@ -1,11 +1,8 @@
 package com.example.gpssatelliteviewer.scene3d.ui
 
-import android.graphics.Camera
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -53,6 +50,8 @@ import com.example.gpssatelliteviewer.scene3d.ui.menu.Scene3DParametersMenu
 import com.example.gpssatelliteviewer.app.theme.DarkBackground
 import com.example.gpssatelliteviewer.app.theme.GreenPrimary
 import com.example.gpssatelliteviewer.app.theme.TextLabel
+import com.example.gpssatelliteviewer.data.ListenerData
+import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.ui.infobox.EarthInfoBox
 import com.example.gpssatelliteviewer.scene3d.ui.infobox.SatelliteInfoBox
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
@@ -63,11 +62,8 @@ import io.github.sceneview.rememberEngine
 import io.github.sceneview.rememberEnvironmentLoader
 import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberView
-import io.github.sceneview.SceneView // hmm
-import io.github.sceneview.gesture.CameraGestureDetector
 import io.github.sceneview.rememberRenderer
 import io.github.sceneview.rememberScene
-import io.github.sceneview.rememberViewNodeManager
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,7 +72,8 @@ import kotlinx.coroutines.delay
 fun Satellite3DScreen(
     navController: NavController,
     gnssViewModel: GNSSViewModel,
-    locationNMEA: NMEALocationData
+    locationNMEA: NMEALocationData,
+    locationAndroidApi: ListenerData
 ) {
     // Immersive mode
     HideSystemUI()
@@ -84,17 +81,19 @@ fun Satellite3DScreen(
 
     val satelliteList by gnssViewModel.satelliteList.collectAsState()
 
-    val userLocation = Float3(
-        CoordinateConverter.nmeaCoordinateToDecimal(
-            locationNMEA.latitude,
-            locationNMEA.latHemisphere
-        ).toFloat(),
-        CoordinateConverter.nmeaCoordinateToDecimal(
-            locationNMEA.longitude,
-            locationNMEA.lonHemisphere
-        ).toFloat(),
-        locationNMEA.altitude.toFloat()
-    )
+    val userLocation = if (locationAndroidApi.latitude == 0.0 && locationAndroidApi.longitude == 0.0 ) {
+        Float3(
+            CoordinateConverter.nmeaCoordinateToDecimal(locationNMEA.latitude, locationNMEA.latHemisphere).toFloat(),
+            CoordinateConverter.nmeaCoordinateToDecimal(locationNMEA.longitude, locationNMEA.lonHemisphere).toFloat(),
+            locationNMEA.altitude.toFloat()
+        )
+    } else {
+        Float3(
+            locationAndroidApi.latitude.toFloat(),
+            locationAndroidApi.longitude.toFloat(),
+            locationAndroidApi.altitude.toFloat()
+        )
+    }
 
     // Satellite filtering
     val selectedConstellations = remember { mutableStateListOf<String>() }
@@ -115,7 +114,7 @@ fun Satellite3DScreen(
 
     val menuWidth = 300.dp
     val safeInsets = WindowInsets.Companion.safeDrawing.asPaddingValues()
-    val totalMenuWidth = remember { menuWidth + safeInsets.calculateLeftPadding(LayoutDirection.Ltr) }
+    val totalMenuWidth = menuWidth + safeInsets.calculateLeftPadding(LayoutDirection.Ltr)
     val menuAnimationDuration = 300
 
     // SceneView parameters init
@@ -125,9 +124,7 @@ fun Satellite3DScreen(
     val view = rememberView(engine)
     val renderer = rememberRenderer(engine)
     val coreScene = rememberScene(engine)
-    val parametersState by remember { mutableStateOf(Scene3DParametersState()) }
-    parametersState.updateLocation(userLocation)
-    //Log.d("user location", "${parametersState.parameters.location}")
+    val parametersState = remember { Scene3DParametersState().apply { updateLocation(userLocation) } }
 
     val scene = remember {
         Scene3D(
@@ -143,28 +140,22 @@ fun Satellite3DScreen(
     }
     var isSceneReady by remember { mutableStateOf(scene.isSceneReady()) }
 
-    // TODO do something about loading screen right now initializeScreen is useless except for loading screen
-    LaunchedEffect(scene) {
-        //scene.initializeScene()
-
-        while (!scene.isSceneReady()) {
-            delay(50)
-            isSceneReady = true
-        }
-
-        // Smooth transition not wanted but i don't know other way
-        // it is feels more responsive with 200 ms delay???
-        delay(200)
-        isSceneReady = true
-    }
-
     Box(
         modifier = Modifier.Companion
             .fillMaxSize()
             .background(DarkBackground)
     ) {
+        LaunchedEffect(scene) {
+            // Smooth transition not wanted but i don't know other way
+            // mandatory 20ms delay ??any less and there are race conditions??
+            delay(20)
+        }
+
         AnimatedVisibility(
             visible = !isSceneReady,
+            enter = fadeIn(
+                animationSpec = tween(10)
+            ),
             exit = fadeOut(
                 animationSpec = tween(500)
             )
@@ -172,6 +163,7 @@ fun Satellite3DScreen(
             Scene3DLoadingScreen(
                 modifier = Modifier.Companion.fillMaxSize()
             )
+            isSceneReady = true
         }
 
         // Handle location marker visibility changes
@@ -179,6 +171,7 @@ fun Satellite3DScreen(
         LaunchedEffect(showLocationMarker, userLocation) {
             if (isSceneReady) {
                 scene.setLocationMarkerVisible(showLocationMarker)
+                scene.updateUserLocation(userLocation)
             }
         }
 
@@ -199,10 +192,10 @@ fun Satellite3DScreen(
             Box(
                 modifier = Modifier.Companion
                     .fillMaxSize()
-                    .offset(x = if (scene.isMenuVisible()) totalMenuWidth/2 else 0.dp)
+                    .offset(x = if (scene.isMenuVisible()) totalMenuWidth / 2 else 0.dp)
             ) {
                 scene.Render()
-                scene.updateScene(filteredSatellites, userLocation)
+                scene.updateScene(filteredSatellites)
                 AnimatedVisibility(
                     visible = scene.isSatelliteInfoBoxVisible(),
                     enter = slideInHorizontally(
@@ -221,7 +214,7 @@ fun Satellite3DScreen(
                         totalMenuWidth = totalMenuWidth
                     )
                 }
-                //*  Box for earth info on click
+
                 AnimatedVisibility(
                     visible = scene.isEarthInfoBoxVisible(),
                     enter = slideInHorizontally(

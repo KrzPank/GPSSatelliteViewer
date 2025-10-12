@@ -17,11 +17,16 @@ data class GNSSHardwareInfo(
     val capabilities: GnssCapabilities? = null
 )
 
-/**         *** TO DO ***
-data class GNSSNavigationData(
-
+data class GNSSMeasurementData(
+    val svid: Int,
+    val constellation: String,
+    val cn0DbHz: Double?,
+    val snrInDb: Double?,
+    val accumulatedDeltaRangeMeters: Double?,
+    val pseudorangeRateMetersPerSecond: Double?,
+    val accumulatedDeltaRangeUncertaintyMeters: Double?,
+    val timeOffsetNanos: Double?
 )
-*/
 
 data class ListenerData(
     val time: String = "",
@@ -39,7 +44,6 @@ data class ListenerData(
     val longHemisphere: Char = 0.toChar(),
     val elapsedRealtimeNanos: Long = 0L,
 )
-
 
 data class NMEALocationData(
     val time: String = "",
