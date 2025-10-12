@@ -38,6 +38,7 @@ import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
 import com.example.gpssatelliteviewer.locationdeny.LocationDenyScreen
 import com.example.gpssatelliteviewer.mainscreen.MainScreen
 import com.example.gpssatelliteviewer.scene3d.ui.Satellite3DScreen
+import com.example.gpssatelliteviewer.statisticscreen.MainStatisticsScreen
 import com.example.gpssatelliteviewer.utils.SetupDarkSystemUI
 
 class MainActivity : ComponentActivity() {
@@ -123,12 +124,29 @@ fun AppNavigation(
             startDestination = "MainScreen"
         ) {
             composable("MainScreen") {
-                MainScreen(navController, gnssViewModel, nmeaViewModel, locationViewModel)
+                MainScreen(
+                    navController = navController,
+                    gnssViewModel =  gnssViewModel,
+                    nmeaViewModel = nmeaViewModel,
+                    locationViewModel = locationViewModel
+                )
             }
             composable("Satellite3DScreen") {
                 val locationNMEA by nmeaViewModel.locationNMEA.collectAsState()
-                val locationAndroidApi by locationViewModel.locationAndroidApi.collectAsState()
-                Satellite3DScreen(navController, gnssViewModel, locationNMEA, locationAndroidApi)
+                Satellite3DScreen(
+                    navController = navController,
+                    gnssViewModel = gnssViewModel,
+                    locationNMEA = locationNMEA,
+                    locationViewModel = locationViewModel
+                )
+            }
+            composable("MainStatisticsScreen") {
+                val nmeaMessageStatistics by nmeaViewModel.messageStatistics.collectAsState()
+                MainStatisticsScreen(
+                    navController = navController,
+                    gnssViewModel = gnssViewModel,
+                    nmeaMessageStatistics = nmeaMessageStatistics
+                )
             }
         }
     } else {

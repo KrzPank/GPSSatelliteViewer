@@ -35,7 +35,6 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val _gnssMeasurements = MutableStateFlow<List<GNSSMeasurementData>>(listOf())
     val gnssMeasurements: StateFlow<List<GNSSMeasurementData>> = _gnssMeasurements
 
-
     private val _snrHistory = MutableStateFlow<Map<String, MutableList<Float>>>(emptyMap())
     val snrHistory: StateFlow<Map<String, List<Float>>> = _snrHistory
 
@@ -47,10 +46,6 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
     private val gnssCallback = object : GnssStatus.Callback() {
         override fun onSatelliteStatusChanged(status: GnssStatus) {
-            // Cancel any ongoing parse
-            parseJob?.cancel()
-
-            // Start a new background parsing job
             parseJob = parsingScope.launch {
                 val list = mutableListOf<GNSSStatusData>()
                 for (i in 0 until status.satelliteCount) {
@@ -65,9 +60,6 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                         GnssStatus.CONSTELLATION_UNKNOWN -> "Unknown"
                         else -> "Other"
                     }
-
-                    if (status.getSvid(i) == 13 && constellation == "GPS") Log.d("az/el_test", "${status.getAzimuthDegrees(i)}, ${status.getElevationDegrees(i)}")
-
                     list.add(
                         GNSSStatusData(
                             constellation = constellation,
@@ -108,11 +100,13 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                     GNSSMeasurementData(
                         svid = m.svid,
                         constellation = constellation,
+                        carrierFrequencyRangeHz = m.carrierFrequencyHz,
                         cn0DbHz = m.cn0DbHz,
                         snrInDb = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) m.snrInDb else null,
                         accumulatedDeltaRangeMeters = m.accumulatedDeltaRangeMeters,
-                        pseudorangeRateMetersPerSecond = m.pseudorangeRateMetersPerSecond,
                         accumulatedDeltaRangeUncertaintyMeters = m.accumulatedDeltaRangeUncertaintyMeters,
+                        pseudorangeRateMetersPerSecond = m.pseudorangeRateMetersPerSecond,
+                        pseudorangeRateUncertaintyMetersPerSecond = m.pseudorangeRateUncertaintyMetersPerSecond,
                         timeOffsetNanos = m.timeOffsetNanos
                     )
                 }

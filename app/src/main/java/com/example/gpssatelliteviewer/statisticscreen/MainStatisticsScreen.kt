@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.mainscreen
+package com.example.gpssatelliteviewer.statisticscreen
 
 import android.os.Build
 import androidx.annotation.RequiresApi
@@ -26,20 +26,17 @@ import androidx.compose.runtime.getValue
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
-fun MainScreen(
+fun MainStatisticsScreen(
     navController: NavController,
     gnssViewModel: GNSSViewModel,
-    nmeaViewModel: NMEAViewModel,
-    locationViewModel: LocationViewModel
+    nmeaMessageStatistics: Map<String, Int>
 ) {
-    val pagerState = rememberPagerState(initialPage = 1, pageCount = { 4 })
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 1 })
     val expandedMap = remember { mutableStateMapOf<String, Boolean>() }
-
-    val gnssChipsetInfo by gnssViewModel.gnssHardwareInfo.collectAsState()
 
     // Determine label based on current page
     val topAppBarLabel = when (pagerState.currentPage) {
-        0 -> "GNSS Chipset Info"
+        0 -> "Average SNR per constellation in FIX"
         1 -> "Location Info"
         2 -> "Satellite Info"
         3 -> "Live NMEA Messages"
@@ -55,7 +52,7 @@ fun MainScreen(
                 menuKey = "mainMenu",
                 menuItems = listOf(
                     "Satellite 3D View" to { navController.navigate("Satellite3DScreen") },
-                    "Statistics" to { navController.navigate("MainStatisticsScreen") }
+                    "Location Info" to { navController.navigate("MainScreen") },
                 )
             )
         }
@@ -64,13 +61,13 @@ fun MainScreen(
             state = pagerState,
             modifier = Modifier.Companion
                 .padding(innerPadding),
-            beyondViewportPageCount = 3
+            //beyondViewportPageCount = 1
         ) { page ->
             when (page) {
-                0 -> GNSSChipsetInfoScreen(gnssChipsetInfo)
-                1 -> LocationInfoScreen(gnssViewModel, nmeaViewModel, locationViewModel)
-                2 -> SatelliteInfoScreen(gnssViewModel)
-                3 -> LiveNMEADataScreen(nmeaViewModel)
+                0 -> SNRStatisticsScreen(
+                    gnssViewModel = gnssViewModel,
+                    nmeaMessageStatistics = nmeaMessageStatistics
+                )
             }
         }
     }

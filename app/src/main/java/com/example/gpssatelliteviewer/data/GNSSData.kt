@@ -1,5 +1,6 @@
 package com.example.gpssatelliteviewer.data
 
+import android.hardware.ConsumerIrManager
 import android.location.GnssCapabilities
 
 data class GNSSStatusData(
@@ -20,12 +21,14 @@ data class GNSSHardwareInfo(
 data class GNSSMeasurementData(
     val svid: Int,
     val constellation: String,
-    val cn0DbHz: Double?,
-    val snrInDb: Double?,
-    val accumulatedDeltaRangeMeters: Double?,
-    val pseudorangeRateMetersPerSecond: Double?,
-    val accumulatedDeltaRangeUncertaintyMeters: Double?,
-    val timeOffsetNanos: Double?
+    val carrierFrequencyRangeHz: Float?, // carrier frequency
+    val cn0DbHz: Double?,   // signal strength
+    val snrInDb: Double?,   // signal to noise ratio
+    val accumulatedDeltaRangeMeters: Double?,   // carrier phase
+    val accumulatedDeltaRangeUncertaintyMeters: Double?, // carrier phase uncertainty
+    val pseudorangeRateMetersPerSecond: Double?, // Doppler effect
+    val pseudorangeRateUncertaintyMetersPerSecond: Double?, // doppler uncertainty
+    val timeOffsetNanos: Double?    // clock drift
 )
 
 data class ListenerData(

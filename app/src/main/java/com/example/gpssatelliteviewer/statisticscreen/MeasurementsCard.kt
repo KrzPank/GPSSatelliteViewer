@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.data.GNSSMeasurementData
+import com.example.gpssatelliteviewer.utils.InfoRow
 
 @SuppressLint("DefaultLocale")
 @Composable
@@ -49,44 +50,35 @@ fun MeasurementCard(measurement: GNSSMeasurementData) {
 
             Spacer(Modifier.height(6.dp))
 
-            if (measurement.snrInDb != null) {
-                Text(
-                    text = "SNR: %.1f dB".format(measurement.snrInDb),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.LightGray
-                )
+            Spacer(Modifier.height(8.dp))
+
+            // Information Rows
+            measurement.snrInDb?.let {
+                InfoRow(label = "SNR", value = String.format("%.1f dB", it))
+            }
+
+            measurement.carrierFrequencyRangeHz?.let {
+                InfoRow(label = "Carrier Freq", value = String.format("%.3f MHz", it / 1_000_000.0))
             }
 
             measurement.accumulatedDeltaRangeMeters?.let {
-                Text(
-                    text = "Carrier Phase Δ: %.3f m".format(it),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.LightGray
-                )
-            }
-
-            measurement.pseudorangeRateMetersPerSecond?.let {
-                Text(
-                    text = "Doppler Rate: %.3f m/s".format(it),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.LightGray
-                )
+                InfoRow(label = "Δ Range", value = String.format("%.3f m", it))
             }
 
             measurement.accumulatedDeltaRangeUncertaintyMeters?.let {
-                Text(
-                    text = "Uncertainty: %.3f m".format(it),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.LightGray
-                )
+                InfoRow(label = "Δ Range Unc.", value = String.format("%.3f m", it))
+            }
+
+            measurement.pseudorangeRateMetersPerSecond?.let {
+                InfoRow(label = "Pseudorange Rate", value = String.format("%.3f m/s", it))
+            }
+
+            measurement.pseudorangeRateUncertaintyMetersPerSecond?.let {
+                InfoRow(label = "Rate Uncertainty", value = String.format("%.3f m/s", it))
             }
 
             measurement.timeOffsetNanos?.let {
-                Text(
-                    text = "Clock Drift: %.3f ns".format(it),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.LightGray
-                )
+                InfoRow(label = "Clock Bias", value = String.format("%.3f ns", it))
             }
         }
     }

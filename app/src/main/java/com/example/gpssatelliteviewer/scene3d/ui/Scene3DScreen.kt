@@ -51,6 +51,7 @@ import com.example.gpssatelliteviewer.app.theme.DarkBackground
 import com.example.gpssatelliteviewer.app.theme.GreenPrimary
 import com.example.gpssatelliteviewer.app.theme.TextLabel
 import com.example.gpssatelliteviewer.data.ListenerData
+import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.ui.infobox.EarthInfoBox
 import com.example.gpssatelliteviewer.scene3d.ui.infobox.SatelliteInfoBox
@@ -73,13 +74,14 @@ fun Satellite3DScreen(
     navController: NavController,
     gnssViewModel: GNSSViewModel,
     locationNMEA: NMEALocationData,
-    locationAndroidApi: ListenerData
+    locationViewModel: LocationViewModel
 ) {
     // Immersive mode
     HideSystemUI()
     LockOrientationLandscape()
 
     val satelliteList by gnssViewModel.satelliteList.collectAsState()
+    val locationAndroidApi by locationViewModel.locationAndroidApi.collectAsState()
 
     val userLocation = if (locationAndroidApi.latitude == 0.0 && locationAndroidApi.longitude == 0.0 ) {
         Float3(
@@ -111,7 +113,6 @@ fun Satellite3DScreen(
 
     //  menu stuff
     var selectedTab by remember { mutableIntStateOf(0) }
-
     val menuWidth = 300.dp
     val safeInsets = WindowInsets.Companion.safeDrawing.asPaddingValues()
     val totalMenuWidth = menuWidth + safeInsets.calculateLeftPadding(LayoutDirection.Ltr)
@@ -119,11 +120,11 @@ fun Satellite3DScreen(
 
     // SceneView parameters init
     val engine = rememberEngine()
-    val modelLoader = rememberModelLoader(engine)
-    val environmentLoader = rememberEnvironmentLoader(engine)
     val view = rememberView(engine)
     val renderer = rememberRenderer(engine)
     val coreScene = rememberScene(engine)
+    val modelLoader = rememberModelLoader(engine)
+    val environmentLoader = rememberEnvironmentLoader(engine)
     val parametersState = remember { Scene3DParametersState().apply { updateLocation(userLocation) } }
 
     val scene = remember {
@@ -134,8 +135,8 @@ fun Satellite3DScreen(
             scene = coreScene,
             modelLoader = modelLoader,
             environmentLoader = environmentLoader,
+            parameters = parametersState.parameters,
             modifier = Modifier.fillMaxSize(),
-            parameters = parametersState.parameters
         )
     }
     var isSceneReady by remember { mutableStateOf(scene.isSceneReady()) }
@@ -149,6 +150,7 @@ fun Satellite3DScreen(
             // Smooth transition not wanted but i don't know other way
             // mandatory 20ms delay ??any less and there are race conditions??
             delay(20)
+            isSceneReady = true
         }
 
         AnimatedVisibility(
@@ -163,7 +165,6 @@ fun Satellite3DScreen(
             Scene3DLoadingScreen(
                 modifier = Modifier.Companion.fillMaxSize()
             )
-            isSceneReady = true
         }
 
         // Handle location marker visibility changes

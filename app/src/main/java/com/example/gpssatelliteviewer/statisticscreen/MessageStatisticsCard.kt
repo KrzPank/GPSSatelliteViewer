@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.mainscreen.screen.livenmea
+package com.example.gpssatelliteviewer.statisticscreen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize

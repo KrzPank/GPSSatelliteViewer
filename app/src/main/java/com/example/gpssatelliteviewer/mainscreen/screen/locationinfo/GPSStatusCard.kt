@@ -99,6 +99,7 @@ fun GPSStatusCard(
                 color = TextLabel,
                 fontSize = 15.sp
             )
+            Spacer(Modifier.Companion.height(4.dp))
             gpsStatus.averageSNRByConstellation.forEach { (constellation, snr) ->
                 InfoRow(
                     label = constellation,

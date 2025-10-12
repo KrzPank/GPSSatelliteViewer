@@ -135,20 +135,8 @@ fun LocationInfoScreen(
         items(measurements) { measurement ->
             MeasurementCard(measurement)
         }
-
-        // --- SNR Line Chart ---
-        //item {
-        //SNRChartCard(
-        //    snrHistory,
-        //    modifier = Modifier
-        //        .weight(1f)
-        //        .fillMaxSize()
-        //)
-        //}
     }
     // Dialog to choose location type
-
-    // TODO move to different card
     if (showPicker) {
         AlertDialog(
             onDismissRequest = { showPicker = false },

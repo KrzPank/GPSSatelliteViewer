@@ -164,6 +164,11 @@ fun AndroidApiLocationCard(
 
             Spacer(Modifier.Companion.height(8.dp))
 
+            InfoRow(
+                label = "Provider",
+                value = if (locationData.provider == "") "No data"
+                else locationData.provider
+            )
             InfoRow(label = "Current system time", value = currentSystemTime)
             InfoRow(
                 label = "Last update",
@@ -199,11 +204,6 @@ fun AndroidApiLocationCard(
                 label = "Speed",
                 value = if (locationData.speed == 0f) "No data"
                 else "%.2f m/s".format(locationData.speed)
-            )
-            InfoRow(
-                label = "Provider",
-                value = if (locationData.provider == "") "No data"
-                else locationData.provider
             )
             InfoRow(
                 label = "Speed Accuracy",
