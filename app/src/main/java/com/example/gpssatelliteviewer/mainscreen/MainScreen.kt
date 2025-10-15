@@ -50,7 +50,7 @@ fun MainScreen(
         topBar = {
             NavigationTopAppBar(
                 label = topAppBarLabel,
-                navController = navController,
+                //navController = navController,
                 expandedMap = expandedMap,
                 menuKey = "mainMenu",
                 menuItems = listOf(

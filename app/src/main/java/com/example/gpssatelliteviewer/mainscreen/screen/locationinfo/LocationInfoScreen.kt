@@ -2,6 +2,7 @@ package com.example.gpssatelliteviewer.mainscreen.screen.locationinfo
 
 import android.icu.text.SimpleDateFormat
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,7 +34,6 @@ import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
 import com.example.gpssatelliteviewer.app.theme.DarkBackground
 import com.example.gpssatelliteviewer.data.LOCATION_IS_LOCATION_ENABLED_TIMER
 import com.example.gpssatelliteviewer.statisticscreen.MeasurementCard
-import com.example.gpssatelliteviewer.statisticscreen.SNRChartCard
 import com.example.gpssatelliteviewer.utils.EmptyStateCard
 import kotlinx.coroutines.delay
 import java.sql.Date
@@ -48,7 +48,11 @@ fun LocationInfoScreen(
     locationViewModel: LocationViewModel
 ) {
     val satellites by gnssStatusViewModel.satelliteList.collectAsState()
-    val snrHistory by gnssStatusViewModel.snrHistory.collectAsState()
+
+    //val snrHistory by gnssStatusViewModel.constellationSNRHistory.collectAsState()
+
+    val satelliteChartData by gnssStatusViewModel.satelliteSNRHistory.collectAsState()
+    Log.d("SatelliteChartData", satelliteChartData.toString())
 
     val measurements by gnssStatusViewModel.gnssMeasurements.collectAsState()
 
@@ -94,10 +98,10 @@ fun LocationInfoScreen(
 
     LazyColumn(
         modifier = Modifier.Companion
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = 8.dp, vertical = 8.dp)
             .fillMaxSize()
             .background(DarkBackground),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // --- Location Card ---
         item {
@@ -136,9 +140,9 @@ fun LocationInfoScreen(
             )
         }
 
-        items(measurements) { measurement ->
-            MeasurementCard(measurement)
-        }
+        //items(measurements) { measurement ->
+        //    MeasurementCard(measurement)
+        //}
     }
 
     // Dialog to choose location type

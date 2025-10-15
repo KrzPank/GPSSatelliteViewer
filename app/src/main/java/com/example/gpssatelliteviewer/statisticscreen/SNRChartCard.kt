@@ -9,14 +9,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.gpssatelliteviewer.app.theme.ChartBeoDou
 import com.example.gpssatelliteviewer.app.theme.ChartGLONASS
@@ -37,6 +37,7 @@ import com.example.gpssatelliteviewer.app.theme.ChartGalileo
 import com.example.gpssatelliteviewer.app.theme.ChartIRNSS
 import com.example.gpssatelliteviewer.app.theme.ChartQZSS
 import com.example.gpssatelliteviewer.app.theme.ChartSBAS
+import com.example.gpssatelliteviewer.app.theme.TextHint
 import com.example.gpssatelliteviewer.app.theme.TextPrimary
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
 import com.github.mikephil.charting.charts.LineChart
@@ -48,14 +49,13 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
-import dev.romainguy.kotlin.math.all
 import java.sql.Date
 import java.util.Locale
 import kotlin.collections.component1
 import kotlin.collections.component2
 
 @Composable
-fun SNRChartCard(
+fun ConstellationSNRChartCard(
     snrHistory: Map<String, List<Float>>,
     modifier: Modifier = Modifier
 ) {
@@ -82,23 +82,24 @@ fun SNRChartCard(
         elevation = CardDefaults.cardElevation(4.dp),
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .height(300.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp) // inner card padding
+                .padding(top = 16.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
         ) {
+            /*
             Text(
                 text = "AVG. SNR in Fix",
                 style = MaterialTheme.typography.titleMedium,
                 fontSize = 20.sp,
-                //modifier = Modifier.padding(bottom = 8.dp)
             )
+
+             */
             GroupedSNRChart(
                 snrHistory = meaningfulSnrHistory,
-                selectedConstellations = selectedConstellations
+                selectedConstellations = selectedConstellations,
+                modifier.height(200.dp)
             )
         }
     }
@@ -110,7 +111,7 @@ fun SNRChartCard(
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp)
+                .padding(bottom = 4.dp)
         ) {
             allConstellations.forEach { constellation ->
                 val isSelected = constellation in selectedConstellations
@@ -125,8 +126,19 @@ fun SNRChartCard(
                     },
                     label = { Text(constellation) },
                     leadingIcon = if (isSelected) {
-                        { Icon(Icons.Default.Check, contentDescription = null) }
-                    } else null
+                        { Icon(
+                            Icons.Default.Bookmark,
+                            contentDescription = null,
+                            tint = TextHint,
+                            modifier = Modifier.size(18.dp))
+                        }
+                    } else {
+                        { Icon(Icons.Default.BookmarkBorder,
+                            contentDescription = null,
+                            tint = TextHint,
+                            modifier = Modifier.size(18.dp))
+                        }
+                    }
                 )
             }
         }
@@ -136,10 +148,11 @@ fun SNRChartCard(
 @Composable
 private fun GroupedSNRChart(
     snrHistory: Map<String, List<Float>>,
-    selectedConstellations: Set<String>
+    selectedConstellations: Set<String>,
+    modifier: Modifier = Modifier
 ) {
     AndroidView(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize(),
         factory = { context -> applyChartSettings(context) },
         update = { lineChart ->
@@ -202,9 +215,8 @@ private fun GroupedSNRChart(
     )
 }
 
-
 @Composable
-fun SNRChartCard(
+fun ConstellationSNRChartCard(
     snrHistory: List<Float>,
     constellation: String,
     modifier: Modifier = Modifier
@@ -212,8 +224,7 @@ fun SNRChartCard(
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = modifier
-            .height(160.dp)
-            .padding(vertical = 4.dp),
+            .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         AndroidView(

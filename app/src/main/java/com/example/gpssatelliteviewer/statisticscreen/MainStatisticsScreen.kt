@@ -44,7 +44,6 @@ fun MainStatisticsScreen(
         topBar = {
             NavigationTopAppBar(
                 label = topAppBarLabel,
-                navController = navController,
                 expandedMap = expandedMap,
                 menuKey = "mainMenu",
                 menuItems = listOf(

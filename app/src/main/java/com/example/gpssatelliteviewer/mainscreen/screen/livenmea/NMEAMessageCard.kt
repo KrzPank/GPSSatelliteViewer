@@ -30,7 +30,6 @@ fun NMEAMessageCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
             .animateContentSize()
     ) {
         Column(modifier = Modifier.Companion.padding(12.dp)) {
@@ -75,38 +74,42 @@ fun NMEAMessageCard(
     }
 }
 
-// TODO add rest of info to display
 @Composable
 private fun RenderGGAInfo(gga: NMEAMessage.GGA) {
     InfoRow("Time (UTC)", gga.time)
     InfoRow("Latitude", CoordinateConverter.nmeaCoordinateToDMS(gga.latitude, gga.latDirection))
     InfoRow("Longitude", CoordinateConverter.nmeaCoordinateToDMS(gga.longitude, gga.lonDirection))
     InfoRow("Fix Quality", mapFixQuality(gga.fixQuality))
-    InfoRow("Satellites", gga.satelliteCount.toString())
-    InfoRow("HDOP", gga.horizontalDilution.toString())
+    InfoRow("Satellites", "${gga.satelliteCount}")
+    InfoRow("HDOP", "${gga.horizontalDilution}")
     InfoRow("Altitude", "${gga.altitude} ${gga.altitudeUnits}")
     InfoRow("Geoid Separation", "${gga.geoidSeparation} ${gga.geoidSeparationUnits}")
+    InfoRow("Dgps Age", "${gga.dgpsAge}")
+    InfoRow("Dgps Station ID", "${gga.dgpsStationId}")
 }
 
 @Composable
 private fun RenderRMCInfo(rmc: NMEAMessage.RMC) {
     InfoRow("Time (UTC)", rmc.time)
-    InfoRow("Date", rmc.date)
+    InfoRow("Status", "${rmc.status}")
     InfoRow("Latitude", CoordinateConverter.nmeaCoordinateToDMS(rmc.latitude, rmc.latDirection))
     InfoRow("Longitude", CoordinateConverter.nmeaCoordinateToDMS(rmc.longitude, rmc.lonDirection))
     InfoRow("Speed (knots)", rmc.speedOverGround.toString())
     InfoRow("Course", rmc.courseOverGround.toString())
-    InfoRow("Magnetic Variation", rmc.magneticVariation?.toString() ?: "-")
+    InfoRow("Date", rmc.date)
+    InfoRow("Magnetic Variation", rmc.magneticVariation?.toString() ?: "")
+    InfoRow("Magnetic Variation Direction", rmc.variationDirection?.toString() ?: "")
 }
 
 @Composable
 private fun RenderGSAInfo(gsa: NMEAMessage.GSA) {
     InfoRow("Mode", gsa.mode.toString())
     InfoRow("Fix Type", mapFixType(gsa.fixType))
+    InfoRow("Satellites IDs", gsa.satelliteIds.joinToString(", "))
     InfoRow("PDOP", gsa.pdop.toString())
     InfoRow("HDOP", gsa.hdop.toString())
     InfoRow("VDOP", gsa.vdop.toString())
-    InfoRow("Satellites IDs", gsa.satelliteIds.joinToString(", "))
+    InfoRow("System ID", gsa.systemId?.toString() ?: "")
 }
 
 @Composable

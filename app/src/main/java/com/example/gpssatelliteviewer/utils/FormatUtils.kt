@@ -41,7 +41,10 @@ import androidx.navigation.NavController
 import com.example.gpssatelliteviewer.app.theme.TextLabel
 import com.example.gpssatelliteviewer.app.theme.ValueText
 import com.example.gpssatelliteviewer.app.theme.GreenPrimary
+import com.example.gpssatelliteviewer.app.theme.StatusError
+import com.example.gpssatelliteviewer.app.theme.StatusGood
 import com.example.gpssatelliteviewer.app.theme.TextHint
+import com.example.gpssatelliteviewer.app.theme.TextSecondary
 
 @Composable
 fun InfoRow(
@@ -78,7 +81,7 @@ fun CapabilityRow(
         Icon(
             imageVector = if (supported) Icons.Default.Check else Icons.Default.Close,
             contentDescription = if (supported) "Supported" else "Not supported",
-            tint = if (supported) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+            tint = if (supported) StatusGood else StatusError,
             modifier = Modifier.size(16.dp)
         )
         Spacer(Modifier.width(8.dp))
@@ -90,12 +93,9 @@ fun CapabilityRow(
 @Composable
 fun NavigationTopAppBar(
     label: String,
-    navController: NavController,
     expandedMap: MutableMap<String, Boolean>,
     menuKey: String = "mainMenu",
-    menuItems: List<Pair<String, () -> Unit>> = listOf(
-        "Satellite 3D View" to { navController.navigate("Satellite3DScreen") }
-    )
+    menuItems: List<Pair<String, () -> Unit>>
 ) {
     val expanded = expandedMap[menuKey] == true
 

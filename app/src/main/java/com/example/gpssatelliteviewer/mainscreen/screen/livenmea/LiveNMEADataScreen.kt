@@ -2,7 +2,7 @@ package com.example.gpssatelliteviewer.mainscreen.screen.livenmea
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +20,7 @@ import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
 
 // GOLD NEVER FORGET
 import androidx.compose.runtime.getValue
-import com.example.gpssatelliteviewer.statisticscreen.MessageStatisticsCard
+import com.example.gpssatelliteviewer.mainscreen.screen.livenmea.NMEAMessageStatisticsCard
 import com.example.gpssatelliteviewer.utils.EmptyStateCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -33,68 +33,66 @@ fun LiveNMEADataScreen(
     val nmeaMessageMap by viewModel.nmeaMessageMap.collectAsState()
     val messageStatistics by viewModel.messageStatistics.collectAsState()
 
-    var statisticsExpanded = remember { mutableStateOf(true) }
+    var statisticsExpanded = remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier.Companion
-            .fillMaxSize()
+    LazyColumn(
+        modifier = Modifier
+            //.padding(top = 4.dp)
+            .padding(horizontal = 8.dp, vertical = 8.dp)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        LazyColumn(
-            modifier = Modifier.Companion
-                .padding(vertical = 8.dp, horizontal = 12.dp)
-        ) {
-            if (messageStatistics.isNotEmpty()) {
-                item {
-                    MessageStatisticsCard(
-                        statistics = messageStatistics,
-                        isExpanded = statisticsExpanded.value,
-                        onExpandedChange = { statisticsExpanded.value = it }
-                    )
-                }
-                // Define the order for standard NMEA messages
-                val standardOrder = listOf("GGA", "RMC", "GSA", "VTG")
-                val gsvMessages = latestMessages.filter { it.key.contains("GSV") }
-                val standardMessages = latestMessages.filter { it.key in standardOrder }
-                val vendorMessages =
-                    latestMessages.filter { it.key !in standardOrder && !it.key.contains("GSV") }
+        if (messageStatistics.isNotEmpty()) {
+            item {
+                NMEAMessageStatisticsCard(
+                    statistics = messageStatistics,
+                    isExpanded = statisticsExpanded.value,
+                    onExpandedChange = { statisticsExpanded.value = it }
+                )
+            }
+            // Define the order for standard NMEA messages
+            val standardOrder = listOf("GGA", "RMC", "GSA", "VTG")
+            val gsvMessages = latestMessages.filter { it.key.contains("GSV") }
+            val standardMessages = latestMessages.filter { it.key in standardOrder }
+            val vendorMessages =
+                latestMessages.filter { it.key !in standardOrder && !it.key.contains("GSV") }
 
-                // Show standard NMEA messages in defined order
-                items(
-                    items = standardOrder.mapNotNull { key ->
-                        standardMessages[key]?.let { message -> key to message }
-                    },
-                    key = { it.first }
-                ) { (type, message) ->
-                    NMEAMessageCard(
-                        message = message,
-                        rawMessage = nmeaMessageMap[type] ?: ""
-                    )
-                }
+            // Show standard NMEA messages in defined order
+            items(
+                items = standardOrder.mapNotNull { key ->
+                    standardMessages[key]?.let { message -> key to message }
+                },
+                key = { it.first }
+            ) { (type, message) ->
+                NMEAMessageCard(
+                    message = message,
+                    rawMessage = nmeaMessageMap[type] ?: ""
+                )
+            }
 
-                // Show GSV messages as a group if any exist
-                if (gsvMessages.isNotEmpty()) {
-                    item(key = "gsv_group") {
-                        RenderGSVInfo(gsvMessages = gsvMessages)
-                    }
+            // Show GSV messages as a group if any exist
+            if (gsvMessages.isNotEmpty()) {
+                item(key = "gsv_group") {
+                    RenderGSVInfo(gsvMessages = gsvMessages)
                 }
+            }
 
-                // Show vendor/unknown messages last
-                items(
-                    items = vendorMessages.entries.toList(),
-                    key = { it.key }
-                ) { (type, message) ->
-                    NMEAMessageCard(
-                        message = message,
-                        rawMessage = nmeaMessageMap[type] ?: ""
-                    )
-                }
-            } else {
-                item {
-                    EmptyStateCard(
-                        message = "No NMEA data received yet.",
-                        icon = Icons.Default.SignalCellularNodata
-                    )
-                }
+            // Show vendor/unknown messages last
+            items(
+                items = vendorMessages.entries.toList(),
+                key = { it.key }
+            ) { (type, message) ->
+                NMEAMessageCard(
+                    message = message,
+                    rawMessage = nmeaMessageMap[type] ?: ""
+                )
+            }
+        } else {
+            item {
+                EmptyStateCard(
+                    message = "No NMEA data received yet.",
+                    icon = Icons.Default.SignalCellularNodata
+                )
             }
         }
     }

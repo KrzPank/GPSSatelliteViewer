@@ -30,7 +30,6 @@ fun GNSSChipsetInfoCard(
 ) {
     Card(
         modifier = modifier
-            .padding(4.dp)
             .fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(4.dp)
@@ -75,9 +74,8 @@ fun GNSSChipsetCapabilitiesCard(
 ) {
     Card(
         modifier = modifier
-            .padding(4.dp)
             .fillMaxWidth(),
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.Companion.padding(12.dp)) {

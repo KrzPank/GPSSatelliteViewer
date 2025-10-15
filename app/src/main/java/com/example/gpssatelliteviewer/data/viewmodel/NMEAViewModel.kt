@@ -57,7 +57,6 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun handleNMEAMessage(message: String) {
-        // Quick validation before launching expensive parsing
         if (message.isBlank() || !message.startsWith("$")) return
         
         // Parse in background thread to avoid blocking UI
@@ -80,11 +79,9 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
                     val currentStats = _messageStatistics.value.toMutableMap()
                     currentStats[key] = (currentStats[key] ?: 0) + 1
                     _messageStatistics.value = currentStats
-                    
-                    // Update raw message map with consistent key
+
                     _nmeaMessageMap.value = _nmeaMessageMap.value + (key to message)
-                    
-                    // Update parsed messages if parsing was successful
+
                     parsedMessage?.let { parsed ->
                         _latestMessages.value = _latestMessages.value + (key to parsed)
                         updateLocationData()

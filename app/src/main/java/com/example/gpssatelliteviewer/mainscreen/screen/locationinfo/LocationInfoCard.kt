@@ -44,7 +44,6 @@ fun NMEALocationCard(
         shape = RoundedCornerShape(12.dp),
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
             .then(if (onClick != null) Modifier.Companion.clickable { onClick() } else Modifier.Companion),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {

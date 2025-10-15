@@ -36,8 +36,7 @@ fun GPSStatusCard(
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.Companion.padding(16.dp)) {

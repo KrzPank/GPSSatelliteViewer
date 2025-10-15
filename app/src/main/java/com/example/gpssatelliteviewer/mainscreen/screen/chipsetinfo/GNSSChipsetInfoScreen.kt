@@ -21,9 +21,9 @@ fun GNSSChipsetInfoScreen(
 ) {
     LazyColumn(
         modifier = modifier
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = 8.dp, vertical = 8.dp)
             .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         item {
             GNSSChipsetInfoCard(gnssHardwareInfo)

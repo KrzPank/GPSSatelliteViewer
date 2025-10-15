@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.statisticscreen
+package com.example.gpssatelliteviewer.mainscreen.screen.livenmea
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.utils.InfoRow
 
 @Composable
-fun MessageStatisticsCard(
+fun NMEAMessageStatisticsCard(
     statistics: Map<String, Int>,
     isExpanded: Boolean,
     onExpandedChange: (Boolean) -> Unit,
@@ -39,7 +39,6 @@ fun MessageStatisticsCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
             .animateContentSize(
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,
@@ -49,13 +48,14 @@ fun MessageStatisticsCard(
     ) {
         Column(
             modifier = modifier
-                .padding(12.dp)) {
+                .padding(12.dp)
+        ) {
             Row(
                 modifier = modifier
                     .fillMaxWidth()
                     .clickable { onExpandedChange(!isExpanded) },
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Companion.CenterVertically
             ) {
                 Text(
                     text = "Message Statistics",
@@ -84,7 +84,8 @@ fun MessageStatisticsCard(
                 Column {
                     Spacer(
                         modifier = modifier
-                            .height(6.dp))
+                            .height(6.dp)
+                    )
 
                     val totalMessages = statistics.values.sum()
 

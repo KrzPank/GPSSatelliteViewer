@@ -4,7 +4,9 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -31,16 +33,18 @@ fun SatelliteInfoScreen(
     gnssViewModel: GNSSViewModel
 ) {
     val satellites by gnssViewModel.satelliteList.collectAsState()
-    val groupedSatellites = satellites.groupBy { it.constellation }
+    val groupedSatellites = satellites
+        .sortedBy { it.prn }
+        .groupBy { it.constellation }
 
     val expandedMap = remember { mutableStateMapOf<String, Boolean>() }
 
     LazyColumn(
         modifier = Modifier.Companion
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(horizontal = 8.dp, vertical = 8.dp)
             .fillMaxSize()
             .background(DarkBackground),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         if (groupedSatellites.isNotEmpty()) {
             groupedSatellites.forEach { (constellation, satellitesInGroup) ->
@@ -60,6 +64,8 @@ fun SatelliteInfoScreen(
                         SatelliteInfoCard(satellites)
                     }
                 }
+
+                item { /* empty item as a 4.dp spacer */ }
             }
         } else {
             item {
