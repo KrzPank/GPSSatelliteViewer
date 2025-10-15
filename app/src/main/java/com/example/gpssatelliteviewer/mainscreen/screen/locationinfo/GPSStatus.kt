@@ -96,7 +96,7 @@ class GPSStatus(
             satellitesUsedInFix >= 4 && averageSNRInFix >= 15f -> {
                 GPSStatusState.Fair
             }
-            satellitesUsedInFix >= 3 && averageSNRInFix >= 5f -> {
+            satellitesUsedInFix >= 1 && averageSNRInFix >= 5f -> {
                 GPSStatusState.Poor
             }
             satellitesUsedInFix == 0 && averageSNRInFix == 0f -> {
@@ -116,7 +116,7 @@ class GPSStatus(
             if (valid.isNotEmpty()) {
                 valid.map { it.snr }.average().toFloat()
             } else {
-                0f
+                0.0f
             }
         }
     }
@@ -130,7 +130,7 @@ class GPSStatus(
             if (valid.isNotEmpty()) {
                 valid.map { it.snr }.average().toFloat()
             } else {
-                0f
+                0.0f
             }
         }
     }
@@ -139,7 +139,7 @@ class GPSStatus(
         val satellitesInFix = satellites.filter { it.usedInFix }
         return if (satellitesInFix.isNotEmpty()) {
             satellitesInFix.map { it.snr }.average().toFloat()
-        } else 0f
+        } else 0.0f
     }
 
     fun getFixCount(): Int {
@@ -149,6 +149,15 @@ class GPSStatus(
     fun getFixCountByConstellation(constellation: String): Int {
         val satellitesInFix = satellites.filter { it.usedInFix }
         return satellitesInFix.count { it.constellation == constellation }
+    }
+
+    fun getSNRNot0CountByConstellation(constellation: String): Int {
+        val satelliteSNRNot0 = satellites.filter { it.snr != 0f }
+        return satelliteSNRNot0.count() { it.constellation == constellation}
+    }
+
+    fun getGroupedSatelliteCount(constellation: String): Int {
+        return satellites.count() { it.constellation == constellation }
     }
 
     fun getSatelliteCount(): Int {

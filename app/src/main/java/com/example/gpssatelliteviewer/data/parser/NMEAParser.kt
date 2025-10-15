@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import com.example.gpssatelliteviewer.data.NMEAMessage
 import com.example.gpssatelliteviewer.data.SatInfo
 
-
 object NMEAParser {
     fun parseMessage(message: String): NMEAMessage? {
         val messageType = getMessageType(message)
@@ -174,10 +173,7 @@ object NMEAParser {
             .dropLast(1)
     }
 
-
     fun getMessageType(message: String): String {
-        if (message.isBlank() || !message.startsWith("$")) return "UNKNOWN"
-        
         val parts = message.split(",")
         if (parts.isEmpty() || !parts[0].startsWith("$") || parts[0].length <= 1) {
             return "UNKNOWN"

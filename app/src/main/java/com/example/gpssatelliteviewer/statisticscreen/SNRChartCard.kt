@@ -2,17 +2,33 @@ package com.example.gpssatelliteviewer.statisticscreen
 
 import android.content.Context
 import android.icu.text.SimpleDateFormat
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.gpssatelliteviewer.app.theme.ChartBeoDou
 import com.example.gpssatelliteviewer.app.theme.ChartGLONASS
@@ -25,64 +41,167 @@ import com.example.gpssatelliteviewer.app.theme.TextPrimary
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Legend
+import com.github.mikephil.charting.components.LegendEntry
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.ValueFormatter
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
+import dev.romainguy.kotlin.math.all
 import java.sql.Date
 import java.util.Locale
-import kotlin.math.round
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 @Composable
 fun SNRChartCard(
     snrHistory: Map<String, List<Float>>,
     modifier: Modifier = Modifier
 ) {
+    val meaningfulSnrHistory = snrHistory.filterValues { list ->
+        list.any { it != 0f }
+    }
+
+    val allConstellations = meaningfulSnrHistory.keys.toList()
+    var selectedConstellations by remember { mutableStateOf(allConstellations.toSet()) }
+    var previousConstellations by remember { mutableStateOf(allConstellations.toSet()) }
+
+    LaunchedEffect(allConstellations) {
+        val newOnes = allConstellations.filterNot { it in previousConstellations }
+        previousConstellations = allConstellations.toSet()
+
+        if (newOnes.isNotEmpty()) {
+            selectedConstellations = selectedConstellations + newOnes
+        }
+    }
+
+    // --- Chart Card ---
     Card(
         shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(4.dp),
         modifier = modifier
-            .height(220.dp)
-            .padding(vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .height(300.dp)
     ) {
-        AndroidView(
-            modifier = modifier
+        Column(
+            modifier = Modifier
                 .fillMaxSize()
-                .padding(10.dp),
-            factory = { context -> applyChartSettings(context) },
-            update = { lineChart ->
-                val dataSets =
-                    snrHistory.entries.mapIndexedNotNull { index, (constellation, snrList) ->
-                        val clipped = if (snrList.size > CHART_UPDATE_WINDOW) snrList.takeLast(
-                            CHART_UPDATE_WINDOW
-                        ) else snrList
+                .padding(16.dp) // inner card padding
+        ) {
+            Text(
+                text = "AVG. SNR in Fix",
+                style = MaterialTheme.typography.titleMedium,
+                fontSize = 20.sp,
+                //modifier = Modifier.padding(bottom = 8.dp)
+            )
+            GroupedSNRChart(
+                snrHistory = meaningfulSnrHistory,
+                selectedConstellations = selectedConstellations
+            )
+        }
+    }
 
-                        if (clipped.isEmpty()) return@mapIndexedNotNull null // skip empty series
-
-                        val startX = (CHART_UPDATE_WINDOW - clipped.size).coerceAtLeast(0)
-                        val entries = clipped.mapIndexedNotNull { i, snr ->
-                            if (snr != 0f) {
-                                Entry(startX + i.toFloat(), snr)
-                            } else null
+    // --- Filter Chips ---
+    if (allConstellations.isNotEmpty()) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+        ) {
+            allConstellations.forEach { constellation ->
+                val isSelected = constellation in selectedConstellations
+                FilterChip(
+                    selected = isSelected,
+                    onClick = {
+                        selectedConstellations = if (isSelected) {
+                            selectedConstellations - constellation
+                        } else {
+                            selectedConstellations + constellation
                         }
-
-                        LineDataSet(entries, constellation).apply {
-                            color = getConstellationColor(constellation).toArgb()
-                            setDrawCircles(false)
-                            lineWidth = 2f
-                            setDrawValues(false)
-                            mode = LineDataSet.Mode.LINEAR
-                        }
-                    }
-
-                lineChart.data = LineData(dataSets)
-                lineChart.setVisibleXRangeMaximum(CHART_UPDATE_WINDOW.toFloat())
-                lineChart.invalidate() // Refresh the chart
+                    },
+                    label = { Text(constellation) },
+                    leadingIcon = if (isSelected) {
+                        { Icon(Icons.Default.Check, contentDescription = null) }
+                    } else null
+                )
             }
-        )
+        }
     }
 }
+
+@Composable
+private fun GroupedSNRChart(
+    snrHistory: Map<String, List<Float>>,
+    selectedConstellations: Set<String>
+) {
+    AndroidView(
+        modifier = Modifier
+            .fillMaxSize(),
+        factory = { context -> applyChartSettings(context) },
+        update = { lineChart ->
+            // Filter only selected constellations
+            val filteredSnr = snrHistory.filterKeys { it in selectedConstellations }
+
+            val dataSets = filteredSnr.entries.flatMap { (constellation, snrList) ->
+                val clipped = if (snrList.size > CHART_UPDATE_WINDOW)
+                    snrList.takeLast(CHART_UPDATE_WINDOW)
+                else snrList
+
+                if (clipped.isEmpty()) return@flatMap emptyList<ILineDataSet>()
+
+                val startX = (CHART_UPDATE_WINDOW - clipped.size).coerceAtLeast(0)
+
+                val dataset = mutableListOf<LineDataSet>()
+                var currentEntries = mutableListOf<Entry>()
+
+                clipped.forEachIndexed { i, snr ->
+                    val x = (startX + i).toFloat()
+                    if (snr == 0f) {
+                        if (currentEntries.isNotEmpty()) {
+                            val ds = LineDataSet(currentEntries, constellation).apply {
+                                color = getConstellationColor(constellation).toArgb()
+                                setDrawCircles(false)
+                                lineWidth = 2f
+                                setDrawValues(false)
+                                mode = LineDataSet.Mode.LINEAR
+                                isHighlightEnabled = false
+                            }
+                            dataset.add(ds)
+                            currentEntries = mutableListOf()
+                        }
+                    } else {
+                        currentEntries.add(Entry(x, snr))
+                    }
+                }
+
+                if (currentEntries.isNotEmpty()) {
+                    val ds = LineDataSet(currentEntries, constellation).apply {
+                        color = getConstellationColor(constellation).toArgb()
+                        setDrawCircles(false)
+                        lineWidth = 2f
+                        setDrawValues(false)
+                        mode = LineDataSet.Mode.LINEAR
+                        isHighlightEnabled = false
+                    }
+                    dataset.add(ds)
+                }
+
+                dataset
+            }
+
+            lineChart.data = LineData(dataSets)
+            applyDistinctLegend(lineChart, dataSets)
+            lineChart.setVisibleXRangeMaximum(CHART_UPDATE_WINDOW.toFloat())
+            lineChart.notifyDataSetChanged()
+            lineChart.invalidate()
+        }
+    )
+}
+
 
 @Composable
 fun SNRChartCard(
@@ -101,30 +220,92 @@ fun SNRChartCard(
             modifier = modifier
                 .fillMaxSize()
                 .padding(10.dp),
-            factory = { context -> applyChartSettings(context) },
+            factory = { context ->
+                applyChartSettings(context)
+                      },
             update = update@{ lineChart ->
                 val clipped = if (snrHistory.size > CHART_UPDATE_WINDOW)
                     snrHistory.takeLast(CHART_UPDATE_WINDOW)
-                    else snrHistory
+                else snrHistory
 
                 val startX = (CHART_UPDATE_WINDOW - clipped.size).coerceAtLeast(0)
-                val entries = clipped.mapIndexedNotNull { i, snr ->
-                    if (snr != 0f) Entry(startX + i.toFloat(), snr) else null
+
+                // Build contiguous segments: each non-zero run becomes its own dataset
+                val datasets = mutableListOf<LineDataSet>()
+                var currentEntries = mutableListOf<Entry>()
+
+                clipped.forEachIndexed { i, snr ->
+                    val x = (startX + i).toFloat()
+                    if (snr == 0f) {
+                        // gap -> flush current segment if any
+                        if (currentEntries.isNotEmpty()) {
+                            val ds = LineDataSet(currentEntries, constellation).apply {
+                                color = getConstellationColor(constellation).toArgb()
+                                setDrawCircles(false)
+                                lineWidth = 2f
+                                setDrawValues(false)
+                                mode = LineDataSet.Mode.LINEAR
+                                isHighlightEnabled = false
+                            }
+                            datasets.add(ds)
+                            currentEntries = mutableListOf()
+                        }
+                    } else {
+                        currentEntries.add(Entry(x, snr))
+                    }
                 }
 
-                val dataSet = LineDataSet(entries, constellation.ifBlank { "SNR" }).apply {
-                    color = getConstellationColor(constellation = constellation).toArgb()
-                    setDrawCircles(false)
-                    lineWidth = 2f
-                    setDrawValues(false)
-                    mode = LineDataSet.Mode.LINEAR
+                // flush last segment
+                if (currentEntries.isNotEmpty()) {
+                    val ds = LineDataSet(currentEntries, constellation).apply {
+                        color = getConstellationColor(constellation).toArgb()
+                        setDrawCircles(false)
+                        lineWidth = 2f
+                        setDrawValues(false)
+                        mode = LineDataSet.Mode.LINEAR
+                        isHighlightEnabled = false
+                    }
+                    datasets.add(ds)
                 }
 
-                lineChart.data = LineData(dataSet)
+                lineChart.data = LineData(datasets as List<ILineDataSet>)
+                applyDistinctLegend(lineChart, datasets)
+
                 lineChart.setVisibleXRangeMaximum(CHART_UPDATE_WINDOW.toFloat())
-                lineChart.invalidate() // Refresh chart
+                lineChart.notifyDataSetChanged()
+                lineChart.invalidate()
             }
         )
+    }
+}
+
+private fun applyDistinctLegend(
+    lineChart: LineChart,
+    datasets: List<ILineDataSet>,
+) {
+    val legend = lineChart.legend
+    if (datasets.isEmpty()) {
+        legend.resetCustom()
+        legend.isEnabled = false
+    } else {
+        legend.isEnabled = true
+        legend.form = Legend.LegendForm.LINE
+        legend.textColor = TextPrimary.toArgb()
+        legend.textSize = 14f
+
+        val distinctLabelColor = datasets
+            .map { ds -> ds.label to ds.color }
+            .distinctBy { it.first }              // keep one entry per label
+
+        // Convert to LegendEntry list (set color and label)
+        val legendEntries = distinctLabelColor.map { (lbl, color) ->
+            LegendEntry().apply {
+                label = lbl
+                form = Legend.LegendForm.LINE
+                formColor = color
+            }
+        }
+        legend.setCustom(legendEntries)
     }
 }
 

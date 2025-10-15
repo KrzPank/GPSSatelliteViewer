@@ -1,6 +1,5 @@
 package com.example.gpssatelliteviewer.data
 
-import android.hardware.ConsumerIrManager
 import android.location.GnssCapabilities
 
 data class GNSSStatusData(
@@ -39,7 +38,7 @@ data class ListenerData(
     val accuracy: Float = 0f,
     val speed: Float = 0f,
     val bearing: Float = 0f,
-    val verticalAccuracy: Float? = null,  // available API 26+
+    val verticalAccuracy: Float? = null,  // API 26+
     val speedAccuracy: Float? = null,     // API 26+
     val bearingAccuracy: Float? = null,   // API 26+
     val provider: String = "",

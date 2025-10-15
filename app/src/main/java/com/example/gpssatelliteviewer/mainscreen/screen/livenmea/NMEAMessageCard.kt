@@ -75,6 +75,7 @@ fun NMEAMessageCard(
     }
 }
 
+// TODO add rest of info to display
 @Composable
 private fun RenderGGAInfo(gga: NMEAMessage.GGA) {
     InfoRow("Time (UTC)", gga.time)

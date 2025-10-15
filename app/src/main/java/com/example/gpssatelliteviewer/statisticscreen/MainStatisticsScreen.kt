@@ -37,9 +37,6 @@ fun MainStatisticsScreen(
     // Determine label based on current page
     val topAppBarLabel = when (pagerState.currentPage) {
         0 -> "Average SNR per constellation in FIX"
-        1 -> "Location Info"
-        2 -> "Satellite Info"
-        3 -> "Live NMEA Messages"
         else -> ""
     }
 
@@ -65,8 +62,7 @@ fun MainStatisticsScreen(
         ) { page ->
             when (page) {
                 0 -> SNRStatisticsScreen(
-                    gnssViewModel = gnssViewModel,
-                    nmeaMessageStatistics = nmeaMessageStatistics
+                    gnssViewModel = gnssViewModel
                 )
             }
         }

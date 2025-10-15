@@ -20,8 +20,6 @@ import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
 
 // GOLD NEVER FORGET
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import com.example.gpssatelliteviewer.statisticscreen.MessageStatisticsCard
 import com.example.gpssatelliteviewer.utils.EmptyStateCard
 

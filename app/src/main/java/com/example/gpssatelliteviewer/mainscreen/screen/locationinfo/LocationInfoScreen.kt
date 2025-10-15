@@ -48,7 +48,7 @@ fun LocationInfoScreen(
     locationViewModel: LocationViewModel
 ) {
     val satellites by gnssStatusViewModel.satelliteList.collectAsState()
-    //val snrHistory by gnssStatusViewModel.snrHistory.collectAsState()
+    val snrHistory by gnssStatusViewModel.snrHistory.collectAsState()
 
     val measurements by gnssStatusViewModel.gnssMeasurements.collectAsState()
 
@@ -129,13 +129,18 @@ fun LocationInfoScreen(
                 hasLocationAndroidApi -> true
                 else -> false
             }
-            GPSStatusCard(satellites, hasLocation, isLocationEnabled)
+            GPSStatusCard(
+                satellites = satellites,
+                hasLocation = hasLocation,
+                isLocationEnabled = isLocationEnabled
+            )
         }
 
         items(measurements) { measurement ->
             MeasurementCard(measurement)
         }
     }
+
     // Dialog to choose location type
     if (showPicker) {
         AlertDialog(

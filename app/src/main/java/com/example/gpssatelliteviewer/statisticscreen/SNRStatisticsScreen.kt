@@ -24,11 +24,9 @@ import com.example.gpssatelliteviewer.app.theme.DarkBackground
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun SNRStatisticsScreen(
-    gnssViewModel: GNSSViewModel,
-    nmeaMessageStatistics: Map<String, Int>
+    gnssViewModel: GNSSViewModel
 ) {
     val snrStatistic by gnssViewModel.snrHistory.collectAsState()
-
     val keys = snrStatistic.keys.toList()
 
     LazyColumn(
@@ -56,9 +54,10 @@ fun SNRStatisticsScreen(
                 )
             }
         } else {
-            item{
-            SNRChartCard(snrHistory = snrStatistic)
+            item {
+                SNRChartCard(snrHistory = snrStatistic)
             }
+
             items(validKeys) { key ->
                 SNRChartCard(
                     snrHistory = snrStatistic[key]!!,
