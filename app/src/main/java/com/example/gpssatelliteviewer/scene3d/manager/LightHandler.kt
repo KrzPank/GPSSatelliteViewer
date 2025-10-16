@@ -3,14 +3,16 @@ package com.example.gpssatelliteviewer.scene3d.manager
 import android.util.Log
 import com.example.gpssatelliteviewer.scene3d.LightParameters
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
+import com.example.gpssatelliteviewer.utils.length
+import com.example.gpssatelliteviewer.utils.normalized
 import com.google.android.filament.Engine
 import com.google.android.filament.EntityManager
 import com.google.android.filament.LightManager
 import dev.romainguy.kotlin.math.Float3
+import dev.romainguy.kotlin.math.cross
 import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.LightNode
 import io.github.sceneview.node.Node
-import kotlin.math.sqrt
 
 class LightHandler(
     private val engine: Engine,
@@ -136,11 +138,6 @@ class LightHandler(
         updateSunLight()
     }
 
-    /**
-     * Calculate optimal light direction for sphere shading
-     * Creates a light that illuminates from the upper-right relative to camera view,
-     * leaving shadows on the left side of spheres for better 3D depth perception
-     */
     private fun calculateOptimalLightDirection(): Float3 {
         val cameraPos = cameraNode.worldPosition
         val centerPos = centerNode.worldPosition
@@ -157,12 +154,6 @@ class LightHandler(
                 cameraRight * -0.55f +        // Some from the right
                 cameraUp * -0.25f             // A bit from above
                 ).normalized()
-
-        //Log.d("LightHandler", "Camera forward: $cameraForward")
-        //Log.d("LightHandler", "Camera right: $cameraRight")
-        //Log.d("LightHandler", "Camera up: $cameraUp")
-        //Log.d("LightHandler", "Calculated optimal light direction: $lightDirection")
-
         return lightDirection
     }
 
@@ -171,35 +162,5 @@ class LightHandler(
     fun cleanup() {
         centerNode.removeChildNode(sunLight)
         sunLight.destroy()
-    }
-
-    // Extension functions for Float3 vector operations
-    private fun Float3.normalized(): Float3 {
-        val length = sqrt(x * x + y * y + z * z)
-        return if (length > 0f) {
-            Float3(x / length, y / length, z / length)
-        } else {
-            Float3(0f, 0f, 0f)
-        }
-    }
-
-    private operator fun Float3.plus(other: Float3): Float3 {
-        return Float3(x + other.x, y + other.y, z + other.z)
-    }
-
-    private operator fun Float3.times(scalar: Float): Float3 {
-        return Float3(x * scalar, y * scalar, z * scalar)
-    }
-
-    private fun Float3.length(): Float {
-        return sqrt(x * x + y * y + z * z)
-    }
-
-    private fun cross(a: Float3, b: Float3): Float3 {
-        return Float3(
-            a.y * b.z - a.z * b.y,
-            a.z * b.x - a.x * b.z,
-            a.x * b.y - a.y * b.x
-        )
     }
 }

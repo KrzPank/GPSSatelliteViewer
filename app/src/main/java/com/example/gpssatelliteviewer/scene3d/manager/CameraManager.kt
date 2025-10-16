@@ -1,8 +1,10 @@
 package com.example.gpssatelliteviewer.scene3d.manager
 
 import android.util.Log
+import com.example.gpssatelliteviewer.utils.length
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
+import com.example.gpssatelliteviewer.utils.normalized
 import com.google.android.filament.Engine
 import com.google.android.filament.View
 import dev.romainguy.kotlin.math.Float3
@@ -11,8 +13,6 @@ import io.github.sceneview.math.Transform
 import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.Node
 import kotlin.apply
-import kotlin.math.sqrt
-import com.google.android.filament.utils.Manipulator
 
 class CameraManager(
     private val engine: Engine,
@@ -95,7 +95,7 @@ class CameraManager(
         if (dist >= minCameraDistance){
             lastValidLocalPosition = cameraNode.position
         } else {
-            val dirNorm = offset.normalized()
+            val dirNorm = offset.normalized(dist)
             cameraNode.position = centerWorldPos + dirNorm * minCameraDistance
             //Log.d("CameraPos", "Clamped camera to $clampedWorldPos, lastValidLocalPosition: $lastValidLocalPosition   (dist=$dist). New manipulator created.")
         }
@@ -202,18 +202,6 @@ class CameraManager(
             it.destroy()
         }
     }
-
-    private fun Float3.length(): Float {
-        return sqrt(x * x + y * y + z * z)
-    }
-
-    private fun Float3.normalized(length: Float): Float3 {
-        return if (length > 0f) {
-            Float3(x / length, y / length, z / length)
-        } else {
-            Float3(0f, 0f, 0f)
-        }
-    }
 }
 
 class ClampedManipulatorWrapper(
@@ -266,15 +254,4 @@ class ClampedManipulatorWrapper(
     override fun scrollEnd() { base.scrollEnd() }
 
     override fun update(deltaTime: Float) { base.update(deltaTime) }
-}
-
-
-
-fun Float3.length(): Float {
-    return sqrt(x * x + y * y + z * z)
-}
-
-fun Float3.normalized(): Float3 {
-    val len = length()
-    return if (len > 0f) Float3(x / len, y / len, z / len) else Float3(0f, 0f, 0f)
 }

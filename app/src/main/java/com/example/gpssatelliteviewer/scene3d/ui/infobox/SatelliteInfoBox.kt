@@ -51,10 +51,7 @@ fun SatelliteInfoBox(
                     )
                     Text("SNR: ${sat.snr}", color = Color.White)
                     Text("Used in fix: ${sat.usedInFix}", color = Color.White)
-                    Text(
-                        "Azimuth: ${sat.azimuth}, Elevation: ${sat.elevation}",
-                        color = Color.White
-                    )
+                    Text("Azimuth: ${sat.azimuth}, Elevation: ${sat.elevation}", color = Color.White)
                 }
             }
         }

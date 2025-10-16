@@ -14,6 +14,7 @@ import androidx.annotation.RequiresApi
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
 import com.example.gpssatelliteviewer.data.GNSSHardwareInfo
 import com.example.gpssatelliteviewer.data.GNSSMeasurementData
+import com.example.gpssatelliteviewer.utils.averageOrNull
 import dev.romainguy.kotlin.math.all
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -192,8 +193,6 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
         return updated
     }
-
-    private fun Iterable<Float>.averageOrNull(): Double? = if (this.any()) this.average() else null
 
     override fun onCleared() {
         super.onCleared()

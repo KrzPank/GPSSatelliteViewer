@@ -53,7 +53,6 @@ import com.example.gpssatelliteviewer.app.theme.SNRRed
 import com.example.gpssatelliteviewer.app.theme.SNRYellow
 import com.example.gpssatelliteviewer.app.theme.TextPrimary
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.scene3d.manager.SatelliteManager
 
 class GPSStatus(
     private val satellites: List<GNSSStatusData>,

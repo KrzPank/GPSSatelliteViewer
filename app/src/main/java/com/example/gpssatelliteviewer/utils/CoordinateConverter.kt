@@ -36,7 +36,6 @@ object CoordinateConverter {
         yawDeg: Float = 0f,            // debug texture offset
     ): Float3 {
         val s = EARTH_RADIUS_WORLD_UNIT / EARTH_RADIUS_METERS
-        // Map axes: X→X, Z→Y (north up), Y→Z (east on equator). Negate Z to match RH/Z-forward.
         var v = Float3(ecef.x * s, ecef.z * s, -ecef.y * s)
 
         // Optional: apply a yaw around Y Earth texture’s 0° meridian isn’t aligned
@@ -76,10 +75,8 @@ object CoordinateConverter {
     ): Float3 {
         val (lat, lon, alt) = userLocation
 
-        // Convert user position to ECEF
         val (userX, userY, userZ) = geodeticToECEF(lat.toDouble(), lon.toDouble(), alt.toDouble())
 
-        // Convert az/el to ENU vector
         val azRad = Math.toRadians(azimuth.toDouble())
         val elRad = Math.toRadians(elevation.toDouble())
 
@@ -87,10 +84,8 @@ object CoordinateConverter {
         val n = altitude * cos(elRad) * cos(azRad)
         val u = altitude * sin(elRad)
 
-        // Rotate ENU to ECEF
         val (dx, dy, dz) = enuToECEF(e, n, u, lat.toDouble(), lon.toDouble())
 
-        // Final ECEF coordinates of satellite
         return Float3(
             (userX + dx).toFloat(),
             (userY + dy).toFloat(),
@@ -105,7 +100,6 @@ object CoordinateConverter {
     ): String {
         if (value == 0.0) return "0°0'0\" N/A"
 
-        // NMEA coordinates are in DDMM.MMMM format (degrees + minutes as decimal)
         val degrees = (value / 100).toInt()
         val minutesDecimal = value - (degrees * 100)
         val minutes = minutesDecimal.toInt()

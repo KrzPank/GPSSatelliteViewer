@@ -86,11 +86,9 @@ fun Scene3DParametersMenu(
 
         Spacer(modifier = Modifier.Companion.height(8.dp))
 
-        // Light Parameters Section
         ParameterSection("Light Parameters") {
             val params = parametersState.parameters
 
-            // Light Intensity (Logarithmic)
             LogarithmicSliderParameter(
                 label = "Light Intensity",
                 value = params.lightIntensity,
@@ -103,7 +101,6 @@ fun Scene3DParametersMenu(
                 valueFormatter = { "${(it / 100_000f).format(1)}e5" }
             )
 
-            // Light Color
             ColorParameter(
                 label = "Light Color",
                 red = params.lightColor.x,
@@ -116,11 +113,9 @@ fun Scene3DParametersMenu(
             )
         }
 
-        // Earth Model Parameters Section
         ParameterSection("Earth Model") {
             val params = parametersState.parameters
 
-            // Earth Model Selection
             ModelSelector(
                 label = "Earth Model",
                 options = Scene3DParameters.Companion.EARTH_MODEL_OPTIONS,
@@ -132,11 +127,9 @@ fun Scene3DParametersMenu(
             )
         }
 
-        // Satellite Parameters Section
         ParameterSection("Satellites") {
             val params = parametersState.parameters
 
-            // Satellite Model Selection
             ModelSelector(
                 label = "Satellite Model",
                 options = Scene3DParameters.Companion.SATELLITE_MODEL_OPTIONS,

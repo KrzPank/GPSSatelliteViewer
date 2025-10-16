@@ -32,7 +32,12 @@ import com.example.gpssatelliteviewer.utils.EmptyStateCard
 fun SatelliteInfoScreen(
     gnssViewModel: GNSSViewModel
 ) {
+
+    // merge measurements to satellite info card and make filter button to show only those with fix == true
+
     val satellites by gnssViewModel.satelliteList.collectAsState()
+
+    // add button to sort by fix
     val groupedSatellites = satellites
         .sortedBy { it.prn }
         .groupBy { it.constellation }
@@ -65,7 +70,7 @@ fun SatelliteInfoScreen(
                     }
                 }
 
-                item { /* empty item as a 4.dp spacer */ }
+                item { /* empty item as 4.dp spacer */ }
             }
         } else {
             item {
