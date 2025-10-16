@@ -106,7 +106,7 @@ class Scene3DParametersState {
         parameters = parameters.copy(lightIntensity = intensity)
     }
 
-    fun updateLocation(location: Float3) {
+    fun updateLocation(location: Float3?) {
         parameters = parameters.copy(userLocation = location)
     }
 

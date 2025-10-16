@@ -71,10 +71,10 @@ fun GPSStatusCard(
                 color = TextLabel
             )
             Text(
-                text = "Fix SNR / sats | All SNR!=0 / sats SNR!=0 / all",
+                text = "Fix SNR dBHz / sats  |  All dBHz / sats SNR!=0 / all",
                 style = MaterialTheme.typography.bodySmall,
                 color = TextLabel,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 textAlign = TextAlign.End,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -88,7 +88,7 @@ fun GPSStatusCard(
 
                 InfoRow(
                     label = constellation,
-                    value = "Fix: %.1f dBHz / %d  |  All: %.1f dBHz / %d / %d".format(
+                    value = "Fix: %.1f / %d   |   All: %.1f / %d / %d".format(
                         avgFix, fixCount, avgAll, totalSNRCount, totalSatellites
                     )
                 )

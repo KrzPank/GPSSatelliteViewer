@@ -7,10 +7,12 @@ import com.google.android.filament.Engine
 import com.google.android.filament.View
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.gesture.CameraGestureDetector
+import io.github.sceneview.math.Transform
 import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.Node
 import kotlin.apply
 import kotlin.math.sqrt
+import com.google.android.filament.utils.Manipulator
 
 class CameraManager(
     private val engine: Engine,
@@ -23,36 +25,44 @@ class CameraManager(
 
     private val cameraGestureDetector = createCameraGestureDetector()
     fun getCameraManipulator() = cameraGestureDetector.cameraManipulator
+    fun getCameraGestureDetector() = cameraGestureDetector
 
     private var frameCount = 0
     private val lookAtUpdateInterval = 2
     private var lastCameraPosition = Float3(0.0f, 0.0f, 0.0f)
-    // change updateThreshold based on camera zoom and add max zoom in
-    // zoomed in -> smaller
-    private val updateThreshold = 0.08f
+    private val updateThreshold = 0.008f
+    private val minCameraDistance = 0.60f
+
+    private var lastValidLocalPosition: Float3 = cameraNode.position
 
     private fun createCameraGestureDetector(): CameraGestureDetector {
-        val cameraGD = CameraGestureDetector(
+        val base = CameraGestureDetector.DefaultCameraManipulator(
+            orbitHomePosition = cameraNode.worldPosition,
+            targetPosition = centerNode.worldPosition
+        )
+
+        val clamped = ClampedManipulatorWrapper(
+            base = base,
+            minDistance = minCameraDistance
+        )
+
+        return CameraGestureDetector(
             viewHeight = { view.viewport.height },
-            cameraManipulator = CameraGestureDetector.DefaultCameraManipulator(
-                orbitHomePosition = cameraNode.worldPosition,
-                targetPosition = centerNode.worldPosition
-            )
+            cameraManipulator = clamped
         ).apply {
-            // does not disable camera pan???
             isPanEnabled = false
         }
-
-        return cameraGD
     }
 
     private fun shouldUpdateLookAt(satellites: SatelliteManager, locationMarker: LocationMarkerManager) {
         frameCount++
 
-        val frameIntervalMet = frameCount >= lookAtUpdateInterval
+        val distanceToCenter = (cameraNode.worldPosition - centerNode.worldPosition).length()
         val cameraMoved = (cameraNode.worldPosition - lastCameraPosition).length()
-        val shouldUpdate = frameIntervalMet && cameraMoved  > updateThreshold
+        val dynamicThreshold = updateThreshold * distanceToCenter * distanceToCenter
+        val frameIntervalMet = frameCount >= lookAtUpdateInterval
 
+        val shouldUpdate = frameIntervalMet && cameraMoved  > dynamicThreshold
         if (shouldUpdate) {
             lastCameraPosition = cameraNode.worldPosition
             frameCount = 0
@@ -63,9 +73,7 @@ class CameraManager(
     }
 
     private fun createCamera(startingLocation: Float3?): CameraNode {
-        Log.d("CameraPos", "Camera starting pos: ${startingLocation}")
         val pos = calculateCameraStartingPosition(startingLocation) ?: parameters.startingCameraLocation
-        Log.d("CameraPos", "Camera pos: ${pos}")
         val camera = CameraNode(engine).apply {
             position = pos
             lookAt(centerNode)
@@ -77,11 +85,21 @@ class CameraManager(
     }
 
     fun onFrame(satellites: SatelliteManager, locationMarker: LocationMarkerManager) {
+        shouldUpdateLookAt(satellites, locationMarker)
+
+        val cameraWorldPos = cameraNode.worldPosition
+        val centerWorldPos = centerNode.worldPosition
+        val offset = cameraWorldPos - centerWorldPos
+        val dist = offset.length()
+
+        if (dist >= minCameraDistance){
+            lastValidLocalPosition = cameraNode.position
+        } else {
+            val dirNorm = offset.normalized()
+            cameraNode.position = centerWorldPos + dirNorm * minCameraDistance
+            //Log.d("CameraPos", "Clamped camera to $clampedWorldPos, lastValidLocalPosition: $lastValidLocalPosition   (dist=$dist). New manipulator created.")
+        }
         cameraNode.lookAt(centerNode)
-        shouldUpdateLookAt(
-            satellites = satellites,
-            locationMarker = locationMarker
-        )
     }
 
     private fun calculateCameraStartingPosition(
@@ -100,7 +118,7 @@ class CameraManager(
         val length = userScenePos.length()
         if (length == 0f) return null
 
-        val dir = userScenePos.normalized(length)
+        val dir = userScenePos.normalized()
 
         val cameraDistance = length * distanceFactor
 
@@ -196,4 +214,67 @@ class CameraManager(
             Float3(0f, 0f, 0f)
         }
     }
+}
+
+class ClampedManipulatorWrapper(
+    private val base: CameraGestureDetector.CameraManipulator,
+    private val minDistance: Float = 0.58f,
+    private val maxDistance: Float = 500.0f
+) : CameraGestureDetector.CameraManipulator {
+
+    override fun setViewport(width: Int, height: Int) {
+        base.setViewport(width, height)
+    }
+
+    override fun getTransform(): Transform {
+        val baseTransform = base.getTransform()
+
+        // Read base values
+        val eye = baseTransform.position
+        var forward = baseTransform.forward
+        var up = baseTransform.up
+
+        val target = eye + forward * -1f
+
+        val dir = eye - target
+        val dist = dir.length()
+
+        val clamped = dist.coerceIn(minDistance, maxDistance)
+
+        if (clamped == dist) {
+            return baseTransform
+        }
+
+        val dirNorm = if (dist > 0f) dir.normalized() else Float3(0f, 0f, -1f)
+        val clampedEye = target + dirNorm * clamped
+
+        val result = Transform().apply {
+            position = clampedEye
+            // recompute forward to look towards the target
+            forward = (target - clampedEye).normalized()
+        }
+        return result
+    }
+
+    override fun grabBegin(x: Int, y: Int, strafe: Boolean) { base.grabBegin(x, y, strafe) }
+    override fun grabUpdate(x: Int, y: Int) { base.grabUpdate(x, y) }
+    override fun grabEnd() { base.grabEnd() }
+    override fun scrollBegin(x: Int, y: Int, separation: Float) { base.scrollBegin(x, y, separation) }
+    override fun scrollUpdate(x: Int, y: Int, prevSeparation: Float, currSeparation: Float) {
+        base.scrollUpdate(x, y, prevSeparation, currSeparation)
+    }
+    override fun scrollEnd() { base.scrollEnd() }
+
+    override fun update(deltaTime: Float) { base.update(deltaTime) }
+}
+
+
+
+fun Float3.length(): Float {
+    return sqrt(x * x + y * y + z * z)
+}
+
+fun Float3.normalized(): Float3 {
+    val len = length()
+    return if (len > 0f) Float3(x / len, y / len, z / len) else Float3(0f, 0f, 0f)
 }

@@ -100,10 +100,6 @@ class Scene3D(
         return satelliteList.find { it.constellation == constellation && it.prn == prn }
     }
 
-    // Scene initialization
-    private var _isSceneReady by mutableStateOf(false)
-    fun isSceneReady(): Boolean = _isSceneReady
-
     @Composable
     fun Render() {
         Scene(
@@ -126,27 +122,25 @@ class Scene3D(
                 onDown = { event, _ -> true},
                 onDoubleTap = { event, _ ->
                     onSceneDoubleTap()
-                    //cameraManager.resetCamera()
                 },
                 onSingleTapConfirmed = { event, node ->
                     onSceneSingleTapConfirmed(node)
                 },
-                //// sometimes prevents camera PAN ??
-                //onMove = { _, event, _ ->
-                //    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                //    camera.getCameraGestureDetector().onTouchEvent(event)
-                //},
-                //onMoveBegin = { _, event, _ ->
-                //    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                //    camera.getCameraGestureDetector().onTouchEvent(event)
-                //},
-                //onMoveEnd = { _, event, _ ->
-                //    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                //    camera.getCameraGestureDetector().onTouchEvent(event)
-                //},
+                // sometimes prevents camera PAN ??
+                onMove = { _, event, _ ->
+                    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
+                    camera.getCameraGestureDetector().onTouchEvent(event)
+                },
+                onMoveBegin = { _, event, _ ->
+                    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
+                    camera.getCameraGestureDetector().onTouchEvent(event)
+                },
+                onMoveEnd = { _, event, _ ->
+                    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
+                    camera.getCameraGestureDetector().onTouchEvent(event)
+                },
             ),
         )
-        _isSceneReady = true
     }
 
     fun updateScene(satelliteList: List<GNSSStatusData>) {
@@ -167,7 +161,7 @@ class Scene3D(
         earth.updateEarthParameters(newParameters)
     }
 
-    fun updateUserLocation(userLocation: Float3) { parameters.userLocation = userLocation }
+    fun updateUserLocation(userLocation: Float3?) { parameters.userLocation = userLocation }
 
     fun cleanup() {
         satellites.cleanup()

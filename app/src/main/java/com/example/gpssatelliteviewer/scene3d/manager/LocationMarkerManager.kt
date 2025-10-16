@@ -23,7 +23,6 @@ class LocationMarkerManager(
             scaleToUnits = parameters.locationMarkerScale
         ).also {
             centerNode.addChildNode(it)
-            it.position = Float3(0f, 0f, 0f)
             it.name = "Location marker"
         }
         return node
@@ -31,20 +30,23 @@ class LocationMarkerManager(
 
     fun updateLocationMarker(userLocation: Float3?) {
         if (userLocation == null) {
+            Log.d("LocationMarkerPos", "null")
             setVisible(false)
             return
         }
 
-        val (lat, lon, alt) = userLocation
-        val ecefPosition = CoordinateConverter.geodeticToECEF(
-            lat.toDouble(),
-            lon.toDouble(),
-            (alt + 5000f).toDouble()  // Add 5km above surface to make marker visible
-        )
-        val scenePosition = CoordinateConverter.ecefToScenePos(ecefPosition)
+        if (isVisible && locationMarkerNode.parent != null) {
+            val (lat, lon, alt) = userLocation
+            val ecefPosition = CoordinateConverter.geodeticToECEF(
+                lat.toDouble(),
+                lon.toDouble(),
+                (alt + 5000f).toDouble()  // Add 5km above surface to make marker visible
+            )
+            val scenePosition = CoordinateConverter.ecefToScenePos(ecefPosition)
 
-        locationMarkerNode.position = scenePosition
-        Log.d("LocationMarkerPos", "${scenePosition}")
+            locationMarkerNode.position = scenePosition
+            Log.d("LocationMarkerPos", "$scenePosition")
+        }
     }
 
     fun setVisible(visible: Boolean) {
@@ -56,7 +58,7 @@ class LocationMarkerManager(
         }
     }
     
-    fun isLocationMarkerVisible(): Boolean = isVisible
+    fun isLocationMarkerVisible() = isVisible
 
     fun updateLookAt(cameraNode: CameraNode) {
         if (isVisible && locationMarkerNode.parent != null) {

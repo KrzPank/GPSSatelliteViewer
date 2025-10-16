@@ -83,14 +83,16 @@ fun Satellite3DScreen(
     val satelliteList by gnssViewModel.satelliteList.collectAsState()
     val locationAndroidApi by locationViewModel.locationAndroidApi.collectAsState()
 
-    val userLocation = if (locationAndroidApi.latitude == 0.0 && locationAndroidApi.longitude == 0.0 ) {
-        Float3(
+    val userLocation: Float3? = when {
+        (locationAndroidApi.latitude == 0.0 && locationAndroidApi.longitude == 0.0) &&
+                (locationNMEA.latitude == 0.0 && locationNMEA.longitude == 0.0) -> null
+
+        (locationAndroidApi.latitude == 0.0 && locationAndroidApi.longitude == 0.0) -> Float3(
             CoordinateConverter.nmeaCoordinateToDecimal(locationNMEA.latitude, locationNMEA.latHemisphere).toFloat(),
             CoordinateConverter.nmeaCoordinateToDecimal(locationNMEA.longitude, locationNMEA.lonHemisphere).toFloat(),
             locationNMEA.altitude.toFloat()
         )
-    } else {
-        Float3(
+        else -> Float3(
             locationAndroidApi.latitude.toFloat(),
             locationAndroidApi.longitude.toFloat(),
             locationAndroidApi.altitude.toFloat()
@@ -139,15 +141,15 @@ fun Satellite3DScreen(
             modifier = Modifier.fillMaxSize(),
         )
     }
-    var isSceneReady by remember { mutableStateOf(scene.isSceneReady()) }
 
     Box(
         modifier = Modifier.Companion
             .fillMaxSize()
             .background(DarkBackground)
     ) {
+        // Smooth transition not wanted but i don't know other way
+        var isSceneReady by remember { mutableStateOf(false) }
         LaunchedEffect(scene) {
-            // Smooth transition not wanted but i don't know other way
             // mandatory 20ms delay ??any less and there are race conditions??
             delay(20)
             isSceneReady = true
@@ -197,6 +199,7 @@ fun Satellite3DScreen(
             ) {
                 scene.Render()
                 scene.updateScene(filteredSatellites)
+
                 AnimatedVisibility(
                     visible = scene.isSatelliteInfoBoxVisible(),
                     enter = slideInHorizontally(
@@ -229,6 +232,7 @@ fun Satellite3DScreen(
                 ) {
                     EarthInfoBox(
                         userLocation = userLocation,
+                        nmea = locationNMEA,
                         isMenuVisible = scene.isMenuVisible(),
                         safeInsets = safeInsets,
                         totalMenuWidth = totalMenuWidth

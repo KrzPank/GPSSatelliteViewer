@@ -40,7 +40,6 @@ fun LocationDenyScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.Companion.CenterHorizontally
         ) {
-            // Location icon
             Icon(
                 imageVector = Icons.Filled.LocationOn,
                 contentDescription = "Location",
@@ -50,7 +49,6 @@ fun LocationDenyScreen(
 
             Spacer(modifier = Modifier.Companion.height(24.dp))
 
-            // Title
             Text(
                 text = "Location Permission Required",
                 style = MaterialTheme.typography.headlineMedium,
@@ -61,7 +59,6 @@ fun LocationDenyScreen(
 
             Spacer(modifier = Modifier.Companion.height(16.dp))
 
-            // Description card
             Card(
                 modifier = Modifier.Companion.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -83,7 +80,7 @@ fun LocationDenyScreen(
                     val features = listOf(
                         "Display your current location on the 3D map",
                         "Show satellite positions relative to you",
-                        "Provide accurate GNSS data and statistics"
+                        "Provide GNSS data and statistics"
                     )
 
                     features.forEach { feature ->
@@ -99,7 +96,6 @@ fun LocationDenyScreen(
 
             Spacer(modifier = Modifier.Companion.height(32.dp))
 
-            // Grant permission button
             Button(
                 onClick = onRequestPermission,
                 modifier = Modifier.Companion
@@ -118,7 +114,6 @@ fun LocationDenyScreen(
 
             Spacer(modifier = Modifier.Companion.height(12.dp))
 
-            // Secondary information
             Text(
                 text = "Your location data is only used within the app and never shared.",
                 style = MaterialTheme.typography.bodySmall,

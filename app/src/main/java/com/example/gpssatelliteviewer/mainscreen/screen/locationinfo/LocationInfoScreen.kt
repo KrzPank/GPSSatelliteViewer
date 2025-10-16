@@ -50,11 +50,8 @@ fun LocationInfoScreen(
     val satellites by gnssStatusViewModel.satelliteList.collectAsState()
 
     //val snrHistory by gnssStatusViewModel.constellationSNRHistory.collectAsState()
-
-    val satelliteChartData by gnssStatusViewModel.satelliteSNRHistory.collectAsState()
-    Log.d("SatelliteChartData", satelliteChartData.toString())
-
-    val measurements by gnssStatusViewModel.gnssMeasurements.collectAsState()
+    //val satelliteChartData by gnssStatusViewModel.satelliteSNRHistory.collectAsState()
+    //val measurements by gnssStatusViewModel.gnssMeasurements.collectAsState()
 
     val locationNMEA by nmeaViewModel.locationNMEA.collectAsState()
     val hasLocationNMEA by nmeaViewModel.hasLocationNMEA.collectAsState()
@@ -139,10 +136,6 @@ fun LocationInfoScreen(
                 isLocationEnabled = isLocationEnabled
             )
         }
-
-        //items(measurements) { measurement ->
-        //    MeasurementCard(measurement)
-        //}
     }
 
     // Dialog to choose location type
@@ -178,5 +171,3 @@ fun LocationInfoScreen(
         )
     }
 }
-
-
