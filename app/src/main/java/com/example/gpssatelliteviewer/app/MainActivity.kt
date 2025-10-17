@@ -116,6 +116,7 @@ fun AppNavigation(
         )
 
         gnssViewModel.startGNSSInfo()
+        gnssViewModel.loadGNSSHardwareInfo()
         nmeaViewModel.startNMEAInfo()
         locationViewModel.startLocationListenerInfo()
 

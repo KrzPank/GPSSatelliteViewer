@@ -36,7 +36,7 @@ fun MainStatisticsScreen(
 
     // Determine label based on current page
     val topAppBarLabel = when (pagerState.currentPage) {
-        0 -> "Average SNR per constellation in FIX"
+        0 -> "Avg. SNR per constellation in Fix"
         else -> ""
     }
 

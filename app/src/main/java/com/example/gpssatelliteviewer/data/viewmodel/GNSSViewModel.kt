@@ -15,14 +15,12 @@ import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
 import com.example.gpssatelliteviewer.data.GNSSHardwareInfo
 import com.example.gpssatelliteviewer.data.GNSSMeasurementData
 import com.example.gpssatelliteviewer.utils.averageOrNull
-import dev.romainguy.kotlin.math.all
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.processNextEventInCurrentThread
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 
@@ -30,7 +28,7 @@ import java.util.concurrent.Executors
 class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
 
-    private val parsingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val gnssCallbackScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val _satelliteList = MutableStateFlow<List<GNSSStatusData>>(listOf())
     val satelliteList: StateFlow<List<GNSSStatusData>> = _satelliteList
@@ -47,12 +45,9 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val _gnssHardwareInfo = MutableStateFlow(GNSSHardwareInfo())
     val gnssHardwareInfo: StateFlow<GNSSHardwareInfo> = _gnssHardwareInfo
 
-    // Keep reference to last parsing job
-    private var parseJob: Job? = null
-
     private val gnssCallback = object : GnssStatus.Callback() {
         override fun onSatelliteStatusChanged(status: GnssStatus) {
-            parseJob = parsingScope.launch {
+            gnssCallbackScope.launch {
                 val list = mutableListOf<GNSSStatusData>()
                 for (i in 0 until status.satelliteCount) {
                     val constellation = when (status.getConstellationType(i)) {
@@ -79,6 +74,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                 }
                 val updatedConstellation = updateConstellationSNRHistory(list)
                 val updatedSatellite = updateSatelliteSNRHistory(list)
+
                 // Update UI state on main thread
                 withContext(Dispatchers.Main) {
                     _satelliteList.value = list
@@ -89,10 +85,9 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // === GNSS Measurements Callback ===
     private val gnssMeasurementCallback = object : GnssMeasurementsEvent.Callback() {
         override fun onGnssMeasurementsReceived(event: GnssMeasurementsEvent) {
-            parsingScope.launch {
+            gnssCallbackScope.launch {
                 val measurements = event.measurements.map { m ->
                     val constellation = when (m.constellationType) {
                         GnssStatus.CONSTELLATION_GPS -> "GPS"
@@ -130,10 +125,6 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    init {
-        loadGNSSHardwareInfo()
-    }
-
     fun startGNSSInfo() {
         try {
             val executor = Executors.newSingleThreadExecutor()
@@ -144,7 +135,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun loadGNSSHardwareInfo() {
+    fun loadGNSSHardwareInfo() {
         val model = try { locationManager.gnssHardwareModelName } catch (_: Exception) { null } // API 28+
         val year = try { locationManager.gnssYearOfHardware } catch (_: Exception) { null }
         val caps = try { locationManager.gnssCapabilities } catch (_: Exception) { null } // API 30+
@@ -170,6 +161,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
             val newHistory = (oldHistory.takeLast(CHART_UPDATE_WINDOW - 1) + newValue).toMutableList()
             updated[satelliteKey] = newHistory
         }
+
         return updated
     }
 
@@ -198,6 +190,6 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
         super.onCleared()
         locationManager.unregisterGnssStatusCallback(gnssCallback)
         locationManager.unregisterGnssMeasurementsCallback(gnssMeasurementCallback)
-        parsingScope.cancel()
+        gnssCallbackScope.cancel()
     }
 }

@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -28,6 +31,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.app.theme.CardBackground
+import com.example.gpssatelliteviewer.app.theme.TextPrimary
 import com.example.gpssatelliteviewer.data.NMEALocationData
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.InfoRow
@@ -45,79 +49,92 @@ fun EarthInfoBox(
     modifier: Modifier = Modifier
 ) {
     val sceneOffsetX by animateDpAsState(
-        targetValue = if (isMenuVisible) totalMenuWidth else safeInsets.calculateLeftPadding(
-            LayoutDirection.Ltr
-        ) * 2,
+        targetValue = if (isMenuVisible) totalMenuWidth
+        else safeInsets.calculateLeftPadding(LayoutDirection.Ltr) * 2,
     )
     userLocation?.let { sat ->
         Box(
             modifier = modifier
-                .padding(top = 50.dp)
+                .padding(top = 20.dp)
                 .offset(x = sceneOffsetX / 2)
         ) {
             Card(
-                modifier = modifier.padding(8.dp),
+                modifier = Modifier
+                    .padding(8.dp)
+                    .width(IntrinsicSize.Max),
                 colors = CardDefaults.cardColors(
-                    containerColor = CardBackground.copy(alpha = 0.6f)
-                )
+                    containerColor = CardBackground.copy(alpha = 0.7f)
+                ),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
-                Column(Modifier.padding(12.dp)) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "Earth - Location Info",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                    )
 
                     if (nmea.time.isNotEmpty()) {
-                        Text(
-                            text = "Last update (UTC): " + nmea.time,
-                            fontSize = 13.sp
-                        )
+                        InfoRow(label = "Last update (UTC): ", value = nmea.time)
                     }
 
                     val fixInfo = listOf(
                         mapFixQuality(nmea.fixQuality),
                         mapFixType(nmea.fixType)
                     ).joinToString(" / ")
+
                     if (fixInfo.isNotBlank()) {
-                        Text(
-                            text = "Fix / Type: $fixInfo",
-                            fontSize = 13.sp
-                        )
+                        InfoRow(label = "Fix / Type: ", value = fixInfo)
                     }
 
                     if (nmea.latitude != 0.0) {
-                        Text(
-                            text = "Latitude: " + CoordinateConverter.nmeaCoordinateToDMS(nmea.latitude, nmea.latHemisphere),
-                            fontSize = 13.sp
+                        InfoRow(
+                            label = "Latitude: ",
+                            value = CoordinateConverter.nmeaCoordinateToDMS(
+                                nmea.latitude,
+                                nmea.latHemisphere
+                            )
                         )
                     }
 
                     if (nmea.longitude != 0.0) {
-                        Text(
-                            text = "Longitude: " + CoordinateConverter.nmeaCoordinateToDMS(nmea.longitude, nmea.lonHemisphere),
-                            fontSize = 13.sp
+                        InfoRow(
+                            label = "Longitude: ",
+                            value = CoordinateConverter.nmeaCoordinateToDMS(
+                                nmea.longitude,
+                                nmea.lonHemisphere
+                            )
                         )
                     }
 
                     if (nmea.mslAltitude != 0.0) {
-                        Text(
-                            text = "Altitude MSL: " + "%.1f m".format(nmea.mslAltitude),
-                            fontSize = 13.sp
+                        InfoRow(
+                            label = "Altitude MSL: ",
+                            value = "%.1f m".format(nmea.mslAltitude)
                         )
                     }
 
                     val accuracy = CoordinateConverter.getAccuracyEstimate(nmea)
                     if (accuracy > 0.0) {
-                        Text(
-                            text = "Accuracy (2D): " + "%.1f m".format(accuracy),
-                            fontSize = 13.sp
+                        InfoRow(
+                            label = "Accuracy (2D): ",
+                            value = "%.1f m".format(accuracy)
                         )
                     }
 
                     if (nmea.speedKnots != 0.0) {
-                        val speedkmh = nmea.speedKnots * 1.852
-                        Text(
-                            text = "Speed: " + listOf(
+                        val speedKmh = nmea.speedKnots * 1.852
+                        InfoRow(
+                            label = "Speed: ",
+                            value = listOf(
                                 "%.1f kn".format(nmea.speedKnots),
-                                "%.1f km/h".format(speedkmh)
-                            ).joinToString(" / "),
-                            fontSize = 13.sp
+                                "%.1f km/h".format(speedKmh)
+                            ).joinToString(" / ")
                         )
                     }
                 }

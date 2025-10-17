@@ -3,6 +3,7 @@ package com.example.gpssatelliteviewer.scene3d.ui
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -150,18 +151,16 @@ fun Satellite3DScreen(
         // Smooth transition not wanted but i don't know other way
         var isSceneReady by remember { mutableStateOf(false) }
         LaunchedEffect(scene) {
-            // mandatory 20ms delay ??any less and there are race conditions??
-            delay(20)
             isSceneReady = true
         }
 
         AnimatedVisibility(
             visible = !isSceneReady,
             enter = fadeIn(
-                animationSpec = tween(10)
+                animationSpec = tween(100)
             ),
             exit = fadeOut(
-                animationSpec = tween(500)
+                animationSpec = tween(100)
             )
         ) {
             Scene3DLoadingScreen(
@@ -192,10 +191,18 @@ fun Satellite3DScreen(
                 animationSpec = tween(menuAnimationDuration)
             )
         ) {
+            // Animate horizontal offset (magic happens here)
+            val targetOffset = if (scene.isMenuVisible()) totalMenuWidth / 2 else 0.dp
+            val animatedOffset by animateDpAsState(
+                targetValue = targetOffset,
+                animationSpec = tween(durationMillis = menuAnimationDuration),
+                label = "sceneOffsetAnim"
+            )
+
             Box(
                 modifier = Modifier.Companion
                     .fillMaxSize()
-                    .offset(x = if (scene.isMenuVisible()) totalMenuWidth / 2 else 0.dp)
+                    .offset(x = animatedOffset)
             ) {
                 scene.Render()
                 scene.updateScene(filteredSatellites)
@@ -204,11 +211,11 @@ fun Satellite3DScreen(
                     visible = scene.isSatelliteInfoBoxVisible(),
                     enter = slideInHorizontally(
                         initialOffsetX = { -it },
-                        animationSpec = tween(menuAnimationDuration/2)
+                        animationSpec = tween(menuAnimationDuration)
                     ),
                     exit = slideOutHorizontally(
                         targetOffsetX = { -it },
-                        animationSpec = tween(menuAnimationDuration/2)
+                        animationSpec = tween(menuAnimationDuration)
                     )
                 ) {
                     SatelliteInfoBox(
@@ -223,11 +230,11 @@ fun Satellite3DScreen(
                     visible = scene.isEarthInfoBoxVisible(),
                     enter = slideInHorizontally(
                         initialOffsetX = { -it },
-                        animationSpec = tween(menuAnimationDuration/2)
+                        animationSpec = tween(menuAnimationDuration)
                     ),
                     exit = slideOutHorizontally(
                         targetOffsetX = { -it },
-                        animationSpec = tween(menuAnimationDuration/2)
+                        animationSpec = tween(menuAnimationDuration)
                     )
                 ) {
                     EarthInfoBox(

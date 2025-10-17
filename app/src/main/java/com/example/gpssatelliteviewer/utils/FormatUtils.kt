@@ -31,28 +31,43 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.gpssatelliteviewer.app.theme.TextLabel
 import com.example.gpssatelliteviewer.app.theme.ValueText
 import com.example.gpssatelliteviewer.app.theme.GreenPrimary
 import com.example.gpssatelliteviewer.app.theme.StatusError
 import com.example.gpssatelliteviewer.app.theme.StatusGood
 import com.example.gpssatelliteviewer.app.theme.TextHint
-import com.example.gpssatelliteviewer.app.theme.TextSecondary
+
+@Composable
+fun ValueText(
+    value: String,
+    modifier: Modifier = Modifier,
+    textAlign: TextAlign? = null,
+    fontWeight: FontWeight? = FontWeight.Bold,
+) {
+    Text(
+        text = value,
+        style = MaterialTheme.typography.bodyLarge,
+        color = ValueText,
+        fontWeight = fontWeight,
+        textAlign = textAlign,
+        modifier = modifier,
+    )
+}
 
 @Composable
 fun InfoRow(
     label: String,
-    value: String
+    value: String,
+    modifier: Modifier = Modifier.fillMaxWidth()
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
@@ -60,11 +75,8 @@ fun InfoRow(
             style = MaterialTheme.typography.bodyMedium,
             color = TextLabel,
         )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyLarge,
-            color = ValueText,
-            fontWeight = FontWeight.Bold,
+        ValueText(
+            value = value
         )
     }
 }
@@ -85,7 +97,11 @@ fun CapabilityRow(
             modifier = Modifier.size(16.dp)
         )
         Spacer(Modifier.width(8.dp))
-        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextLabel,
+        )
     }
 }
 
@@ -100,7 +116,7 @@ fun NavigationTopAppBar(
     val expanded = expandedMap[menuKey] == true
 
     TopAppBar(
-        title = { Text(label, style = MaterialTheme.typography.headlineMedium) },
+        title = { Text(label, style = MaterialTheme.typography.headlineLarge) },
         actions = {
             Box {
                 IconButton(onClick = {
@@ -160,7 +176,7 @@ fun EmptyStateCard(
             Text(
                 text = message,
                 color = TextHint,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center
             )
         }
@@ -224,6 +240,7 @@ fun CustomCheckbox(
         description?.let {
             Text(
                 text = it,
+                style = MaterialTheme.typography.labelMedium,
                 color = TextHint,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(start = 15.dp)
@@ -267,5 +284,4 @@ fun mapTalker(talker: String): String {
     }
 }
 
-// Extension function for number formatting
 fun Float.format(digits: Int) = "%.${digits}f".format(this)

@@ -74,6 +74,8 @@ data class SatInfo(
 )
 
 // Sealed class hierarchy for NMEA messages
+
+// check parser if they get all of the data ??
 sealed class NMEAMessage {
     abstract val messageType: String
     
@@ -91,7 +93,7 @@ sealed class NMEAMessage {
         val geoidSeparation: Double?,
         val geoidSeparationUnits: Char?,
         val dgpsAge: Double?,
-        val dgpsStationId: String?
+        val checksum: String?
     ) : NMEAMessage() {
         override val messageType = "GGA"
     }

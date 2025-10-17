@@ -98,8 +98,7 @@ fun LocationInfoScreen(
     LazyColumn(
         modifier = Modifier.Companion
             .padding(horizontal = 8.dp, vertical = 8.dp)
-            .fillMaxSize()
-            .background(DarkBackground),
+            .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         // --- Location Card ---

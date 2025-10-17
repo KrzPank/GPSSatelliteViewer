@@ -99,7 +99,7 @@ fun ConstellationSNRChartCard(
             GroupedSNRChart(
                 snrHistory = meaningfulSnrHistory,
                 selectedConstellations = selectedConstellations,
-                modifier.height(200.dp)
+                modifier = modifier
             )
         }
     }

@@ -55,7 +55,7 @@ fun NMEALocationCard(
             ) {
                 Text(
                     "NMEA Location",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.headlineMedium,
                     fontSize = 20.sp
                 )
                 Icon(
@@ -151,7 +151,7 @@ fun AndroidApiLocationCard(
             ) {
                 Text(
                     "Location Listener",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.headlineMedium,
                     fontSize = 20.sp
                 )
                 Icon(
@@ -164,15 +164,18 @@ fun AndroidApiLocationCard(
             Spacer(Modifier.Companion.height(8.dp))
 
             InfoRow(
-                label = "Provider",
-                value = if (locationData.provider == "") "No data"
-                else locationData.provider
+                label = "Current system time",
+                value = currentSystemTime
             )
-            InfoRow(label = "Current system time", value = currentSystemTime)
             InfoRow(
                 label = "Last update",
                 value = if (locationData.time == "") "No data"
                 else locationData.time
+            )
+            InfoRow(
+                label = "Provider",
+                value = if (locationData.provider == "") "No data"
+                else locationData.provider
             )
             InfoRow(
                 label = "Latitude",

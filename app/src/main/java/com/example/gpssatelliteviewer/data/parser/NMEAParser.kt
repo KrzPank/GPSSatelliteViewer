@@ -37,7 +37,7 @@ object NMEAParser {
                 geoidSeparation = parts.getOrNull(11)?.toDoubleOrNull(),
                 geoidSeparationUnits = parts.getOrNull(12)?.firstOrNull(),
                 dgpsAge = parts.getOrNull(13)?.toDoubleOrNull(),
-                dgpsStationId = parts.getOrNull(14)
+                checksum = parts.getOrNull(14)
             )
         } catch (e: Exception) {
             e.printStackTrace()

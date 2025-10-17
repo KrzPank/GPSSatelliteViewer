@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.SignalCellularNodata
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,19 +45,22 @@ fun SNRStatisticsScreen(
             item {
                 EmptyStateCard(
                     message = "No valid SNR data available",
-                    icon = Icons.Default.SignalCellularNodata
+                    icon = Icons.Default.LocationOff
                 )
             }
         } else {
             item {
-                ConstellationSNRChartCard(snrHistory = snrStatistic)
+                ConstellationSNRChartCard(
+                    snrHistory = snrStatistic,
+                    modifier = Modifier.height(220.dp)
+                )
             }
 
             items(validKeys) { key ->
                 ConstellationSNRChartCard(
                     snrHistory = snrStatistic[key]!!,
                     constellation = key,
-                    modifier = Modifier.height(140.dp)
+                    modifier = Modifier.height(190.dp)
                 )
             }
         }

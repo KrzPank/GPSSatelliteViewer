@@ -19,11 +19,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationDisabled
+import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationSearching
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SignalCellularAlt
+import androidx.compose.material.icons.filled.SignalCellularAlt1Bar
+import androidx.compose.material.icons.filled.SignalCellularAlt2Bar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -166,12 +171,13 @@ class GPSStatus(
     // Helper functions for GPS status display
     private fun getStatusIcon(gpsStatusState: GPSStatusState): ImageVector {
         return when (gpsStatusState) {
-            is GPSStatusState.Excellent, is GPSStatusState.Good -> Icons.Default.Check
-            is GPSStatusState.Fair -> Icons.Default.Home
-            is GPSStatusState.Poor -> Icons.Default.Person
-            is GPSStatusState.NoFix -> Icons.Default.Close
+            is GPSStatusState.Excellent -> Icons.Default.CheckCircle
+            is GPSStatusState.Good -> Icons.Default.SignalCellularAlt
+            is GPSStatusState.Fair -> Icons.Default.SignalCellularAlt2Bar
+            is GPSStatusState.Poor -> Icons.Default.SignalCellularAlt1Bar
+            is GPSStatusState.NoFix -> Icons.Default.LocationDisabled
             is GPSStatusState.Searching -> Icons.Default.LocationSearching
-            is GPSStatusState.Disabled -> Icons.Default.LocationDisabled
+            is GPSStatusState.Disabled -> Icons.Default.LocationOff
         }
     }
 

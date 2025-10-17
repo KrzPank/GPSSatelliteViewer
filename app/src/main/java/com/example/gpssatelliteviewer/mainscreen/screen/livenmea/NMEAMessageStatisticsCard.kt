@@ -59,7 +59,7 @@ fun NMEAMessageStatisticsCard(
             ) {
                 Text(
                     text = "Message Statistics",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleLarge,
                 )
                 Icon(
                     imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,

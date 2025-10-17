@@ -2,6 +2,7 @@ package com.example.gpssatelliteviewer.mainscreen.screen.chipsetinfo
 
 import android.location.GnssCapabilities
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,8 @@ import com.example.gpssatelliteviewer.app.theme.ValueText
 import com.example.gpssatelliteviewer.data.GNSSHardwareInfo
 import com.example.gpssatelliteviewer.utils.CapabilityRow
 import com.example.gpssatelliteviewer.utils.InfoRow
+import com.example.gpssatelliteviewer.utils.ValueText
+import kotlin.math.sign
 
 @RequiresApi(Build.VERSION_CODES.R)
 @Composable
@@ -37,12 +40,12 @@ fun GNSSChipsetInfoCard(
         Column(modifier = Modifier.Companion.padding(12.dp)) {
             Text(
                 "Hardware Info",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.headlineMedium,
                 fontSize = 20.sp
             )
             Spacer(Modifier.Companion.height(8.dp))
 
-            // mediatek ???getting different chip names??? sometimes good sometimes shit
+            // mediatek ???getting different chip names??? sometimes good sometimes sh
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 InfoRow("SOC Manufacturer", Build.SOC_MANUFACTURER)
                 InfoRow("SOC Model", Build.SOC_MODEL)
@@ -58,10 +61,10 @@ fun GNSSChipsetInfoCard(
                 "Model name including vendor and hardware/software version",
                 style = MaterialTheme.typography.bodyMedium
             )
-            Text(
-                info.modelName.toString(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = ValueText
+
+            val modelName = info.modelName.toString().replace(",", ", ")
+            ValueText(
+                value = modelName
             )
         }
     }
@@ -82,7 +85,7 @@ fun GNSSChipsetCapabilitiesCard(
             if (info.capabilities != null) {
                 Text(
                     "Capabilities",
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.headlineMedium,
                     fontSize = 20.sp
                 )
                 Spacer(Modifier.Companion.height(8.dp))
@@ -127,6 +130,7 @@ fun GNSSChipsetCapabilitiesCard(
 
                     // GNSS signal types
                     val signals = caps.gnssSignalTypes
+                    //Log.d("SignalTypes", "Signal types: ${signals}")
                     if (signals.isNotEmpty()) {
                         Spacer(Modifier.Companion.height(8.dp))
                         Text(
@@ -160,7 +164,7 @@ fun GNSSChipsetCapabilitiesCard(
                     Spacer(Modifier.Companion.height(8.dp))
                     Text(
                         "GNSS capability details not available on this Android version.",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }

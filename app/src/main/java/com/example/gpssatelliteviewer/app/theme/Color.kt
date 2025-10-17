@@ -12,14 +12,17 @@ val CardBackground = Color(0xFF3A3A3A)
 // Text Colors
 val TextPrimary = Color(0xFFFFFFFF)
 val TextSecondary = Color(0xFFE0E0E0)
-val TextLabel = Color(0xFFFFFFFF)
-val TextHint = Color(0xFF9E9E9E)
+val TextLabel = Color(0xFFE7E7E7)
+val TextHint = Color(0xFFC2C2C2)
 
 // Green Accent Colors for Values
 val GreenPrimary = Color(0xFF4CAF50)
 val GreenLight = Color(0xFF81C784)
 val GreenDark = Color(0xFF388E3C)
 val ValueText = Color(0xFF4CAF50)
+
+val SelectAllButton = Color(0xFF46984B)
+val DeselectAllButton = Color(0xFFA63830)
 
 // Status Colors
 val StatusGood = Color(0xFF4CAF50)

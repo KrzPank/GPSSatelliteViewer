@@ -27,12 +27,15 @@ import com.example.gpssatelliteviewer.utils.CustomCheckbox
 import com.example.gpssatelliteviewer.utils.ParameterSection
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.app.theme.DarkSurfaceVariant
+import com.example.gpssatelliteviewer.app.theme.DeselectAllButton
 import com.example.gpssatelliteviewer.app.theme.GPSDisabled
+import com.example.gpssatelliteviewer.app.theme.GreenLight
 import com.example.gpssatelliteviewer.app.theme.TextLabel
 import com.example.gpssatelliteviewer.app.theme.TextSecondary
 import com.example.gpssatelliteviewer.app.theme.GreenPrimary
 import com.example.gpssatelliteviewer.app.theme.StatusError
 import com.example.gpssatelliteviewer.app.theme.OutlineColor
+import com.example.gpssatelliteviewer.app.theme.SelectAllButton
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,14 +108,14 @@ fun SatelliteFilterMenu(
                         selectedConstellations.addAll(allConstellations)
                     },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
+                    colors = ButtonDefaults.buttonColors(containerColor = SelectAllButton)
                 ) {
                     Text("Select All", color = TextLabel, fontSize = 12.sp)
                 }
                 Button(
                     onClick = { selectedConstellations.clear() },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = StatusError)
+                    colors = ButtonDefaults.buttonColors(containerColor = DeselectAllButton)
                 ) {
                     Text("Deselect All", color = TextLabel, fontSize = 12.sp)
                 }

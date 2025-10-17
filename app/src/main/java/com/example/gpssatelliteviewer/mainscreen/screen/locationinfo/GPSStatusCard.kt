@@ -23,6 +23,7 @@ import com.example.gpssatelliteviewer.app.theme.TextLabel
 import com.example.gpssatelliteviewer.app.theme.ValueText
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.utils.InfoRow
+import com.example.gpssatelliteviewer.utils.ValueText
 
 @Composable
 fun GPSStatusCard(
@@ -42,7 +43,7 @@ fun GPSStatusCard(
         Column(modifier = Modifier.Companion.padding(16.dp)) {
             Text(
                 "GPS Status",
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.headlineMedium,
                 fontSize = 20.sp
             )
             Spacer(Modifier.Companion.height(8.dp))
@@ -67,32 +68,55 @@ fun GPSStatusCard(
             Text(
                 text = "SNR Summary per Constellation",
                 style = MaterialTheme.typography.titleMedium,
-                fontSize = 18.sp,
                 color = TextLabel
             )
-            Text(
-                text = "Fix SNR dBHz / sats  |  All dBHz / sats SNR!=0 / all",
-                style = MaterialTheme.typography.bodySmall,
-                color = TextLabel,
-                fontSize = 12.sp,
-                textAlign = TextAlign.End,
+            Column(
                 modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(4.dp))
-
-            gpsStatus.averageSNRByConstellation.forEach { (constellation, avgAll) ->
-                val avgFix = gpsStatus.averageSNRByConstellationInFix[constellation] ?: 0.0f
-                val fixCount = gpsStatus.getFixCountByConstellation(constellation)
-                val totalSNRCount = gpsStatus.getSNRNot0CountByConstellation(constellation)
-                val totalSatellites = gpsStatus.getGroupedSatelliteCount(constellation)
-
-                InfoRow(
-                    label = constellation,
-                    value = "Fix: %.1f / %d   |   All: %.1f / %d / %d".format(
-                        avgFix, fixCount, avgAll, totalSNRCount, totalSatellites
-                    )
+            ) {
+                Text(
+                    text = "Fix SNR dBHz / sats  |  All dBHz / sats SNR!=0 / all",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextLabel,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(4.dp))
+                //Spacer(Modifier.height(4.dp))
+
+                gpsStatus.averageSNRByConstellation.forEach { (constellation, avgAll) ->
+                    val avgFix = gpsStatus.averageSNRByConstellationInFix[constellation] ?: 0.0f
+                    val fixCount = gpsStatus.getFixCountByConstellation(constellation)
+                    val totalSNRCount = gpsStatus.getSNRNot0CountByConstellation(constellation)
+                    val totalSatellites = gpsStatus.getGroupedSatelliteCount(constellation)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = constellation,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextLabel,
+                            modifier = Modifier.weight(0.8f)
+                        )
+                        ValueText(
+                            value = "%.1f / %d".format(avgFix, fixCount),
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.weight(0.7f)
+                        )
+                        ValueText(
+                            value = "  |  ",
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.weight(0.2f)
+                        )
+                        ValueText(
+                            value = "%.1f / %d / %d".format(avgAll, totalSNRCount, totalSatellites),
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.weight(0.7f)
+                        )
+                    }
+                    Spacer(Modifier.height(4.dp))
+                }
             }
         }
     }
