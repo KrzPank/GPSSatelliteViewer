@@ -62,7 +62,7 @@ fun SatelliteInfoBox(
                         color = Color.White
                     )
 
-                    InfoRow(label = "SNR: ", value = sat.snr.toString())
+                    InfoRow(label = "SNR: ", value = sat.cn0DbHz.toString())
                     InfoRow(label = "In fix: ", value = sat.usedInFix.toString())
                     InfoRow(label = "Azimuth: ", value = sat.azimuth.toString())
                     InfoRow(label = "Elevation: ", value = sat.elevation.toString())

@@ -39,11 +39,37 @@ class Scene3D(
     private val centerNode = Node(engine)
 
     // Management systems
-    private val camera: CameraManager = CameraManager(engine, view, centerNode, parameters)
-    private var mainLight: LightHandler = LightHandler(engine, centerNode, camera.getCameraNode(), parameters)
-    private var locationMarker: LocationMarkerManager = LocationMarkerManager(modelLoader, centerNode, parameters)
-    private var earth: EarthManager = EarthManager(modelLoader, centerNode, parameters)
-    val satellites: SatelliteManager = SatelliteManager(modelLoader, centerNode, parameters)
+    private var earth: EarthManager = EarthManager(
+        modelLoader = modelLoader,
+        centerNode = centerNode,
+        parameters = parameters
+    )
+
+    private var locationMarker: LocationMarkerManager = LocationMarkerManager(
+        modelLoader = modelLoader,
+        centerNode = centerNode,
+        parameters = parameters
+    )
+
+    private val camera: CameraManager = CameraManager(
+        engine = engine,
+        view = view,
+        centerNode = centerNode,
+        parameters = parameters
+    )
+
+    private var mainLight: LightHandler = LightHandler(
+        engine = engine,
+        centerNode = centerNode,
+        cameraNode = camera.getCameraNode(),
+        parameters = parameters
+    )
+
+    val satellites: SatelliteManager = SatelliteManager(
+        modelLoader = modelLoader,
+        centerNode = centerNode,
+        parameters = parameters
+    )
 
     // Menu on/off
     private var _menuVisible by mutableStateOf(true)

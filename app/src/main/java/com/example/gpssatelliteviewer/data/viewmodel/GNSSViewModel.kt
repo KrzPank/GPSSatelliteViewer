@@ -17,7 +17,6 @@ import com.example.gpssatelliteviewer.data.GNSSMeasurementData
 import com.example.gpssatelliteviewer.utils.averageOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -65,7 +64,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                         GNSSStatusData(
                             constellation = constellation,
                             prn = status.getSvid(i),
-                            snr = status.getCn0DbHz(i),
+                            cn0DbHz = status.getCn0DbHz(i),
                             usedInFix = status.usedInFix(i),
                             azimuth = status.getAzimuthDegrees(i),
                             elevation = status.getElevationDegrees(i)
@@ -156,7 +155,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
             val (constellation, prn) = satelliteKey.split(":")
             val newValue = gnssStatusData
                 .filter { it.constellation == constellation && it.prn.toString() == prn }
-                .map { it.snr }
+                .map { it.cn0DbHz }
 
             val newHistory = (oldHistory.takeLast(CHART_UPDATE_WINDOW - 1) + newValue).toMutableList()
             updated[satelliteKey] = newHistory
@@ -175,7 +174,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
             val newValue = gnssStatusList
                 .filter { it.constellation == constellation && it.usedInFix }
-                .map { it.snr }
+                .map { it.cn0DbHz }
                 .averageOrNull()
                 ?.toFloat() ?: 0f
 

@@ -9,6 +9,7 @@ import com.google.android.filament.Engine
 import com.google.android.filament.View
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.gesture.CameraGestureDetector
+import io.github.sceneview.gesture.transform
 import io.github.sceneview.math.Transform
 import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.Node
@@ -41,14 +42,14 @@ class CameraManager(
             targetPosition = centerNode.worldPosition
         )
 
-        val clamped = ClampedManipulatorWrapper(
-            base = base,
-            minDistance = minCameraDistance
-        )
+        //val clamped = ClampedManipulatorWrapper(
+        //    base = base,
+        //    minDistance = minCameraDistance
+        //)
 
         return CameraGestureDetector(
             viewHeight = { view.viewport.height },
-            cameraManipulator = clamped
+            cameraManipulator = base
         ).apply {
             isPanEnabled = false
         }

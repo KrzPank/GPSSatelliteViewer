@@ -18,14 +18,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationDisabled
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationSearching
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.SignalCellularAlt1Bar
 import androidx.compose.material.icons.filled.SignalCellularAlt2Bar
@@ -115,10 +111,10 @@ class GPSStatus(
         val groupedSatellites = satellitesInFix.groupBy { it.constellation }
 
         return groupedSatellites.mapValues { (_, sats) ->
-            val valid = sats.filter { it.snr != 0f }
+            val valid = sats.filter { it.cn0DbHz != 0f }
 
             if (valid.isNotEmpty()) {
-                valid.map { it.snr }.average().toFloat()
+                valid.map { it.cn0DbHz }.average().toFloat()
             } else {
                 0.0f
             }
@@ -129,10 +125,10 @@ class GPSStatus(
         val groupedSatellites = satellites.groupBy { it.constellation }
 
         return groupedSatellites.mapValues { (_, sats) ->
-            val valid = sats.filter { it.snr != 0f }
+            val valid = sats.filter { it.cn0DbHz != 0f }
 
             if (valid.isNotEmpty()) {
-                valid.map { it.snr }.average().toFloat()
+                valid.map { it.cn0DbHz }.average().toFloat()
             } else {
                 0.0f
             }
@@ -142,7 +138,7 @@ class GPSStatus(
     private fun calculateAverageSNRInFix(satellites: List<GNSSStatusData>): Float {
         val satellitesInFix = satellites.filter { it.usedInFix }
         return if (satellitesInFix.isNotEmpty()) {
-            satellitesInFix.map { it.snr }.average().toFloat()
+            satellitesInFix.map { it.cn0DbHz }.average().toFloat()
         } else 0.0f
     }
 
@@ -156,7 +152,7 @@ class GPSStatus(
     }
 
     fun getSNRNot0CountByConstellation(constellation: String): Int {
-        val satelliteSNRNot0 = satellites.filter { it.snr != 0f }
+        val satelliteSNRNot0 = satellites.filter { it.cn0DbHz != 0f }
         return satelliteSNRNot0.count() { it.constellation == constellation}
     }
 

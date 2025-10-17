@@ -5,7 +5,7 @@ import android.location.GnssCapabilities
 data class GNSSStatusData(
     val constellation: String,
     val prn: Int,
-    val snr: Float,
+    val cn0DbHz: Float,
     val usedInFix: Boolean,
     val azimuth: Float,
     val elevation: Float

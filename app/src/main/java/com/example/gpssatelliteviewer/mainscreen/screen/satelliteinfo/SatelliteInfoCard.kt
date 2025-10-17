@@ -69,7 +69,7 @@ fun SatelliteInfoCard(satellite: GNSSStatusData) {
     ) {
         Column(modifier = Modifier.Companion.padding(12.dp)) {
             InfoRow("PRN", satellite.prn.toString())
-            InfoRow("SNR", "${satellite.snr} dBHz")
+            InfoRow("SNR", "${satellite.cn0DbHz} dBHz")
             InfoRow("Used in Fix", satellite.usedInFix.toString())
             InfoRow("Azimuth", "${satellite.azimuth}°")
             InfoRow("Elevation", "${satellite.elevation}°")

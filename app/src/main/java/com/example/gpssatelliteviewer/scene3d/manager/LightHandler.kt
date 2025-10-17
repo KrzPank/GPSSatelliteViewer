@@ -18,11 +18,11 @@ class LightHandler(
     private val engine: Engine,
     private val centerNode: Node,
     private val cameraNode: CameraNode,
-    initialParameters: Scene3DParameters
+    parameters: Scene3DParameters
 ) {
-    private var sunLight: LightNode = createSunLight(initialParameters.getLightParameters())
+    private var sunLight: LightNode = createSunLight(parameters.getLightParameters())
 
-    private var currentLightParameters: LightParameters = initialParameters.getLightParameters()
+    private var currentLightParameters: LightParameters = parameters.getLightParameters()
 
     // Light update optimization
     private var lastCameraPosition = Float3(0f, 0f, 0f)
