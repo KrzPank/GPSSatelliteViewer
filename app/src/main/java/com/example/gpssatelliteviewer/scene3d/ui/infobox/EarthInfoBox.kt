@@ -79,8 +79,16 @@ fun EarthInfoBox(
                         fontWeight = FontWeight.Bold,
                     )
 
+                    val labelStyle = MaterialTheme.typography.bodySmall
+                    val valueStyle = MaterialTheme.typography.bodyMedium
+
                     if (nmea.time.isNotEmpty()) {
-                        InfoRow(label = "Last update (UTC): ", value = nmea.time)
+                        InfoRow(
+                            label = "Last update (UTC): ",
+                            value = nmea.time,
+                            labelStyle = labelStyle,
+                            valueStyle = valueStyle
+                        )
                     }
 
                     val fixInfo = listOf(
@@ -89,7 +97,12 @@ fun EarthInfoBox(
                     ).joinToString(" / ")
 
                     if (fixInfo.isNotBlank()) {
-                        InfoRow(label = "Fix / Type: ", value = fixInfo)
+                        InfoRow(
+                            label = "Fix / Type: ",
+                            value = fixInfo,
+                            labelStyle = labelStyle,
+                            valueStyle = valueStyle
+                        )
                     }
 
                     if (nmea.latitude != 0.0) {
@@ -98,7 +111,9 @@ fun EarthInfoBox(
                             value = CoordinateConverter.nmeaCoordinateToDMS(
                                 nmea.latitude,
                                 nmea.latHemisphere
-                            )
+                            ),
+                            labelStyle = labelStyle,
+                            valueStyle = valueStyle
                         )
                     }
 
@@ -108,14 +123,18 @@ fun EarthInfoBox(
                             value = CoordinateConverter.nmeaCoordinateToDMS(
                                 nmea.longitude,
                                 nmea.lonHemisphere
-                            )
+                            ),
+                            labelStyle = labelStyle,
+                            valueStyle = valueStyle
                         )
                     }
 
                     if (nmea.mslAltitude != 0.0) {
                         InfoRow(
                             label = "Altitude MSL: ",
-                            value = "%.1f m".format(nmea.mslAltitude)
+                            value = "%.1f m".format(nmea.mslAltitude),
+                            labelStyle = labelStyle,
+                            valueStyle = valueStyle
                         )
                     }
 
@@ -123,7 +142,9 @@ fun EarthInfoBox(
                     if (accuracy > 0.0) {
                         InfoRow(
                             label = "Accuracy (2D): ",
-                            value = "%.1f m".format(accuracy)
+                            value = "%.1f m".format(accuracy),
+                            labelStyle = labelStyle,
+                            valueStyle = valueStyle
                         )
                     }
 
@@ -134,9 +155,12 @@ fun EarthInfoBox(
                             value = listOf(
                                 "%.1f kn".format(nmea.speedKnots),
                                 "%.1f km/h".format(speedKmh)
-                            ).joinToString(" / ")
+                            ).joinToString(" / "),
+                            labelStyle = labelStyle,
+                            valueStyle = valueStyle
                         )
                     }
+
                 }
             }
         }

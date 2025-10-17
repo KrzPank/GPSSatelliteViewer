@@ -24,7 +24,6 @@ import com.example.gpssatelliteviewer.mainscreen.screen.livenmea.NMEAMessageStat
 import com.example.gpssatelliteviewer.utils.EmptyStateCard
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun LiveNMEADataScreen(
     viewModel: NMEAViewModel

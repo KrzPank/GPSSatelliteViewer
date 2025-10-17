@@ -5,15 +5,12 @@ import android.icu.text.SimpleDateFormat
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.AndroidViewModel
 import com.example.gpssatelliteviewer.data.LOCATION_TIMEOUT_PERIOD
 import com.example.gpssatelliteviewer.data.LOCATION_UPDATE_INTERVAL
-import com.example.gpssatelliteviewer.data.ListenerData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -21,14 +18,31 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Date
 import java.util.Locale
 
-@RequiresApi(Build.VERSION_CODES.P)
+data class ListenerData(
+    val time: String = "",
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val altitude: Double = 0.0,
+    val accuracy: Float = 0f,
+    val speed: Float = 0f,
+    val bearing: Float = 0f,
+    val verticalAccuracy: Float? = null,
+    val speedAccuracy: Float? = null,
+    val bearingAccuracy: Float? = null,
+    val provider: String = "",
+    val latHemisphere: Char = 0.toChar(),
+    val longHemisphere: Char = 0.toChar(),
+    val elapsedRealtimeNanos: Long = 0L,
+)
+
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
     private val handler = Handler(Looper.getMainLooper())
-    private val parsingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private val listenerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val _locationAndroidApi = MutableStateFlow<ListenerData>(ListenerData())
     val locationAndroidApi: StateFlow<ListenerData> = _locationAndroidApi
@@ -49,7 +63,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
-            parsingScope.launch {
+            listenerScope.launch {
                 _hasLocationAndroidApi.value = true
                 handler.removeCallbacks(noAndroidApiLocationTimeout)
                 handler.postDelayed(noAndroidApiLocationTimeout, LOCATION_TIMEOUT_PERIOD)
@@ -70,7 +84,10 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                     longHemisphere = if (location.longitude >= 0) 'E' else 'W',
                     elapsedRealtimeNanos = location.elapsedRealtimeNanos
                 )
-                _locationAndroidApi.value = listenerData
+
+                withContext(Dispatchers.Main) {
+                    _locationAndroidApi.value = listenerData
+                }
             }
         }
 
@@ -95,6 +112,6 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     override fun onCleared() {
         super.onCleared()
         locationManager.removeUpdates(locationListener)
-        parsingScope.cancel()
+        listenerScope.cancel()
     }
 }

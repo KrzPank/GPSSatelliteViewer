@@ -1,6 +1,7 @@
 package com.example.gpssatelliteviewer.scene3d.ui
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -51,9 +52,10 @@ import com.example.gpssatelliteviewer.scene3d.ui.menu.Scene3DParametersMenu
 import com.example.gpssatelliteviewer.app.theme.DarkBackground
 import com.example.gpssatelliteviewer.app.theme.GreenPrimary
 import com.example.gpssatelliteviewer.app.theme.TextLabel
-import com.example.gpssatelliteviewer.data.ListenerData
+import com.example.gpssatelliteviewer.data.GNSSCombinedData
+import com.example.gpssatelliteviewer.data.GNSSStatusData
+import com.example.gpssatelliteviewer.data.mergeLists
 import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
-import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.ui.infobox.EarthInfoBox
 import com.example.gpssatelliteviewer.scene3d.ui.infobox.SatelliteInfoBox
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
@@ -69,7 +71,6 @@ import io.github.sceneview.rememberScene
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun Satellite3DScreen(
     navController: NavController,
@@ -82,6 +83,8 @@ fun Satellite3DScreen(
     LockOrientationLandscape()
 
     val satelliteList by gnssViewModel.satelliteList.collectAsState()
+    val measurements by gnssViewModel.gnssMeasurements.collectAsState()
+
     val locationAndroidApi by locationViewModel.locationAndroidApi.collectAsState()
 
     val userLocation: Float3? = when {
@@ -178,11 +181,11 @@ fun Satellite3DScreen(
         }
 
         // Handle satellite click
+        val satelliteInfo = mergeLists(satelliteList, measurements)
+
         val clickedSatelliteKey by scene.clickedSatelliteKeyState
-        val clickedSatellite by remember(clickedSatelliteKey, satelliteList) {
-            derivedStateOf {
-                scene.resolveClickedSatelliteByKey(clickedSatelliteKey, satelliteList)
-            }
+        val clickedSatellite by remember (clickedSatelliteKey, satelliteInfo) {
+            derivedStateOf { resolveClickedSatelliteByKey(clickedSatelliteKey, satelliteInfo) }
         }
 
         AnimatedVisibility(
@@ -329,4 +332,13 @@ fun Satellite3DScreen(
             }
         }
     }
+}
+
+fun resolveClickedSatelliteByKey(key: String?, satelliteList: List<GNSSCombinedData>): GNSSCombinedData? {
+    if (key == null) return null
+    val parts = key.split(":")
+    if (parts.size != 2) return null
+    val constellation = parts[0]
+    val prn = parts[1].toIntOrNull() ?: return null
+    return satelliteList.find { it.constellation == constellation && it.prn == prn }
 }

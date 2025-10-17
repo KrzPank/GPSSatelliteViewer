@@ -1,19 +1,21 @@
 package com.example.gpssatelliteviewer.data.viewmodel
 
 import android.app.Application
+import android.location.GnssCapabilities
 import android.location.GnssMeasurementsEvent
 import android.location.GnssStatus
 import android.location.LocationManager
 import androidx.lifecycle.AndroidViewModel
 import com.example.gpssatelliteviewer.data.GNSSStatusData
+import com.example.gpssatelliteviewer.data.GNSSHardwareInfo
+import com.example.gpssatelliteviewer.data.GNSSMeasurementData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
-import com.example.gpssatelliteviewer.data.GNSSHardwareInfo
-import com.example.gpssatelliteviewer.data.GNSSMeasurementData
+import com.example.gpssatelliteviewer.data.GNSSCombinedData
 import com.example.gpssatelliteviewer.utils.averageOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +25,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 
-@RequiresApi(Build.VERSION_CODES.R)
 class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
 
@@ -135,9 +136,9 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun loadGNSSHardwareInfo() {
-        val model = try { locationManager.gnssHardwareModelName } catch (_: Exception) { null } // API 28+
+        val model = try { locationManager.gnssHardwareModelName } catch (_: Exception) { null }
         val year = try { locationManager.gnssYearOfHardware } catch (_: Exception) { null }
-        val caps = try { locationManager.gnssCapabilities } catch (_: Exception) { null } // API 30+
+        val caps = try { locationManager.gnssCapabilities } catch (_: Exception) { null }
 
         _gnssHardwareInfo.value = GNSSHardwareInfo(
             modelName = model,

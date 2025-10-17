@@ -1,5 +1,6 @@
 package com.example.gpssatelliteviewer.utils
 
+import android.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -49,10 +51,11 @@ fun ValueText(
     modifier: Modifier = Modifier,
     textAlign: TextAlign? = null,
     fontWeight: FontWeight? = FontWeight.Bold,
+    style: TextStyle = MaterialTheme.typography.bodyLarge,
 ) {
     Text(
         text = value,
-        style = MaterialTheme.typography.bodyLarge,
+        style = style,
         color = ValueText,
         fontWeight = fontWeight,
         textAlign = textAlign,
@@ -64,7 +67,9 @@ fun ValueText(
 fun InfoRow(
     label: String,
     value: String,
-    modifier: Modifier = Modifier.fillMaxWidth()
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    labelStyle: TextStyle = MaterialTheme.typography.bodyMedium,
+    valueStyle: TextStyle = MaterialTheme.typography.bodyLarge
 ) {
     Row(
         modifier = modifier,
@@ -72,11 +77,12 @@ fun InfoRow(
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyMedium,
+            style = labelStyle,
             color = TextLabel,
         )
         ValueText(
-            value = value
+            value = value,
+            style = valueStyle
         )
     }
 }

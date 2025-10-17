@@ -1,44 +1,55 @@
 package com.example.gpssatelliteviewer.mainscreen.screen.satelliteinfo
 
-import android.os.Build
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SatelliteAlt
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.gpssatelliteviewer.app.theme.DarkBackground
 import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
-import com.example.gpssatelliteviewer.mainscreen.screen.satelliteinfo.ConstellationCard
-import com.example.gpssatelliteviewer.mainscreen.screen.satelliteinfo.SatelliteInfoCard
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import com.example.gpssatelliteviewer.app.theme.GreenPrimary
+import com.example.gpssatelliteviewer.app.theme.TextPrimary
+import com.example.gpssatelliteviewer.data.GNSSCombinedData
+import com.example.gpssatelliteviewer.data.mergeLists
 import com.example.gpssatelliteviewer.utils.EmptyStateCard
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun SatelliteInfoScreen(
     gnssViewModel: GNSSViewModel
 ) {
-
-    // merge measurements to satellite info card and make filter button to show only those with fix == true
-
     val satellites by gnssViewModel.satelliteList.collectAsState()
+    val measurements by gnssViewModel.gnssMeasurements.collectAsState()
+    val satelliteInfo = mergeLists(satellites, measurements)
 
-    // add button to sort by fix
-    val groupedSatellites = satellites
+    var showOnlyInfFix by remember { mutableStateOf(false) }
+
+    val filteredSatellites = satelliteInfo.let { list ->
+        if (showOnlyInfFix) list.filter { it.usedInFix }
+        else list
+    }
         .sortedBy { it.prn }
         .groupBy { it.constellation }
 
@@ -47,12 +58,34 @@ fun SatelliteInfoScreen(
     LazyColumn(
         modifier = Modifier.Companion
             .padding(horizontal = 8.dp, vertical = 8.dp)
-            .fillMaxSize()
-            .background(DarkBackground),
+            .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        if (groupedSatellites.isNotEmpty()) {
-            groupedSatellites.forEach { (constellation, satellitesInGroup) ->
+        item {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Checkbox(
+                    checked = showOnlyInfFix,
+                    onCheckedChange = { showOnlyInfFix = it },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = GreenPrimary,
+                        uncheckedColor = TextPrimary
+                    )
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Show only used in Fix",
+                    color = TextPrimary,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
+
+        if (filteredSatellites.isNotEmpty()) {
+            filteredSatellites.forEach { (constellation, satellitesInGroup) ->
                 val expanded = expandedMap.getOrPut(constellation) { false }
 
                 item {
@@ -65,8 +98,8 @@ fun SatelliteInfoScreen(
                 }
 
                 if (expanded) {
-                    items(satellitesInGroup) { satellites ->
-                        SatelliteInfoCard(satellites)
+                    items(satellitesInGroup) { satellite ->
+                        SatelliteInfoCard(satellite)
                     }
                 }
 

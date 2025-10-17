@@ -39,7 +39,6 @@ import kotlinx.coroutines.delay
 import java.sql.Date
 import java.util.Locale
 
-@RequiresApi(Build.VERSION_CODES.R)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocationInfoScreen(

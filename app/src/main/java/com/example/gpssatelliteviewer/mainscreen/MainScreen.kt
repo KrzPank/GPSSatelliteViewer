@@ -24,7 +24,6 @@ import com.example.gpssatelliteviewer.utils.NavigationTopAppBar
 import androidx.compose.runtime.getValue
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun MainScreen(
     navController: NavController,

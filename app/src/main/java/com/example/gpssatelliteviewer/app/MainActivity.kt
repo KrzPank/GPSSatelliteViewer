@@ -42,7 +42,6 @@ import com.example.gpssatelliteviewer.statisticscreen.MainStatisticsScreen
 import com.example.gpssatelliteviewer.utils.SetupDarkSystemUI
 
 class MainActivity : ComponentActivity() {
-    @RequiresApi(Build.VERSION_CODES.R)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -92,7 +91,6 @@ class MainActivity : ComponentActivity() {
 }
 
 
-@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun AppNavigation(
     hasPermission: Boolean,

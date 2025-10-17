@@ -80,7 +80,7 @@ fun GPSStatusCard(
                     textAlign = TextAlign.End,
                     modifier = Modifier.fillMaxWidth()
                 )
-                //Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(4.dp))
 
                 gpsStatus.averageSNRByConstellation.forEach { (constellation, avgAll) ->
                     val avgFix = gpsStatus.averageSNRByConstellationInFix[constellation] ?: 0.0f

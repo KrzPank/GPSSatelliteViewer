@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.app.theme.DarkBackground
 import com.example.gpssatelliteviewer.utils.EmptyStateCard
 
-@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun SNRStatisticsScreen(
     gnssViewModel: GNSSViewModel

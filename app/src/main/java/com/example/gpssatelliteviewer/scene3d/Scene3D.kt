@@ -95,35 +95,26 @@ class Scene3D(
         when (key) {
             null -> {
                 // Empty tap or node without a name → hide everything
-                Log.d("clickingstuff", "Single-tap (empty scene): closing InfoBox")
+                //Log.d("clickingstuff", "Single-tap (empty scene): closing InfoBox")
                 _clickedSatelliteKey.value = null
                 _isSatelliteInfoBoxVisible = false
                 _isEarthInfoBoxVisible = false
             }
             earth.getEarthNode().name -> {
                 // Earth tapped
-                Log.d("clickingstuff", "Tapped earth node")
+                //Log.d("clickingstuff", "Tapped earth node")
                 _clickedSatelliteKey.value = null
                 _isSatelliteInfoBoxVisible = false
                 _isEarthInfoBoxVisible = true
             }
             else -> {
                 // Satellite tapped
-                Log.d("clickingstuff", "Tapped node with satellite key: $key")
+                //Log.d("clickingstuff", "Tapped node with satellite key: $key")
                 _clickedSatelliteKey.value = key
                 _isSatelliteInfoBoxVisible = true
                 _isEarthInfoBoxVisible = false
             }
         }
-    }
-
-    fun resolveClickedSatelliteByKey(key: String?, satelliteList: List<GNSSStatusData>): GNSSStatusData? {
-        if (key == null) return null
-        val parts = key.split(":")
-        if (parts.size != 2) return null
-        val constellation = parts[0]
-        val prn = parts[1].toIntOrNull() ?: return null
-        return satelliteList.find { it.constellation == constellation && it.prn == prn }
     }
 
     @Composable

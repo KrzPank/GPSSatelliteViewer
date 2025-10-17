@@ -25,7 +25,6 @@ import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.ValueText
 import kotlin.math.sign
 
-@RequiresApi(Build.VERSION_CODES.R)
 @Composable
 fun GNSSChipsetInfoCard(
     info: GNSSHardwareInfo,
