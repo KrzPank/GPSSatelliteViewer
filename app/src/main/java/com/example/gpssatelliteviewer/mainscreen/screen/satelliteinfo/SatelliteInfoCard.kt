@@ -84,7 +84,7 @@ fun SatelliteInfoCard(satellite: GNSSCombinedData) {
             InfoRow("Elevation ", "%.1f°".format(satellite.elevation))
 
             satellite.carrierFrequencyRangeHz?.let {
-                InfoRow("Carrier Frequency ", "%.1f Hz".format(it))
+                InfoRow("Carrier Frequency ", "%.3f MHz".format(it/1_000_000))
             }
 
             satellite.accumulatedDeltaRangeMeters?.let {

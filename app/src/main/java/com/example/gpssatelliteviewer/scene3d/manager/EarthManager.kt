@@ -31,7 +31,7 @@ class EarthManager(
         return earthNode
     }
 
-    fun updateEarthParameters(newParameters: Scene3DParameters) {
+    fun updateParameters(newParameters: Scene3DParameters) {
         val oldParameters = parameters
         parameters = newParameters
 

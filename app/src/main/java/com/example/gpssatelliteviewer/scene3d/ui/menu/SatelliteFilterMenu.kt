@@ -26,14 +26,10 @@ import com.example.gpssatelliteviewer.app.theme.DarkBackground
 import com.example.gpssatelliteviewer.utils.CustomCheckbox
 import com.example.gpssatelliteviewer.utils.ParameterSection
 import com.example.gpssatelliteviewer.utils.InfoRow
-import com.example.gpssatelliteviewer.app.theme.DarkSurfaceVariant
 import com.example.gpssatelliteviewer.app.theme.DeselectAllButton
-import com.example.gpssatelliteviewer.app.theme.GPSDisabled
-import com.example.gpssatelliteviewer.app.theme.GreenLight
-import com.example.gpssatelliteviewer.app.theme.TextLabel
-import com.example.gpssatelliteviewer.app.theme.TextSecondary
-import com.example.gpssatelliteviewer.app.theme.GreenPrimary
-import com.example.gpssatelliteviewer.app.theme.StatusError
+import com.example.gpssatelliteviewer.app.theme.GPSDisabledColor
+import com.example.gpssatelliteviewer.app.theme.TextLabelColor
+import com.example.gpssatelliteviewer.app.theme.TextSecondaryColor
 import com.example.gpssatelliteviewer.app.theme.OutlineColor
 import com.example.gpssatelliteviewer.app.theme.SelectAllButton
 
@@ -62,7 +58,7 @@ fun SatelliteFilterMenu(
         // Header
         Text(
             text = "Satellite Filters",
-            color = TextLabel,
+            color = TextLabelColor,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
@@ -73,12 +69,12 @@ fun SatelliteFilterMenu(
         ParameterSection("Navigation") {
             Text(
                 text = "Double tap on scene to open/close menu",
-                color = TextSecondary,
+                color = TextSecondaryColor,
                 fontSize = 14.sp
             )
             Text(
                 text = "Click on satellite to show info",
-                color = TextSecondary,
+                color = TextSecondaryColor,
                 fontSize = 14.sp
             )
             Row(
@@ -88,9 +84,9 @@ fun SatelliteFilterMenu(
                 Button(
                     onClick = { navController.navigate("MainScreen") },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = GPSDisabled)
+                    colors = ButtonDefaults.buttonColors(containerColor = GPSDisabledColor)
                 ) {
-                    Text("Main screen", color = TextLabel, fontSize = 12.sp)
+                    Text("Main screen", color = TextLabelColor, fontSize = 12.sp)
                 }
             }
         }
@@ -110,14 +106,14 @@ fun SatelliteFilterMenu(
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = SelectAllButton)
                 ) {
-                    Text("Select All", color = TextLabel, fontSize = 12.sp)
+                    Text("Select All", color = TextLabelColor, fontSize = 12.sp)
                 }
                 Button(
                     onClick = { selectedConstellations.clear() },
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(containerColor = DeselectAllButton)
                 ) {
-                    Text("Deselect All", color = TextLabel, fontSize = 12.sp)
+                    Text("Deselect All", color = TextLabelColor, fontSize = 12.sp)
                 }
             }
 

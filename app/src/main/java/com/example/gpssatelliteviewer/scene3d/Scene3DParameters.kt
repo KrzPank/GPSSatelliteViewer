@@ -6,9 +6,6 @@ import androidx.compose.runtime.setValue
 import com.google.android.filament.LightManager
 import dev.romainguy.kotlin.math.Float3
 
-/**
- * Light-specific parameters extracted for LightHandler
- */
 data class LightParameters(
     val intensity: Float,
     val color: Float3,
@@ -18,9 +15,6 @@ data class LightParameters(
 
 // TODO make earth, satellite, marker and render quality specific parameters extraction like for light
 
-/**
- * Data class containing all configurable parameters for Scene3D
- */
 data class Scene3DParameters(
     // Light Parameters
     var lightIntensity: Float = 250_000.0f,
@@ -37,8 +31,8 @@ data class Scene3DParameters(
     var satelliteScale: Float = 0.05f,
 
     // Location marker Parameters
-    var locationMarkerModelPath: String = "models/RedCircle.glb",
-    var locationMarkerScale: Float = 0.1f,
+    var locationMarkerModelPath: String = "models/LocationMarker.glb",
+    var locationMarkerScale: Float = 0.05f,
     var userLocation: Float3? = null,
 
     // Environment Parameters
@@ -46,7 +40,7 @@ data class Scene3DParameters(
     var environmentIntensity: Float = 1.0f,
 
     // Camera Parameters - positioned for better Earth view
-    var startingCameraLocation: Float3 = Float3(0.0f, 1.5f, 4.0f),
+    var startingCameraLocation: Float3 = Float3(3.0f, 1.0f, 3.0f),
 
     // Performance Parameters
     var enableLevelOfDetail: Boolean = true,
@@ -108,6 +102,10 @@ class Scene3DParametersState {
 
     fun updateLocation(location: Float3?) {
         parameters = parameters.copy(userLocation = location)
+    }
+
+    fun updateLocationMarkerScale(locationMarkerScale: Float) {
+        parameters = parameters.copy(locationMarkerScale = locationMarkerScale)
     }
 
     fun updateLightColor(red: Float, green: Float, blue: Float) {

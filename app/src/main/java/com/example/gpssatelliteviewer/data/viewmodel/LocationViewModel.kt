@@ -10,7 +10,6 @@ import android.os.Handler
 import android.os.Looper
 import androidx.lifecycle.AndroidViewModel
 import com.example.gpssatelliteviewer.data.LOCATION_TIMEOUT_PERIOD
-import com.example.gpssatelliteviewer.data.LOCATION_UPDATE_INTERVAL
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -100,10 +99,11 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         try {
             locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER,
-                LOCATION_UPDATE_INTERVAL,
+                1000L, // 1000 ms = 1sec
                 0f,
                 locationListener
             )
+            checkLocationEnabled()
         } catch (e: SecurityException) {
             e.printStackTrace()
         }

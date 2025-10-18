@@ -9,7 +9,6 @@ import com.google.android.filament.Engine
 import com.google.android.filament.View
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.gesture.CameraGestureDetector
-import io.github.sceneview.gesture.transform
 import io.github.sceneview.math.Transform
 import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.Node
@@ -21,20 +20,25 @@ class CameraManager(
     private val centerNode: Node,
     private val parameters: Scene3DParameters
 ) {
-    private var cameraNode = createCamera(parameters.userLocation)
-    fun getCameraNode() = cameraNode
+    private var cameraNode = createCamera()
 
     private val cameraGestureDetector = createCameraGestureDetector()
+
+    private val updateThreshold = 0.01f
+    private var dynamicUpdateThreshold = updateThreshold
+    private val minCameraDistance = 0.60f
+
+    private var lastCameraPosition = Float3(0.0f, 0.0f, 0.0f)
+    private var lastValidLocalPosition: Float3 = cameraNode.position
+
+    fun getCameraNode() = cameraNode
+
     fun getCameraManipulator() = cameraGestureDetector.cameraManipulator
     fun getCameraGestureDetector() = cameraGestureDetector
 
-    private var frameCount = 0
-    private val lookAtUpdateInterval = 2
-    private var lastCameraPosition = Float3(0.0f, 0.0f, 0.0f)
-    private val updateThreshold = 0.008f
-    private val minCameraDistance = 0.60f
-
-    private var lastValidLocalPosition: Float3 = cameraNode.position
+    fun getLastCameraPosition() = lastCameraPosition
+    fun getCameraPosition() = cameraNode.worldPosition
+    fun getDynamicUpdateThreshold() = dynamicUpdateThreshold
 
     private fun createCameraGestureDetector(): CameraGestureDetector {
         val base = CameraGestureDetector.DefaultCameraManipulator(
@@ -55,26 +59,8 @@ class CameraManager(
         }
     }
 
-    private fun shouldUpdateLookAt(satellites: SatelliteManager, locationMarker: LocationMarkerManager) {
-        frameCount++
-
-        val distanceToCenter = (cameraNode.worldPosition - centerNode.worldPosition).length()
-        val cameraMoved = (cameraNode.worldPosition - lastCameraPosition).length()
-        val dynamicThreshold = updateThreshold * distanceToCenter * distanceToCenter
-        val frameIntervalMet = frameCount >= lookAtUpdateInterval
-
-        val shouldUpdate = frameIntervalMet && cameraMoved  > dynamicThreshold
-        if (shouldUpdate) {
-            lastCameraPosition = cameraNode.worldPosition
-            frameCount = 0
-
-            satellites.updateLookAt(cameraNode)
-            locationMarker.updateLookAt(cameraNode)
-        }
-    }
-
-    private fun createCamera(startingLocation: Float3?): CameraNode {
-        val pos = calculateCameraStartingPosition(startingLocation) ?: parameters.startingCameraLocation
+    private fun createCamera(): CameraNode {
+        val pos = calculateCameraStartingPosition() ?: parameters.startingCameraLocation
         val camera = CameraNode(engine).apply {
             position = pos
             lookAt(centerNode)
@@ -85,9 +71,11 @@ class CameraManager(
         return camera
     }
 
-    fun onFrame(satellites: SatelliteManager, locationMarker: LocationMarkerManager) {
-        shouldUpdateLookAt(satellites, locationMarker)
+    fun onFrame() {
+        updateClippedCamera()
+    }
 
+    private fun updateClippedCamera() {
         val cameraWorldPos = cameraNode.worldPosition
         val centerWorldPos = centerNode.worldPosition
         val offset = cameraWorldPos - centerWorldPos
@@ -98,13 +86,12 @@ class CameraManager(
         } else {
             val dirNorm = offset.normalized(dist)
             cameraNode.position = centerWorldPos + dirNorm * minCameraDistance
-            //Log.d("CameraPos", "Clamped camera to $clampedWorldPos, lastValidLocalPosition: $lastValidLocalPosition   (dist=$dist). New manipulator created.")
         }
         cameraNode.lookAt(centerNode)
     }
 
     private fun calculateCameraStartingPosition(
-        userLocation: Float3?,
+        userLocation: Float3? = parameters.userLocation,
         distanceFactor: Float = 10.0f
     ): Float3? {
         if (userLocation == null) return null
@@ -115,22 +102,13 @@ class CameraManager(
         )
 
         val userScenePos = CoordinateConverter.ecefToScenePos(ecef)
-
-        val length = userScenePos.length()
-        if (length == 0f) return null
-
         val dir = userScenePos.normalized()
-
-        val cameraDistance = length * distanceFactor
-
         // +- 1 for better viewing experience
-        val cameraPos = Float3(
-            dir.x * cameraDistance + 1f,
-            dir.y * cameraDistance - 1f,
-            dir.z * cameraDistance + 1f
+        return Float3(
+            dir.x * distanceFactor + 1f,
+            dir.y * distanceFactor - 1f,
+            dir.z * distanceFactor + 1f
         )
-
-        return cameraPos
     }
 
     private fun applyVisualEffects() {

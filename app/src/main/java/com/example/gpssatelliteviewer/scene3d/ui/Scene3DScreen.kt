@@ -1,8 +1,5 @@
 package com.example.gpssatelliteviewer.scene3d.ui
 
-import android.os.Build
-import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -50,10 +47,9 @@ import com.example.gpssatelliteviewer.scene3d.Scene3DParametersState
 import com.example.gpssatelliteviewer.scene3d.ui.menu.SatelliteFilterMenu
 import com.example.gpssatelliteviewer.scene3d.ui.menu.Scene3DParametersMenu
 import com.example.gpssatelliteviewer.app.theme.DarkBackground
-import com.example.gpssatelliteviewer.app.theme.GreenPrimary
-import com.example.gpssatelliteviewer.app.theme.TextLabel
+import com.example.gpssatelliteviewer.app.theme.GreenPrimaryColor
+import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.data.GNSSCombinedData
-import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.data.mergeLists
 import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
 import com.example.gpssatelliteviewer.scene3d.ui.infobox.EarthInfoBox
@@ -68,7 +64,6 @@ import io.github.sceneview.rememberModelLoader
 import io.github.sceneview.rememberView
 import io.github.sceneview.rememberRenderer
 import io.github.sceneview.rememberScene
-import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -180,6 +175,12 @@ fun Satellite3DScreen(
             }
         }
 
+        LaunchedEffect(filteredSatellites, isSceneReady) {
+            if (isSceneReady) {
+                scene.updateSatelliteList(filteredSatellites)
+            }
+        }
+
         // Handle satellite click
         val satelliteInfo = mergeLists(satelliteList, measurements)
 
@@ -208,7 +209,6 @@ fun Satellite3DScreen(
                     .offset(x = animatedOffset)
             ) {
                 scene.Render()
-                scene.updateScene(filteredSatellites)
 
                 AnimatedVisibility(
                     visible = scene.isSatelliteInfoBoxVisible(),
@@ -278,23 +278,23 @@ fun Satellite3DScreen(
                     TabRow(
                         selectedTabIndex = selectedTab,
                         containerColor = Color.Companion.Transparent,
-                        contentColor = TextLabel,
+                        contentColor = TextLabelColor,
                         indicator = { tabPositions ->
                             TabRowDefaults.SecondaryIndicator(
                                 Modifier.Companion.tabIndicatorOffset(tabPositions[selectedTab]),
-                                color = GreenPrimary
+                                color = GreenPrimaryColor
                             )
                         }
                     ) {
                         Tab(
                             selected = selectedTab == 0,
                             onClick = { selectedTab = 0 },
-                            text = { Text("Satellites", color = TextLabel) }
+                            text = { Text("Satellites", color = TextLabelColor) }
                         )
                         Tab(
                             selected = selectedTab == 1,
                             onClick = { selectedTab = 1 },
-                            text = { Text("Scene Settings", color = TextLabel) }
+                            text = { Text("Scene Settings", color = TextLabelColor) }
                         )
                     }
 

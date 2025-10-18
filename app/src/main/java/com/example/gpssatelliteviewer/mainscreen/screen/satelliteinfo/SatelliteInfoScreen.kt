@@ -4,15 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SatelliteAlt
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,9 +26,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import com.example.gpssatelliteviewer.app.theme.GreenPrimary
-import com.example.gpssatelliteviewer.app.theme.TextPrimary
-import com.example.gpssatelliteviewer.data.GNSSCombinedData
+import com.example.gpssatelliteviewer.app.theme.GreenPrimaryColor
+import com.example.gpssatelliteviewer.app.theme.TextPrimaryColor
 import com.example.gpssatelliteviewer.data.mergeLists
 import com.example.gpssatelliteviewer.utils.EmptyStateCard
 
@@ -71,14 +67,14 @@ fun SatelliteInfoScreen(
                     checked = showOnlyInfFix,
                     onCheckedChange = { showOnlyInfFix = it },
                     colors = CheckboxDefaults.colors(
-                        checkedColor = GreenPrimary,
-                        uncheckedColor = TextPrimary
+                        checkedColor = GreenPrimaryColor,
+                        uncheckedColor = TextPrimaryColor
                     )
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Show only used in Fix",
-                    color = TextPrimary,
+                    color = TextPrimaryColor,
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -107,8 +103,11 @@ fun SatelliteInfoScreen(
             }
         } else {
             item {
+                val message = if (showOnlyInfFix) "No valid satellite information."
+                else "No satellite information received yet."
+
                 EmptyStateCard(
-                    message = "No satellite information received yet.",
+                    message = message,
                     icon = Icons.Default.SatelliteAlt
                 )
             }

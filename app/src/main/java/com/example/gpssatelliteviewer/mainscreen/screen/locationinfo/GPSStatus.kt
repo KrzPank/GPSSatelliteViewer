@@ -40,19 +40,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.gpssatelliteviewer.app.theme.GPSDisabled
-import com.example.gpssatelliteviewer.app.theme.GPSExcellent
-import com.example.gpssatelliteviewer.app.theme.GPSFair
-import com.example.gpssatelliteviewer.app.theme.GPSGood
-import com.example.gpssatelliteviewer.app.theme.GPSNoFix
-import com.example.gpssatelliteviewer.app.theme.GPSPoor
-import com.example.gpssatelliteviewer.app.theme.GPSSearching
-import com.example.gpssatelliteviewer.app.theme.SNRDarkerGreen
-import com.example.gpssatelliteviewer.app.theme.SNRLightGreen
-import com.example.gpssatelliteviewer.app.theme.SNROrange
-import com.example.gpssatelliteviewer.app.theme.SNRRed
-import com.example.gpssatelliteviewer.app.theme.SNRYellow
-import com.example.gpssatelliteviewer.app.theme.TextPrimary
+import com.example.gpssatelliteviewer.app.theme.GPSDisabledColor
+import com.example.gpssatelliteviewer.app.theme.GPSExcellentColor
+import com.example.gpssatelliteviewer.app.theme.GPSFairColor
+import com.example.gpssatelliteviewer.app.theme.GPSGoodColor
+import com.example.gpssatelliteviewer.app.theme.GPSNoFixColor
+import com.example.gpssatelliteviewer.app.theme.GPSPoorColor
+import com.example.gpssatelliteviewer.app.theme.GPSSearchingColor
+import com.example.gpssatelliteviewer.app.theme.SNRDarkerGreenColor
+import com.example.gpssatelliteviewer.app.theme.SNRLightGreenColor
+import com.example.gpssatelliteviewer.app.theme.SNROrangeColor
+import com.example.gpssatelliteviewer.app.theme.SNRRedColor
+import com.example.gpssatelliteviewer.app.theme.SNRYellowColor
+import com.example.gpssatelliteviewer.app.theme.TextPrimaryColor
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 
 class GPSStatus(
@@ -191,13 +191,13 @@ class GPSStatus(
 
     private fun getStatusColor(gpsStatusState: GPSStatusState): Color {
         return when (gpsStatusState) {
-            is GPSStatusState.Excellent -> GPSExcellent
-            is GPSStatusState.Good -> GPSGood
-            is GPSStatusState.Fair -> GPSFair
-            is GPSStatusState.Poor -> GPSPoor
-            is GPSStatusState.NoFix -> GPSNoFix
-            is GPSStatusState.Searching -> GPSSearching
-            is GPSStatusState.Disabled -> GPSDisabled
+            is GPSStatusState.Excellent -> GPSExcellentColor
+            is GPSStatusState.Good -> GPSGoodColor
+            is GPSStatusState.Fair -> GPSFairColor
+            is GPSStatusState.Poor -> GPSPoorColor
+            is GPSStatusState.NoFix -> GPSNoFixColor
+            is GPSStatusState.Searching -> GPSSearchingColor
+            is GPSStatusState.Disabled -> GPSDisabledColor
         }
     }
 
@@ -253,11 +253,11 @@ class GPSStatus(
         val clamped = averageSNRInFix.coerceIn(0f, 99f)
 
         val ranges = listOf(
-            0f to 10f to SNRRed,
-            10f to 20f to SNROrange,
-            20f to 30f to SNRYellow,
-            30f to 50f to SNRLightGreen,
-            50f to 99f to SNRDarkerGreen
+            0f to 10f to SNRRedColor,
+            10f to 20f to SNROrangeColor,
+            20f to 30f to SNRYellowColor,
+            30f to 50f to SNRLightGreenColor,
+            50f to 99f to SNRDarkerGreenColor
         )
 
         val thresholds = listOf(0f, 10f, 20f, 30f, 50f, 99f)
@@ -291,7 +291,7 @@ class GPSStatus(
                         lineTo(indicatorX + triangleWidth / 2, -8f)
                         close()
                     }
-                    drawPath(path, color = TextPrimary)
+                    drawPath(path, color = TextPrimaryColor)
                 }
             }
 

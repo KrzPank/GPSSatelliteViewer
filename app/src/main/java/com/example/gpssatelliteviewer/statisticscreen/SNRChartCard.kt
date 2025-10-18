@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,15 +29,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.example.gpssatelliteviewer.app.theme.ChartBeoDou
-import com.example.gpssatelliteviewer.app.theme.ChartGLONASS
-import com.example.gpssatelliteviewer.app.theme.ChartGPS
-import com.example.gpssatelliteviewer.app.theme.ChartGalileo
-import com.example.gpssatelliteviewer.app.theme.ChartIRNSS
-import com.example.gpssatelliteviewer.app.theme.ChartQZSS
-import com.example.gpssatelliteviewer.app.theme.ChartSBAS
-import com.example.gpssatelliteviewer.app.theme.TextHint
-import com.example.gpssatelliteviewer.app.theme.TextPrimary
+import com.example.gpssatelliteviewer.app.theme.ChartBeoDouColor
+import com.example.gpssatelliteviewer.app.theme.ChartGLONASSColor
+import com.example.gpssatelliteviewer.app.theme.ChartGPSColor
+import com.example.gpssatelliteviewer.app.theme.ChartGalileoColor
+import com.example.gpssatelliteviewer.app.theme.ChartIRNSSColor
+import com.example.gpssatelliteviewer.app.theme.ChartQZSSColor
+import com.example.gpssatelliteviewer.app.theme.ChartSBASColor
+import com.example.gpssatelliteviewer.app.theme.TextHintColor
+import com.example.gpssatelliteviewer.app.theme.TextPrimaryColor
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Legend
@@ -129,13 +128,13 @@ fun ConstellationSNRChartCard(
                         { Icon(
                             Icons.Default.Bookmark,
                             contentDescription = null,
-                            tint = TextHint,
+                            tint = TextHintColor,
                             modifier = Modifier.size(18.dp))
                         }
                     } else {
                         { Icon(Icons.Default.BookmarkBorder,
                             contentDescription = null,
-                            tint = TextHint,
+                            tint = TextHintColor,
                             modifier = Modifier.size(18.dp))
                         }
                     }
@@ -301,7 +300,7 @@ private fun applyDistinctLegend(
     } else {
         legend.isEnabled = true
         legend.form = Legend.LegendForm.LINE
-        legend.textColor = TextPrimary.toArgb()
+        legend.textColor = TextPrimaryColor.toArgb()
         legend.textSize = 14f
 
         val distinctLabelColor = datasets
@@ -334,7 +333,7 @@ private fun applyChartSettings(context: Context): LineChart {
             isGranularityEnabled = true
             axisMinimum = 0f
             axisMaximum = CHART_UPDATE_WINDOW.toFloat()
-            textColor = TextPrimary.toArgb()
+            textColor = TextPrimaryColor.toArgb()
             textSize = 10f
             valueFormatter = object : ValueFormatter() {
                 override fun getFormattedValue(value: Float): String {
@@ -349,14 +348,14 @@ private fun applyChartSettings(context: Context): LineChart {
 
         axisLeft.apply {
             setDrawGridLines(true)
-            textColor = TextPrimary.toArgb()
+            textColor = TextPrimaryColor.toArgb()
             textSize = 10f
         }
 
         legend.apply {
             isEnabled = true
             form = Legend.LegendForm.LINE
-            textColor = TextPrimary.toArgb()
+            textColor = TextPrimaryColor.toArgb()
             textSize = 14f
         }
     }
@@ -364,13 +363,13 @@ private fun applyChartSettings(context: Context): LineChart {
 
 private fun getConstellationColor(constellation: String): Color {
     return when (constellation.uppercase()) {
-        "GPS" -> ChartGPS
-        "GLONASS" -> ChartGLONASS
-        "GALILEO" -> ChartGalileo
-        "BEIDOU" -> ChartBeoDou
-        "QZSS" -> ChartQZSS
-        "IRNSS" -> ChartIRNSS
-        "SBAS" -> ChartSBAS
+        "GPS" -> ChartGPSColor
+        "GLONASS" -> ChartGLONASSColor
+        "GALILEO" -> ChartGalileoColor
+        "BEIDOU" -> ChartBeoDouColor
+        "QZSS" -> ChartQZSSColor
+        "IRNSS" -> ChartIRNSSColor
+        "SBAS" -> ChartSBASColor
         else -> Color.Companion.LightGray
     }
 }

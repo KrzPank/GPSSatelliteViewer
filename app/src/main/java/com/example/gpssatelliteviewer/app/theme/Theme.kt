@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
     // Primary colors - using green as accent
-    primary = GreenPrimary,
+    primary = GreenPrimaryColor,
     onPrimary = Color.Black,
     primaryContainer = GreenDark,
     onPrimaryContainer = Color.White,
@@ -21,7 +21,7 @@ private val DarkColorScheme = darkColorScheme(
     secondary = GreenLight,
     onSecondary = Color.Black,
     secondaryContainer = DarkSurfaceVariant,
-    onSecondaryContainer = TextPrimary,
+    onSecondaryContainer = TextPrimaryColor,
     
     // Tertiary colors
     tertiary = StatusWarning,
@@ -29,13 +29,13 @@ private val DarkColorScheme = darkColorScheme(
     
     // Background colors
     background = DarkBackground,
-    onBackground = TextPrimary,
+    onBackground = TextPrimaryColor,
     
     // Surface colors (for cards and elevated elements)
     surface = DarkSurface,
-    onSurface = TextPrimary,
+    onSurface = TextPrimaryColor,
     surfaceVariant = CardBackground,
-    onSurfaceVariant = TextSecondary,
+    onSurfaceVariant = TextSecondaryColor,
     
     // Error colors
     error = StatusError,
@@ -55,7 +55,7 @@ private val LightColorScheme = lightColorScheme(
     primaryContainer = GreenLight,
     onPrimaryContainer = Color.Black,
     
-    secondary = GreenPrimary,
+    secondary = GreenPrimaryColor,
     onSecondary = Color.White,
     secondaryContainer = Color(0xFFE8F5E8),
     onSecondaryContainer = Color.Black,

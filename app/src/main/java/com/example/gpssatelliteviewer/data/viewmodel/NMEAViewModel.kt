@@ -91,10 +91,6 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun updateLocationData() {
-
-    }
-
     fun startNMEAInfo() {
         try {
             val executor = Executors.newSingleThreadExecutor()

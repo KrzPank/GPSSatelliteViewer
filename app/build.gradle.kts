@@ -63,6 +63,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.kotlinx.coroutines.android)
+    implementation ("androidx.core:core-splashscreen:1.0.1")
+
 
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation(libs.sceneview)

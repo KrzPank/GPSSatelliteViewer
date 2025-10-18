@@ -67,40 +67,43 @@ fun SatelliteInfoBox(
                     val labelStyle = MaterialTheme.typography.bodySmall
                     val valueStyle = MaterialTheme.typography.bodyMedium
 
-                    InfoRow("Constellation", satellite.constellation, labelStyle = labelStyle, valueStyle = valueStyle)
-                    InfoRow("SVID/PRN", "${satellite.svid ?: "N/A"} / ${satellite.prn}", labelStyle = labelStyle, valueStyle = valueStyle)
-                    InfoRow("SNR", "%.1f dBHz".format(satellite.cn0DbHz), labelStyle = labelStyle, valueStyle = valueStyle)
+                    InfoRow("SVID/PRN ", "${satellite.svid ?: "N/A"} / ${satellite.prn}", labelStyle = labelStyle, valueStyle = valueStyle)
+                    InfoRow("SNR ", "%.1f dBHz".format(satellite.cn0DbHz), labelStyle = labelStyle, valueStyle = valueStyle)
 
                     satellite.snrInDb?.let {
-                        InfoRow("SNR (dB)", "%.1f dB".format(it), labelStyle = labelStyle, valueStyle = valueStyle)
+                        InfoRow(label = "SNR (dB) ",
+                            value = if (it == 0.0) "N/A" else "%.1f dB".format(it),
+                            labelStyle = labelStyle,
+                            valueStyle = valueStyle
+                        )
                     }
 
-                    InfoRow("Used in Fix", satellite.usedInFix.toString(), labelStyle = labelStyle, valueStyle = valueStyle)
-                    InfoRow("Azimuth", "%.1f°".format(satellite.azimuth), labelStyle = labelStyle, valueStyle = valueStyle)
-                    InfoRow("Elevation", "%.1f°".format(satellite.elevation), labelStyle = labelStyle, valueStyle = valueStyle)
+                    InfoRow("Used in Fix ", satellite.usedInFix.toString(), labelStyle = labelStyle, valueStyle = valueStyle)
+                    InfoRow("Azimuth ", "%.1f°".format(satellite.azimuth), labelStyle = labelStyle, valueStyle = valueStyle)
+                    InfoRow("Elevation ", "%.1f°".format(satellite.elevation), labelStyle = labelStyle, valueStyle = valueStyle)
 
                     satellite.carrierFrequencyRangeHz?.let {
-                        InfoRow("Carrier Frequency", "%.1f Hz".format(it), labelStyle = labelStyle, valueStyle = valueStyle)
+                        InfoRow("Carrier Frequency ", "%.3f MHz".format(it/ 1_000_000), labelStyle = labelStyle, valueStyle = valueStyle)
                     }
 
                     satellite.accumulatedDeltaRangeMeters?.let {
-                        InfoRow("Accum. Δ Range", "%.3f m".format(it), labelStyle = labelStyle, valueStyle = valueStyle)
+                        InfoRow("Accum. Δ Range ", "%.3f m".format(it), labelStyle = labelStyle, valueStyle = valueStyle)
                     }
 
                     satellite.accumulatedDeltaRangeUncertaintyMeters?.let {
-                        InfoRow("Accum. Δ Range Uncer.", "%.3f m".format(it), labelStyle = labelStyle, valueStyle = valueStyle)
+                        InfoRow("Accum. Δ Range Uncer. ", "%.3f m".format(it), labelStyle = labelStyle, valueStyle = valueStyle)
                     }
 
                     satellite.pseudorangeRateMetersPerSecond?.let {
-                        InfoRow("Pseudorange", "%.3f m/s".format(it), labelStyle = labelStyle, valueStyle = valueStyle)
+                        InfoRow("Pseudorange ", "%.3f m/s".format(it), labelStyle = labelStyle, valueStyle = valueStyle)
                     }
 
                     satellite.pseudorangeRateUncertaintyMetersPerSecond?.let {
-                        InfoRow("Pseudorange Rate Uncer.", "%.3f m/s".format(it), labelStyle = labelStyle, valueStyle = valueStyle)
+                        InfoRow("Pseudorange Rate Uncer. ", "%.3f m/s".format(it), labelStyle = labelStyle, valueStyle = valueStyle)
                     }
 
                     satellite.timeOffsetNanos?.let {
-                        InfoRow("Time Offset", "%.6f ns".format(it), labelStyle = labelStyle, valueStyle = valueStyle)
+                        InfoRow("Time Offset ", "%.6f ns".format(it), labelStyle = labelStyle, valueStyle = valueStyle)
                     }
                 }
             }

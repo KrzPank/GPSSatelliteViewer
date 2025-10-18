@@ -1,6 +1,5 @@
 package com.example.gpssatelliteviewer.scene3d.manager
 
-import android.util.Log
 import com.example.gpssatelliteviewer.scene3d.LightParameters
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.utils.length
@@ -10,14 +9,13 @@ import com.google.android.filament.EntityManager
 import com.google.android.filament.LightManager
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.cross
-import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.LightNode
 import io.github.sceneview.node.Node
 
 class LightHandler(
     private val engine: Engine,
     private val centerNode: Node,
-    private val cameraNode: CameraNode,
+    private val cameraManager: CameraManager,
     parameters: Scene3DParameters
 ) {
     private var sunLight: LightNode = createSunLight(parameters.getLightParameters())
@@ -25,7 +23,6 @@ class LightHandler(
     private var currentLightParameters: LightParameters = parameters.getLightParameters()
 
     // Light update optimization
-    private var lastCameraPosition = Float3(0f, 0f, 0f)
     private var isLightBeingRecreated = false
 
     // Light recreation throttling
@@ -33,19 +30,12 @@ class LightHandler(
     private val minRecreationInterval = 16L // Minimum 16ms between recreations /60Hz
     private var frameCount = 0
     private val lightUpdateInterval = 2
-    private val lightUpdateThreshold = 0.08f
 
     /**
      * Create a sun light from behind the camera
      */
     private fun createSunLight(lightParams: LightParameters): LightNode {
         val lightEntity = EntityManager.get().create()
-
-        // Sun light direction: from camera towards center (behind camera illuminating forward)
-        //val cameraToCenter = (centerNode.worldPosition - cameraNode.worldPosition).normalized()
-        //val lightDirection = cameraToCenter
-
-        // Calculate optimal light direction for good sphere shading
         val lightDirection = calculateOptimalLightDirection()
 
         val builder = LightManager.Builder(lightParams.type)
@@ -99,13 +89,11 @@ class LightHandler(
         if (isLightBeingRecreated) return
 
         val frameIntervalMet = frameCount>= lightUpdateInterval
-        val cameraMovement = (cameraNode.worldPosition - lastCameraPosition).length()
-        val shouldUpdate = frameIntervalMet && cameraMovement > lightUpdateThreshold
+        val cameraMovement = (cameraManager.getCameraPosition() - cameraManager.getLastCameraPosition()).length()
+        val shouldUpdate = frameIntervalMet && cameraMovement > cameraManager.getDynamicUpdateThreshold()
 
         if (shouldUpdate) {
-            lastCameraPosition = cameraNode.worldPosition
             frameCount = 0
-
             recreateSunLight()
         }
     }
@@ -139,7 +127,7 @@ class LightHandler(
     }
 
     private fun calculateOptimalLightDirection(): Float3 {
-        val cameraPos = cameraNode.worldPosition
+        val cameraPos = cameraManager.getCameraPosition()
         val centerPos = centerNode.worldPosition
 
         val cameraForward = (centerPos - cameraPos).normalized()
@@ -150,10 +138,10 @@ class LightHandler(
         val cameraUp = cross(cameraRight, cameraForward).normalized()
 
         val lightDirection = (
-                cameraForward * 0.75f +      // Mostly forward
-                cameraRight * -0.55f +        // Some from the right
-                cameraUp * -0.25f             // A bit from above
-                ).normalized()
+                cameraForward * 0.75f +
+                cameraRight * -0.55f +
+                cameraUp * -0.25f
+        ).normalized()
         return lightDirection
     }
 

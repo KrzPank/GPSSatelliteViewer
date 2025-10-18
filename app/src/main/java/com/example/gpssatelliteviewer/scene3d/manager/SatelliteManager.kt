@@ -4,20 +4,22 @@ import android.util.Log
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
+import com.example.gpssatelliteviewer.utils.length
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.loaders.ModelLoader
 import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
+import kotlin.math.abs
 
 // Thresholds to avoid tiny jitter updates
 private const val AZIMUTH_THRESHOLD_DEG = 0.1f
 private const val ELEVATION_THRESHOLD_DEG = 0.1f
-private const val ALTITUDE_THRESHOLD_M = 1.0f
 
 class SatelliteManager(
     private val modelLoader: ModelLoader,
     private val centerNode: Node,
+    private val cameraManager: CameraManager,
     private var parameters: Scene3DParameters
 ) {
     /*
@@ -37,6 +39,12 @@ class SatelliteManager(
         "Other" to 0f
     )
 
+    private var satelliteList: List<GNSSStatusData> = emptyList()
+
+    fun updateSatelliteList(newList: List<GNSSStatusData>) {
+        satelliteList = newList
+    }
+
     // Dynamic object pooling for satellite nodes
     private val satelliteNodePool = mutableListOf<ModelNode>()
     val activeSatelliteNodes = mutableMapOf<String, ModelNode>() // "constellation:prn" -> node
@@ -44,9 +52,10 @@ class SatelliteManager(
     // Cache last-known values per satellite so we only update nodes when something meaningful changed
     private val satelliteCache = mutableMapOf<String, SatelliteCache>()
 
-    private var userLocation = parameters.userLocation ?: Float3(0.0f, 0.0f, 0.0f)
+    private var frameCount = 0
+    private val lookAtUpdateInterval = 2
+    //private var userLocation = parameters.userLocation //?: Float3(0.0f, 0.0f, 0.0f)
 
-    // before: var onSatelliteClick: ((GNSSStatusData) -> Unit)? = null
     var onSatelliteClick: ((String) -> Unit)? = null
 
     private fun satelliteKey(constellation: String, prn: Int) = "$constellation:$prn"
@@ -61,14 +70,19 @@ class SatelliteManager(
         var lastPos: Float3? = null
     )
 
+    fun onFrame() {
+        updateSatellites()
+        shouldUpdateSatelliteLookAt()
+    }
+
     /**
      * Update satellites in the scene
      * Handles adding, removing, and updating satellite positions
      */
-    fun updateSatellites(satelliteList: List<GNSSStatusData>, userLoc: Float3?) {
+    fun updateSatellites() {
+        if (parameters.userLocation == null) return
         val currentSatelliteKeys = satelliteList.map { satelliteKey(it) }.toSet()
         val activeKeys = activeSatelliteNodes.keys.toSet()
-        userLocation = userLoc ?: Float3(0.0f, 0.0f, 0.0f)
 
         val disappearedKeys = activeKeys - currentSatelliteKeys
         disappearedKeys.forEach { key ->
@@ -93,17 +107,15 @@ class SatelliteManager(
                 val shouldUpdate = if (cache == null) {
                     true
                 } else {
-                    val azChanged = kotlin.math.abs(sat.azimuth - cache.azimuth) > AZIMUTH_THRESHOLD_DEG
-                    val elChanged = kotlin.math.abs(sat.elevation - cache.elevation) > ELEVATION_THRESHOLD_DEG
+                    val azChanged = abs(sat.azimuth - cache.azimuth) > AZIMUTH_THRESHOLD_DEG
+                    val elChanged = abs(sat.elevation - cache.elevation) > ELEVATION_THRESHOLD_DEG
                     val usedChanged = sat.usedInFix != cache.usedInFix
-                    val altChanged = kotlin.math.abs(newAltitude - cache.altitude) > ALTITUDE_THRESHOLD_M
-                    azChanged || elChanged || usedChanged || altChanged
+                    azChanged || elChanged || usedChanged
                 }
                 if (shouldUpdate) {
                     updateSatellitePosition(existingNode, sat)
                     //Log.d("SatelliteManager", "Updating satellite:${key}")
                     //Log.d("SatelliteManager", " Info - New:${sat.azimuth}, ${sat.elevation}, ${sat.usedInFix}, ${sat.snr} Old:${cache?.lastData?.azimuth}, ${cache?.lastData?.elevation}, ${cache?.lastData?.usedInFix}, ${cache?.lastData?.snr}")
-                    // update cache (create if missing)
                     satelliteCache[key] = SatelliteCache(
                         lastData = sat,
                         azimuth = sat.azimuth,
@@ -136,10 +148,17 @@ class SatelliteManager(
     /**
      * Update satellite look-at behavior to always face camera
      */
-    fun updateLookAt(cameraNode: CameraNode) {
-        // Update orientation for all active satellite nodes
-        activeSatelliteNodes.values.forEach { satellite ->
-            satellite.lookAt(cameraNode.worldPosition)
+    private fun shouldUpdateSatelliteLookAt() {
+        frameCount++
+
+        val frameIntervalMet = frameCount>= lookAtUpdateInterval
+        val cameraMovement = (cameraManager.getCameraPosition() - cameraManager.getLastCameraPosition()).length()
+        val shouldUpdate = frameIntervalMet && cameraMovement > cameraManager.getDynamicUpdateThreshold()
+
+        if (shouldUpdate) {
+            frameCount = 0
+
+            updateLookAt()
         }
     }
 
@@ -155,6 +174,7 @@ class SatelliteManager(
             oldParameters.satelliteScale != newParameters.satelliteScale) {
             updateSatelliteModels()
             //Log.d("SatelliteManager", "Updated satellite models")
+            updateLookAt()
         }
     }
 
@@ -213,7 +233,7 @@ class SatelliteManager(
             CoordinateConverter.azElToECEF(
                 sat.azimuth,
                 sat.elevation,
-                userLocation,
+                parameters.userLocation!!,
                 altitude
             )
         )
@@ -223,7 +243,6 @@ class SatelliteManager(
         }
 
         node.position = pos
-        Log.d("SatelliteuserLocation", "UserLocation: ${userLocation}")
     }
 
     /**
@@ -234,6 +253,12 @@ class SatelliteManager(
             sat.constellation == "BeiDou" && sat.prn in keysFor35786000 -> 35786000f
             sat.constellation in constellationAltitudes -> constellationAltitudes[sat.constellation]!!
             else -> 0f
+        }
+    }
+
+    private fun updateLookAt() {
+        activeSatelliteNodes.values.forEach { satellite ->
+            satellite.lookAt(cameraManager.getCameraNode().worldPosition)
         }
     }
 

@@ -15,12 +15,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.gpssatelliteviewer.app.theme.TextLabel
-import com.example.gpssatelliteviewer.app.theme.ValueText
+import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.ValueText
@@ -68,7 +66,7 @@ fun GPSStatusCard(
             Text(
                 text = "SNR Summary per Constellation",
                 style = MaterialTheme.typography.titleMedium,
-                color = TextLabel
+                color = TextLabelColor
             )
             Column(
                 modifier = Modifier.fillMaxWidth()
@@ -76,7 +74,7 @@ fun GPSStatusCard(
                 Text(
                     text = "Fix SNR dBHz / sats  |  All dBHz / sats SNR!=0 / all",
                     style = MaterialTheme.typography.labelMedium,
-                    color = TextLabel,
+                    color = TextLabelColor,
                     textAlign = TextAlign.End,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -96,7 +94,7 @@ fun GPSStatusCard(
                         Text(
                             text = constellation,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = TextLabel,
+                            color = TextLabelColor,
                             modifier = Modifier.weight(0.8f)
                         )
                         ValueText(

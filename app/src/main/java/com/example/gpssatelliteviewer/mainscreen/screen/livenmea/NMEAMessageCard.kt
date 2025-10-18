@@ -59,7 +59,6 @@ fun NMEAMessageCard(
                 }
 
                 is NMEAMessage.GSV -> {
-                    RenderGSVInfo(message)
                 }
 
                 is NMEAMessage.VTG -> {
@@ -147,13 +146,8 @@ fun RenderGSVInfo(
 
             gsvMessages.forEach { (_, message) ->
                 if (message is NMEAMessage.GSV) {
-                    InfoRow("Constellation", "${message.talker}/${mapTalker(message.talker)}")
-                    InfoRow("Message", "${message.messageNumber}/${message.totalMessages}")
-                    InfoRow("SV in view", message.satellitesInView.toString())
-                    message.satellitesInfo.forEach { sat ->
-                        InfoRow("PRN ${sat.prn}", "Az:${sat.azimuth}° E:${sat.elevation}° SNR:${sat.snr}")
-                    }
-                    Spacer(modifier = Modifier.Companion.height(10.dp))
+                    RenderGSVInfo(message)
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
             }
         }

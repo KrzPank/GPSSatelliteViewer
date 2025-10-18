@@ -1,6 +1,5 @@
 package com.example.gpssatelliteviewer.utils
 
-import android.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,12 +37,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.gpssatelliteviewer.app.theme.TextLabel
+import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.app.theme.ValueText
-import com.example.gpssatelliteviewer.app.theme.GreenPrimary
+import com.example.gpssatelliteviewer.app.theme.GreenPrimaryColor
 import com.example.gpssatelliteviewer.app.theme.StatusError
 import com.example.gpssatelliteviewer.app.theme.StatusGood
-import com.example.gpssatelliteviewer.app.theme.TextHint
+import com.example.gpssatelliteviewer.app.theme.TextHintColor
 
 @Composable
 fun ValueText(
@@ -78,7 +77,7 @@ fun InfoRow(
         Text(
             text = label,
             style = labelStyle,
-            color = TextLabel,
+            color = TextLabelColor,
         )
         ValueText(
             value = value,
@@ -106,7 +105,7 @@ fun CapabilityRow(
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = TextLabel,
+            color = TextLabelColor,
         )
     }
 }
@@ -175,13 +174,13 @@ fun EmptyStateCard(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = TextHint,
+                tint = TextHintColor,
                 modifier = Modifier.size(48.dp)
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = message,
-                color = TextHint,
+                color = TextHintColor,
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center
             )
@@ -204,7 +203,7 @@ fun ParameterSection(
         ) {
             Text(
                 text = title,
-                color = TextLabel,
+                color = TextLabelColor,
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
             )
@@ -229,15 +228,15 @@ fun CustomCheckbox(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 colors = CheckboxDefaults.colors(
-                    checkmarkColor = TextLabel,
-                    uncheckedColor = TextLabel,
-                    checkedColor = GreenPrimary
+                    checkmarkColor = TextLabelColor,
+                    uncheckedColor = TextLabelColor,
+                    checkedColor = GreenPrimaryColor
                 )
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = label,
-                color = TextLabel,
+                color = TextLabelColor,
                 fontSize = 14.sp
             )
         }
@@ -247,7 +246,7 @@ fun CustomCheckbox(
             Text(
                 text = it,
                 style = MaterialTheme.typography.labelMedium,
-                color = TextHint,
+                color = TextHintColor,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(start = 15.dp)
             )

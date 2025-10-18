@@ -1,7 +1,6 @@
 package com.example.gpssatelliteviewer.scene3d
 
 import android.util.Log
-import android.view.MotionEvent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -39,18 +38,6 @@ class Scene3D(
     private val centerNode = Node(engine)
 
     // Management systems
-    private var earth: EarthManager = EarthManager(
-        modelLoader = modelLoader,
-        centerNode = centerNode,
-        parameters = parameters
-    )
-
-    private var locationMarker: LocationMarkerManager = LocationMarkerManager(
-        modelLoader = modelLoader,
-        centerNode = centerNode,
-        parameters = parameters
-    )
-
     private val camera: CameraManager = CameraManager(
         engine = engine,
         view = view,
@@ -58,16 +45,29 @@ class Scene3D(
         parameters = parameters
     )
 
-    private var mainLight: LightHandler = LightHandler(
-        engine = engine,
+    private var earth: EarthManager = EarthManager(
+        modelLoader = modelLoader,
         centerNode = centerNode,
-        cameraNode = camera.getCameraNode(),
         parameters = parameters
     )
 
-    val satellites: SatelliteManager = SatelliteManager(
+    private val locationMarker: LocationMarkerManager = LocationMarkerManager(
         modelLoader = modelLoader,
         centerNode = centerNode,
+        parameters = parameters
+    )
+
+    private val mainLight: LightHandler = LightHandler(
+        engine = engine,
+        centerNode = centerNode,
+        cameraManager = camera,
+        parameters = parameters
+    )
+
+    private val satellites: SatelliteManager = SatelliteManager(
+        modelLoader = modelLoader,
+        centerNode = centerNode,
+        cameraManager = camera,
         parameters = parameters
     )
 
@@ -105,7 +105,7 @@ class Scene3D(
                 //Log.d("clickingstuff", "Tapped earth node")
                 _clickedSatelliteKey.value = null
                 _isSatelliteInfoBoxVisible = false
-                _isEarthInfoBoxVisible = true
+                _isEarthInfoBoxVisible = !_isEarthInfoBoxVisible
             }
             else -> {
                 // Satellite tapped
@@ -131,7 +131,9 @@ class Scene3D(
             childNodes = listOf(centerNode),
             environment = environmentLoader.createHDREnvironment(parameters.environmentPath)!!,
             onFrame = {
-                camera.onFrame(satellites, locationMarker)
+                camera.onFrame()
+                locationMarker.onFrame()
+                satellites.onFrame()
                 mainLight.onFrame()
             },
             mainLightNode = mainLight.getSunLightNode(),
@@ -143,31 +145,29 @@ class Scene3D(
                 onSingleTapConfirmed = { event, node ->
                     onSceneSingleTapConfirmed(node)
                 },
-                // sometimes prevents camera PAN ??
-                onMove = { _, event, _ ->
-                    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                    camera.getCameraGestureDetector().onTouchEvent(event)
-                },
-                onMoveBegin = { _, event, _ ->
-                    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                    camera.getCameraGestureDetector().onTouchEvent(event)
-                },
-                onMoveEnd = { _, event, _ ->
-                    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                    camera.getCameraGestureDetector().onTouchEvent(event)
-                },
+                //// sometimes prevents camera PAN ??
+                //onMove = { _, event, _ ->
+                //    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
+                //    camera.getCameraGestureDetector().onTouchEvent(event)
+                //},
+                //onMoveBegin = { _, event, _ ->
+                //    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
+                //    camera.getCameraGestureDetector().onTouchEvent(event)
+                //},
+                //onMoveEnd = { _, event, _ ->
+                //    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
+                //    camera.getCameraGestureDetector().onTouchEvent(event)
+                //},
             ),
         )
     }
 
-    fun updateScene(satelliteList: List<GNSSStatusData>) {
-        satellites.updateSatellites(satelliteList, parameters.userLocation)
-        locationMarker.updateLocationMarker(parameters.userLocation)
-    }
-
     fun setLocationMarkerVisible(visible: Boolean) { locationMarker.setVisible(visible) }
-
     fun isLocationMarkerVisible() = locationMarker.isLocationMarkerVisible()
+
+    fun updateSatelliteList(newList: List<GNSSStatusData>){
+        satellites.updateSatelliteList(newList)
+    }
 
     fun updateParameters(newParameters: Scene3DParameters) {
         Log.d("Scene3D", "updateParameters called - intensity: ${newParameters.lightIntensity}, color: ${newParameters.lightColor}")
@@ -175,7 +175,8 @@ class Scene3D(
 
         mainLight.updateParameters(newParameters)
         satellites.updateParameters(newParameters)
-        earth.updateEarthParameters(newParameters)
+        earth.updateParameters(newParameters)
+        locationMarker.updateParameters(newParameters)
     }
 
     fun updateUserLocation(userLocation: Float3?) { parameters.userLocation = userLocation }

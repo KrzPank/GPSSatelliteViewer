@@ -1,10 +1,6 @@
 package com.example.gpssatelliteviewer.mainscreen.screen.locationinfo
 
 import android.icu.text.SimpleDateFormat
-import android.os.Build
-import android.util.Log
-import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
@@ -24,20 +19,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
 import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
-import com.example.gpssatelliteviewer.app.theme.DarkBackground
-import com.example.gpssatelliteviewer.data.LOCATION_IS_LOCATION_ENABLED_TIMER
-import com.example.gpssatelliteviewer.statisticscreen.MeasurementCard
 import com.example.gpssatelliteviewer.utils.EmptyStateCard
 import kotlinx.coroutines.delay
 import java.sql.Date
 import java.util.Locale
+
+const val IS_LOCATION_ENABLED_TIMER = 2000L  // 1 sec wait
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,12 +40,6 @@ fun LocationInfoScreen(
     locationViewModel: LocationViewModel
 ) {
     val satellites by gnssStatusViewModel.satelliteList.collectAsState()
-
-    // add satelltiechart data to make charts per satellite in statistics screen
-
-    //val snrHistory by gnssStatusViewModel.constellationSNRHistory.collectAsState()
-    //val satelliteChartData by gnssStatusViewModel.satelliteSNRHistory.collectAsState()
-    //val measurements by gnssStatusViewModel.gnssMeasurements.collectAsState()
 
     val locationNMEA by nmeaViewModel.locationNMEA.collectAsState()
     val hasLocationNMEA by nmeaViewModel.hasLocationNMEA.collectAsState()
@@ -80,7 +67,7 @@ fun LocationInfoScreen(
     LaunchedEffect(Unit) {
         while (true) {
             locationViewModel.checkLocationEnabled()
-            delay(LOCATION_IS_LOCATION_ENABLED_TIMER)
+            delay(IS_LOCATION_ENABLED_TIMER)
         }
     }
 
@@ -90,7 +77,7 @@ fun LocationInfoScreen(
         while (true) {
             val date = Date(System.currentTimeMillis())
             currentSystemTime = sdf.format(date)
-            delay(450L) // wait 1 second
+            delay(330L) // wait 330ms more and updates seem not consistent?
         }
     }
 
@@ -117,7 +104,7 @@ fun LocationInfoScreen(
                 }
 
                 "Waiting for location..." -> EmptyStateCard(
-                    message = "Waiting for location...",
+                    message = "No location received",
                     icon = Icons.Default.LocationOn
                 )
             }

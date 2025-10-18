@@ -98,7 +98,7 @@ object CoordinateConverter {
         value: Double,
         hemisphere: Char
     ): String {
-        if (value == 0.0) return "0°0'0\" N/A"
+        if (value == 0.0) return "N/A"
 
         val degrees = (value / 100).toInt()
         val minutesDecimal = value - (degrees * 100)
@@ -113,6 +113,8 @@ object CoordinateConverter {
         value: Double,
         hemisphere: Char
     ): String {
+        if (value == 0.0) return "N/A"
+
         val degrees = value.toInt()
         val minutesDecimal = abs((value - degrees) * 60)
         val minutes = minutesDecimal.toInt()

@@ -36,7 +36,6 @@ fun LiveNMEADataScreen(
 
     LazyColumn(
         modifier = Modifier
-            //.padding(top = 4.dp)
             .padding(horizontal = 8.dp, vertical = 8.dp)
             .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(6.dp)

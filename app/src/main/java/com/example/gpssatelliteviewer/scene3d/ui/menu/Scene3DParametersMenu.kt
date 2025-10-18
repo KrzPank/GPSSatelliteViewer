@@ -32,8 +32,8 @@ import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.Scene3DParametersState
 import com.example.gpssatelliteviewer.utils.ParameterSection
-import com.example.gpssatelliteviewer.app.theme.TextLabel
-import com.example.gpssatelliteviewer.app.theme.GreenPrimary
+import com.example.gpssatelliteviewer.app.theme.TextLabelColor
+import com.example.gpssatelliteviewer.app.theme.GreenPrimaryColor
 import com.example.gpssatelliteviewer.app.theme.StatusError
 import com.example.gpssatelliteviewer.app.theme.OutlineColor
 import kotlin.math.log10
@@ -61,7 +61,7 @@ fun Scene3DParametersMenu(
         // Header
         Text(
             text = "Scene3D Parameters",
-            color = TextLabel,
+            color = TextLabelColor,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
@@ -80,7 +80,7 @@ fun Scene3DParametersMenu(
                 modifier = Modifier.Companion.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = StatusError)
             ) {
-                Text("Reset", color = TextLabel, fontSize = 12.sp)
+                Text("Reset", color = TextLabelColor, fontSize = 12.sp)
             }
         }
 
@@ -156,16 +156,16 @@ private fun SliderParameter(
             modifier = Modifier.Companion.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = label, color = TextLabel, fontSize = 14.sp)
-            Text(text = valueFormatter(value), color = TextLabel, fontSize = 12.sp)
+            Text(text = label, color = TextLabelColor, fontSize = 14.sp)
+            Text(text = valueFormatter(value), color = TextLabelColor, fontSize = 12.sp)
         }
         Slider(
             value = value,
             onValueChange = onValueChange,
             valueRange = valueRange,
             colors = SliderDefaults.colors(
-                thumbColor = TextLabel,
-                activeTrackColor = GreenPrimary,
+                thumbColor = TextLabelColor,
+                activeTrackColor = GreenPrimaryColor,
                 inactiveTrackColor = OutlineColor
             )
         )
@@ -181,7 +181,7 @@ private fun ColorParameter(
     onColorChanged: (Float, Float, Float) -> Unit
 ) {
     Column {
-        Text(text = label, color = TextLabel, fontSize = 14.sp)
+        Text(text = label, color = TextLabelColor, fontSize = 14.sp)
 
         // Red component
         SliderParameter(
@@ -232,7 +232,7 @@ private fun ModelSelector(
     val currentDisplayName = options.find { it.first == currentPath }?.second ?: "Unknown"
 
     Column {
-        Text(text = label, color = TextLabel, fontSize = 14.sp)
+        Text(text = label, color = TextLabelColor, fontSize = 14.sp)
 
         ExposedDropdownMenuBox(
             expanded = expanded,
@@ -244,9 +244,9 @@ private fun ModelSelector(
                 readOnly = true,
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedTextColor = TextLabel,
-                    unfocusedTextColor = TextLabel,
-                    focusedBorderColor = GreenPrimary,
+                    focusedTextColor = TextLabelColor,
+                    unfocusedTextColor = TextLabelColor,
+                    focusedBorderColor = GreenPrimaryColor,
                     unfocusedBorderColor = OutlineColor
                 ),
                 modifier = Modifier.Companion
@@ -292,8 +292,8 @@ private fun LogarithmicSliderParameter(
             modifier = Modifier.Companion.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(text = label, color = TextLabel, fontSize = 14.sp)
-            Text(text = valueFormatter(value), color = TextLabel, fontSize = 12.sp)
+            Text(text = label, color = TextLabelColor, fontSize = 14.sp)
+            Text(text = valueFormatter(value), color = TextLabelColor, fontSize = 12.sp)
         }
         Slider(
             value = sliderPosition,
@@ -305,8 +305,8 @@ private fun LogarithmicSliderParameter(
             },
             valueRange = 0f..1f,
             colors = SliderDefaults.colors(
-                thumbColor = TextLabel,
-                activeTrackColor = GreenPrimary,
+                thumbColor = TextLabelColor,
+                activeTrackColor = GreenPrimaryColor,
                 inactiveTrackColor = OutlineColor
             )
         )
