@@ -2,6 +2,7 @@ package com.example.gpssatelliteviewer.scene3d.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -143,6 +144,9 @@ fun Satellite3DScreen(
         )
     }
 
+    val isSatelliteInfoBoxVisible by scene.satelliteInfoBoxVisible.collectAsState()
+    val isEarthInfoBoxVisible by scene.earthInfoBoxVisible.collectAsState()
+
     Box(
         modifier = Modifier.Companion
             .fillMaxSize()
@@ -185,7 +189,7 @@ fun Satellite3DScreen(
 
         // Handle satellite click
         val satelliteInfo = mergeLists(satelliteList, measurements)
-        val clickedSatelliteKey by scene.clickedSatelliteKeyState
+        val clickedSatelliteKey by scene.clickedSatelliteKeyState.collectAsState()
         val clickedSatellite by remember (clickedSatelliteKey, satelliteInfo) {
             derivedStateOf { resolveClickedSatelliteByKey(clickedSatelliteKey, satelliteInfo) }
         }
@@ -214,8 +218,8 @@ fun Satellite3DScreen(
                 AnimatedContent(
                     modifier = Modifier.fillMaxSize(),
                     targetState = when {
-                        scene.isSatelliteInfoBoxVisible() -> "satellite"
-                        scene.isEarthInfoBoxVisible() -> "earth"
+                        isSatelliteInfoBoxVisible -> "satellite"
+                        isEarthInfoBoxVisible -> "earth"
                         else -> "none"
                     },
                     transitionSpec = {
@@ -243,7 +247,7 @@ fun Satellite3DScreen(
                             safeInsets = safeInsets,
                             totalMenuWidth = totalMenuWidth
                         )
-                        "none" -> {} // Empty state – box hidden, triggers exit animation
+                        "none" -> Box(modifier = Modifier.fillMaxSize()) {}
                     }
                 }
             }

@@ -24,6 +24,9 @@ import io.github.sceneview.loaders.EnvironmentLoader
 import io.github.sceneview.loaders.ModelLoader
 import io.github.sceneview.node.Node
 import io.github.sceneview.rememberOnGestureListener
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 class Scene3D(
     private val engine: Engine,
@@ -78,14 +81,14 @@ class Scene3D(
     fun isMenuVisible() = _menuVisible
 
     // satellite click handling
-    private val _clickedSatelliteKey = mutableStateOf<String?>(null)
-    val clickedSatelliteKeyState: State<String?> get() = _clickedSatelliteKey
+    private val _clickedSatelliteKey = MutableStateFlow<String?>(null)
+    val clickedSatelliteKeyState: StateFlow<String?> = _clickedSatelliteKey.asStateFlow()
 
-    private var _isSatelliteInfoBoxVisible by mutableStateOf(false)
-    fun isSatelliteInfoBoxVisible() = _isSatelliteInfoBoxVisible
+    private val _isSatelliteInfoBoxVisible = MutableStateFlow(false)
+    val satelliteInfoBoxVisible: StateFlow<Boolean> = _isSatelliteInfoBoxVisible.asStateFlow()
 
-    private var _isEarthInfoBoxVisible by mutableStateOf(false)
-    fun isEarthInfoBoxVisible() = _isEarthInfoBoxVisible
+    private val _isEarthInfoBoxVisible = MutableStateFlow(false)
+    val earthInfoBoxVisible: StateFlow<Boolean> = _isEarthInfoBoxVisible.asStateFlow()
 
     private fun onSceneDoubleTap() {
         toggleMenu()
@@ -96,18 +99,18 @@ class Scene3D(
         when (key) {
             null -> {
                 _clickedSatelliteKey.value = null
-                _isSatelliteInfoBoxVisible = false
-                _isEarthInfoBoxVisible = false
+                _isSatelliteInfoBoxVisible.value = false
+                _isEarthInfoBoxVisible.value = false
             }
             earthManager.getEarthNode().name -> {
                 _clickedSatelliteKey.value = null
-                _isSatelliteInfoBoxVisible = false
-                _isEarthInfoBoxVisible = !_isEarthInfoBoxVisible
+                _isSatelliteInfoBoxVisible.value = false
+                _isEarthInfoBoxVisible.value = !_isEarthInfoBoxVisible.value
             }
             else -> {
                 _clickedSatelliteKey.value = key
-                _isSatelliteInfoBoxVisible = true
-                _isEarthInfoBoxVisible = false
+                _isSatelliteInfoBoxVisible.value = true
+                _isEarthInfoBoxVisible.value = false
             }
         }
     }

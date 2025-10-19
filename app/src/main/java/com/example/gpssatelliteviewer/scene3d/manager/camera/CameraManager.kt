@@ -2,19 +2,21 @@ package com.example.gpssatelliteviewer.scene3d.manager.camera
 
 import android.util.Log
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
-import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManipulatorWrapper
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.length
 import com.example.gpssatelliteviewer.utils.normalized
 import com.google.android.filament.Engine
 import com.google.android.filament.View
+import com.google.android.filament.utils.Manipulator
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.gesture.CameraGestureDetector
+import io.github.sceneview.managers.getTransform
 import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.Node
 
 private const val updateThreshold = 0.005f
 private const val minCameraDistance = 0.65f
+private const val maxPitchDeg = 85f
 
 class CameraManager(
     private val engine: Engine,
@@ -53,39 +55,43 @@ class CameraManager(
         return camera
     }
 
+    // change to different manipulator wrapper have some ideas going on
+    // move to transforms not camera.position
     private fun createCameraGestureDetector(): CameraGestureDetector {
-        val manipulator = CameraManipulatorWrapper(
-            base = CameraGestureDetector.DefaultCameraManipulator(
-                orbitHomePosition = cameraNode.worldPosition,
-                targetPosition = centerNode.worldPosition
-            ),
-            cameraNode = cameraNode,
-            minCameraDistance = minCameraDistance
+        val baseManipulator = Manipulator.Builder()
+            .orbitHomePosition(cameraNode.worldPosition.x, cameraNode.worldPosition.y, cameraNode.worldPosition.z)
+            .targetPosition(centerNode.worldPosition.x, centerNode.worldPosition.y, centerNode.worldPosition.z)
+            .orbitSpeed(0.005f, 0.005f)
+            .zoomSpeed(0.04f)
+            .build(Manipulator.Mode.ORBIT)
+
+        val clampedManipulator = ClampedCameraManipulator(
+            manipulator = baseManipulator,
+            minCameraDistance = minCameraDistance,
+            maxPitchDeg = maxPitchDeg
         )
 
         return CameraGestureDetector(
             viewHeight = { view.viewport.height },
-            cameraManipulator = manipulator
+            cameraManipulator = clampedManipulator
         ).apply {
             isPanEnabled = false
         }
     }
 
     private fun updateCameraParameters() {
-        val cameraWorldPos: Float3 = cameraNode.worldPosition
+        val cameraWorldPos = cameraNode.worldPosition
         val dist = cameraWorldPos.length()
 
         val cameraMovement = (cameraWorldPos - lastCameraPosition).length()
         val shouldUpdate = cameraMovement > dynamicUpdateThreshold
 
         cameraMovedUnits = cameraMovement
-
         cameraDistanceToCenter = dist
 
         if (shouldUpdate) {
-            lastCameraPosition = cameraNode.worldPosition
+            lastCameraPosition = cameraWorldPos
             dynamicUpdateThreshold = cameraDistanceToCenter * updateThreshold  // dist^2 * updateThreshold
-
         }
     }
 

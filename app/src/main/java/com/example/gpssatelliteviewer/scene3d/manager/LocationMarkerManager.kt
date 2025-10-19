@@ -10,9 +10,10 @@ import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.loaders.ModelLoader
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
+import kotlin.math.min
 
-private const val SCALE_THRESHOLD = 0.15f
-private const val scale = 0.05f
+private const val MAX_SCALE_SIZE = 0.15f
+private const val scale = 0.035f
 private const val locationMarkerUpdateInterval = 60 * 1000 * 5
 
 class LocationMarkerManager(
@@ -63,51 +64,48 @@ class LocationMarkerManager(
     }
 
     private fun updateLocationMarker() {
-        if (shouldUpdateLocationMarker()){
-            frameCount++
+        if (!shouldUpdateLocationMarker()) return
 
-            if (firstLocationMarkerUpdate) {
-                val dist = cameraManager.getCameraDistanceToCenter()
-                val s = scale * dist * dist
-                locationMarkerScale = if (s >= SCALE_THRESHOLD) SCALE_THRESHOLD else s
+        frameCount++
+        val now = System.currentTimeMillis()
 
-                locationMarkerNode.position = calculateLocationMarkerScenePosition()
-                locationMarkerNode.lookTowards(calculateLocationMarkerDirection(verticalToWorld = true))
-                locationMarkerNode.scaleToUnitCube(locationMarkerScale)
+        // small helpers to avoid duplication
+        val updatePosition: () -> Unit = {
+            locationMarkerNode.position = calculateLocationMarkerScenePosition()
+            locationMarkerNode.lookTowards(calculateLocationMarkerDirection(followUser = false))
+        }
+        val updateScale: (Float) -> Unit = { dist ->
+            val s = scale * dist * dist
+            locationMarkerScale = min(s, MAX_SCALE_SIZE)
+            locationMarkerNode.scaleToUnitCube(locationMarkerScale)
+        }
 
-                lastLocationMarkerUpdateTime = System.currentTimeMillis()
-                firstLocationMarkerUpdate = false
+        if (firstLocationMarkerUpdate) {
+            val dist = cameraManager.getCameraDistanceToCenter()
+            updateScale(dist)
+            updatePosition()
+            lastLocationMarkerUpdateTime = now
+            firstLocationMarkerUpdate = false
+            //Log.d("LocationMarkerPos", "firstLocationMarkerUpdate")
+            return
+        }
 
-                return
-                Log.d("LocationMarkerPos", "firstLocationMarkerUpdate")
-            }
+        if (now - lastLocationMarkerUpdateTime >= locationMarkerUpdateInterval) {
+            updatePosition()
+            lastLocationMarkerUpdateTime = now
+        }
 
-            val timeSinceLastLocationMarkerPositionUpdate = System.currentTimeMillis() - lastLocationMarkerUpdateTime
-            val locationMarkerPositionUpdateIntervalMet = timeSinceLastLocationMarkerPositionUpdate >= locationMarkerUpdateInterval
+        val frameIntervalMet = frameCount >= frameCountUpdateInterval
+        val cameraMovement = cameraManager.getCameraMovedUnits()
+        val shouldUpdateScale = frameIntervalMet && cameraMovement > cameraManager.getDynamicUpdateThreshold()
 
-            if (locationMarkerPositionUpdateIntervalMet) {
-                locationMarkerNode.position = calculateLocationMarkerScenePosition()
-                locationMarkerNode.lookTowards(calculateLocationMarkerDirection(verticalToWorld = true))
-
-                lastLocationMarkerUpdateTime = System.currentTimeMillis()
-            }
-
-            val frameIntervalMet = frameCount >= frameCountUpdateInterval
-            val cameraMovement = cameraManager.getCameraMovedUnits()
-            val shouldUpdateScale = frameIntervalMet && cameraMovement > cameraManager.getDynamicUpdateThreshold()
-
-            if (shouldUpdateScale) {
-                val dist = cameraManager.getCameraDistanceToCenter()
-                val s = scale * dist * dist
-                locationMarkerScale = if (s >= SCALE_THRESHOLD) SCALE_THRESHOLD else s
-
-                locationMarkerNode.position = calculateLocationMarkerScenePosition()
-                locationMarkerNode.lookTowards(calculateLocationMarkerDirection(verticalToWorld = true))
-                locationMarkerNode.scaleToUnitCube(locationMarkerScale)
-
-                lastLocationMarkerUpdateTime = System.currentTimeMillis()
-                Log.d("locationMarkerScale", " locationMarkerScale=$locationMarkerScale CameraDist=${cameraManager.getCameraDistanceToCenter()}")
-            }
+        if (shouldUpdateScale) {
+            frameCount = 0
+            val dist = cameraManager.getCameraDistanceToCenter()
+            updateScale(dist)
+            updatePosition()
+            lastLocationMarkerUpdateTime = System.currentTimeMillis()
+            //Log.d("locationMarkerScale", " locationMarkerScale=$locationMarkerScale CameraDist=$dist")
         }
     }
 
@@ -153,11 +151,11 @@ class LocationMarkerManager(
     }
 
     private fun calculateLocationMarkerDirection(
-        verticalToWorld: Boolean
+        followUser: Boolean
     ): Float3 {
-        val dir = locationMarkerNode.position.normalized()
-        return if (!verticalToWorld) dir
-        else Float3(dir.x, 0.0f, dir.z).normalized()
+        val dir = if (followUser) cameraManager.getCameraPosition().normalized()
+            else locationMarkerNode.position.normalized()
+        return Float3(dir.x, 0.0f, dir.z).normalized()
     }
 
     fun cleanup() {
