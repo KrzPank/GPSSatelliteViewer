@@ -1,5 +1,6 @@
 package com.example.gpssatelliteviewer.scene3d.ui
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
@@ -7,6 +8,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -183,7 +185,6 @@ fun Satellite3DScreen(
 
         // Handle satellite click
         val satelliteInfo = mergeLists(satelliteList, measurements)
-
         val clickedSatelliteKey by scene.clickedSatelliteKeyState
         val clickedSatellite by remember (clickedSatelliteKey, satelliteInfo) {
             derivedStateOf { resolveClickedSatelliteByKey(clickedSatelliteKey, satelliteInfo) }
@@ -195,7 +196,7 @@ fun Satellite3DScreen(
                 animationSpec = tween(menuAnimationDuration)
             )
         ) {
-            // Animate horizontal offset (magic happens here)
+            // Animate horizontal offset
             val targetOffset = if (scene.isMenuVisible()) totalMenuWidth / 2 else 0.dp
             val animatedOffset by animateDpAsState(
                 targetValue = targetOffset,
@@ -210,43 +211,40 @@ fun Satellite3DScreen(
             ) {
                 scene.Render()
 
-                AnimatedVisibility(
-                    visible = scene.isSatelliteInfoBoxVisible(),
-                    enter = slideInHorizontally(
-                        initialOffsetX = { -it },
-                        animationSpec = tween(menuAnimationDuration)
-                    ),
-                    exit = slideOutHorizontally(
-                        targetOffsetX = { -it },
-                        animationSpec = tween(menuAnimationDuration)
-                    )
-                ) {
-                    SatelliteInfoBox(
-                        clickedSatellite = clickedSatellite,
-                        isMenuVisible = scene.isMenuVisible(),
-                        safeInsets = safeInsets,
-                        totalMenuWidth = totalMenuWidth
-                    )
-                }
-
-                AnimatedVisibility(
-                    visible = scene.isEarthInfoBoxVisible(),
-                    enter = slideInHorizontally(
-                        initialOffsetX = { -it },
-                        animationSpec = tween(menuAnimationDuration)
-                    ),
-                    exit = slideOutHorizontally(
-                        targetOffsetX = { -it },
-                        animationSpec = tween(menuAnimationDuration)
-                    )
-                ) {
-                    EarthInfoBox(
-                        userLocation = userLocation,
-                        nmea = locationNMEA,
-                        isMenuVisible = scene.isMenuVisible(),
-                        safeInsets = safeInsets,
-                        totalMenuWidth = totalMenuWidth
-                    )
+                AnimatedContent(
+                    modifier = Modifier.fillMaxSize(),
+                    targetState = when {
+                        scene.isSatelliteInfoBoxVisible() -> "satellite"
+                        scene.isEarthInfoBoxVisible() -> "earth"
+                        else -> "none"
+                    },
+                    transitionSpec = {
+                        slideInHorizontally(
+                            initialOffsetX = { -it },
+                            animationSpec = tween(menuAnimationDuration)
+                        ) togetherWith slideOutHorizontally(
+                            targetOffsetX = { -it },
+                            animationSpec = tween(menuAnimationDuration)
+                        )
+                    },
+                    label = "InfoBoxTransition",
+                ) { target ->
+                    when (target) {
+                        "satellite" -> SatelliteInfoBox(
+                            clickedSatellite = clickedSatellite,
+                            isMenuVisible = scene.isMenuVisible(),
+                            safeInsets = safeInsets,
+                            totalMenuWidth = totalMenuWidth
+                        )
+                        "earth" -> EarthInfoBox(
+                            userLocation = userLocation,
+                            nmea = locationNMEA,
+                            isMenuVisible = scene.isMenuVisible(),
+                            safeInsets = safeInsets,
+                            totalMenuWidth = totalMenuWidth
+                        )
+                        "none" -> {} // Empty state – box hidden, triggers exit animation
+                    }
                 }
             }
         }
@@ -334,7 +332,7 @@ fun Satellite3DScreen(
     }
 }
 
-fun resolveClickedSatelliteByKey(key: String?, satelliteList: List<GNSSCombinedData>): GNSSCombinedData? {
+private fun resolveClickedSatelliteByKey(key: String?, satelliteList: List<GNSSCombinedData>): GNSSCombinedData? {
     if (key == null) return null
     val parts = key.split(":")
     if (parts.size != 2) return null

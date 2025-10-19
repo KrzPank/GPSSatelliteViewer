@@ -37,13 +37,12 @@ fun NMEALocationCard(
     nmea: NMEALocationData,
     currentSystemTime: String,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
+    onSettingsClick: (() -> Unit)? = null
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.Companion.clickable { onClick() } else Modifier.Companion),
+            .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(Modifier.Companion.padding(12.dp)) {
@@ -60,7 +59,11 @@ fun NMEALocationCard(
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Location Settings",
-                    modifier = Modifier.Companion.size(24.dp)
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable(enabled = onSettingsClick != null) {
+                            onSettingsClick?.invoke()
+                        }
                 )
             }
 
@@ -132,13 +135,12 @@ fun AndroidApiLocationCard(
     locationData: ListenerData,
     currentSystemTime: String,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
+    onSettingsClick: (() -> Unit)? = null
 ) {
     Card(
-        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(12.dp),
         modifier = modifier
-            .fillMaxWidth()
-            .then(if (onClick != null) Modifier.Companion.clickable { onClick() } else Modifier.Companion),
+            .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(Modifier.Companion.padding(12.dp)) {
@@ -155,7 +157,11 @@ fun AndroidApiLocationCard(
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Location Settings",
-                    modifier = Modifier.Companion.size(24.dp)
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable(enabled = onSettingsClick != null) {
+                            onSettingsClick?.invoke()
+                        }
                 )
             }
 

@@ -104,10 +104,6 @@ class Scene3DParametersState {
         parameters = parameters.copy(userLocation = location)
     }
 
-    fun updateLocationMarkerScale(locationMarkerScale: Float) {
-        parameters = parameters.copy(locationMarkerScale = locationMarkerScale)
-    }
-
     fun updateLightColor(red: Float, green: Float, blue: Float) {
         parameters = parameters.copy(lightColor = Float3(red, green, blue))
     }

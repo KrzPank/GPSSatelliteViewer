@@ -95,10 +95,7 @@ fun LocationInfoScreen(
                     userHasSelectedType = true
                 }
 
-                "Location Listener" -> AndroidApiLocationCard(
-                    locationAndroidApi,
-                    currentSystemTime
-                ) {
+                "Location Listener" -> AndroidApiLocationCard(locationAndroidApi, currentSystemTime) {
                     showPicker = true
                     userHasSelectedType = true
                 }

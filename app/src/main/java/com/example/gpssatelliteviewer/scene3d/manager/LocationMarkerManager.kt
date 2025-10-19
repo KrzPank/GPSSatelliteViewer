@@ -1,7 +1,9 @@
 package com.example.gpssatelliteviewer.scene3d.manager
 
 import android.util.Log
+import com.example.gpssatelliteviewer.data.frameCountUpdateInterval
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
+import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.normalized
 import dev.romainguy.kotlin.math.Float3
@@ -9,17 +11,24 @@ import io.github.sceneview.loaders.ModelLoader
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
 
+private const val SCALE_THRESHOLD = 0.15f
+private const val scale = 0.05f
+private const val locationMarkerUpdateInterval = 60 * 1000 * 5
+
 class LocationMarkerManager(
     private val modelLoader: ModelLoader,
     private val centerNode: Node,
+    private val cameraManager: CameraManager,
     private var parameters: Scene3DParameters
 ) {
     private var locationMarkerNode: ModelNode
     private var isVisible: Boolean = true
 
+    private var frameCount = 0
+
     private var lastLocationMarkerUpdateTime = 0L
-    private val locationMarkerUpdateInterval = 60 * 1000 * 5 // 5 min
     private var firstLocationMarkerUpdate = true
+    private var locationMarkerScale = 0.1f
 
     init {
         locationMarkerNode = createLocationMarker()
@@ -45,7 +54,7 @@ class LocationMarkerManager(
     private fun createLocationMarker(): ModelNode {
         val node = ModelNode(
             modelInstance = modelLoader.createModelInstance(parameters.locationMarkerModelPath),
-            scaleToUnits = parameters.locationMarkerScale
+            scaleToUnits = locationMarkerScale
         ).also {
             centerNode.addChildNode(it)
             it.name = "Location marker"
@@ -55,30 +64,50 @@ class LocationMarkerManager(
 
     private fun updateLocationMarker() {
         if (shouldUpdateLocationMarker()){
-            if (firstLocationMarkerUpdate) {
-                locationMarkerNode.position = calculateLocationMarkerScenePosition()
+            frameCount++
 
+            if (firstLocationMarkerUpdate) {
+                val dist = cameraManager.getCameraDistanceToCenter()
+                val s = scale * dist * dist
+                locationMarkerScale = if (s >= SCALE_THRESHOLD) SCALE_THRESHOLD else s
+
+                locationMarkerNode.position = calculateLocationMarkerScenePosition()
                 locationMarkerNode.lookTowards(calculateLocationMarkerDirection(verticalToWorld = true))
-                //locationMarkerNode.scaleToUnitCube(parameters.locationMarkerScale)
+                locationMarkerNode.scaleToUnitCube(locationMarkerScale)
 
                 lastLocationMarkerUpdateTime = System.currentTimeMillis()
                 firstLocationMarkerUpdate = false
-                //Log.d("LocationMarkerPos", "firstLocationMarkerUpdate")
+
+                return
+                Log.d("LocationMarkerPos", "firstLocationMarkerUpdate")
             }
 
-            val timeSinceLastLocationMarkerUpdate = System.currentTimeMillis() - lastLocationMarkerUpdateTime
-            val locationMarkerUpdateIntervalMet = timeSinceLastLocationMarkerUpdate >= locationMarkerUpdateInterval
+            val timeSinceLastLocationMarkerPositionUpdate = System.currentTimeMillis() - lastLocationMarkerUpdateTime
+            val locationMarkerPositionUpdateIntervalMet = timeSinceLastLocationMarkerPositionUpdate >= locationMarkerUpdateInterval
 
-            if (locationMarkerUpdateIntervalMet) {
+            if (locationMarkerPositionUpdateIntervalMet) {
                 locationMarkerNode.position = calculateLocationMarkerScenePosition()
-
                 locationMarkerNode.lookTowards(calculateLocationMarkerDirection(verticalToWorld = true))
 
                 lastLocationMarkerUpdateTime = System.currentTimeMillis()
-                //Log.d("LocationMarkerPos", "locationMarkerUpdateIntervalMet")
             }
 
-            // dodac framecount i brac threashold, zwiekszanie markera od odleglosci satelity
+            val frameIntervalMet = frameCount >= frameCountUpdateInterval
+            val cameraMovement = cameraManager.getCameraMovedUnits()
+            val shouldUpdateScale = frameIntervalMet && cameraMovement > cameraManager.getDynamicUpdateThreshold()
+
+            if (shouldUpdateScale) {
+                val dist = cameraManager.getCameraDistanceToCenter()
+                val s = scale * dist * dist
+                locationMarkerScale = if (s >= SCALE_THRESHOLD) SCALE_THRESHOLD else s
+
+                locationMarkerNode.position = calculateLocationMarkerScenePosition()
+                locationMarkerNode.lookTowards(calculateLocationMarkerDirection(verticalToWorld = true))
+                locationMarkerNode.scaleToUnitCube(locationMarkerScale)
+
+                lastLocationMarkerUpdateTime = System.currentTimeMillis()
+                Log.d("locationMarkerScale", " locationMarkerScale=$locationMarkerScale CameraDist=${cameraManager.getCameraDistanceToCenter()}")
+            }
         }
     }
 
@@ -107,7 +136,7 @@ class LocationMarkerManager(
     }
 
     fun updateParameters(newParameters: Scene3DParameters) {
-        val oldParameters = parameters
+        //val oldParameters = parameters
         parameters = newParameters
     }
 

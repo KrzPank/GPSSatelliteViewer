@@ -1,7 +1,10 @@
 package com.example.gpssatelliteviewer.scene3d.manager
 
+import android.util.Log
+import com.example.gpssatelliteviewer.data.frameCountUpdateInterval
 import com.example.gpssatelliteviewer.scene3d.LightParameters
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
+import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
 import com.example.gpssatelliteviewer.utils.length
 import com.example.gpssatelliteviewer.utils.normalized
 import com.google.android.filament.Engine
@@ -12,6 +15,8 @@ import dev.romainguy.kotlin.math.cross
 import io.github.sceneview.node.LightNode
 import io.github.sceneview.node.Node
 
+private const val minRecreationInterval = 16L // Minimum 16ms between recreations /60Hz
+
 class LightHandler(
     private val engine: Engine,
     private val centerNode: Node,
@@ -19,7 +24,6 @@ class LightHandler(
     parameters: Scene3DParameters
 ) {
     private var sunLight: LightNode = createSunLight(parameters.getLightParameters())
-
     private var currentLightParameters: LightParameters = parameters.getLightParameters()
 
     // Light update optimization
@@ -27,9 +31,7 @@ class LightHandler(
 
     // Light recreation throttling
     private var lastRecreationTime = 0L
-    private val minRecreationInterval = 16L // Minimum 16ms between recreations /60Hz
     private var frameCount = 0
-    private val lightUpdateInterval = 2
 
     /**
      * Create a sun light from behind the camera
@@ -88,13 +90,14 @@ class LightHandler(
         // Early exit if light is being recreated
         if (isLightBeingRecreated) return
 
-        val frameIntervalMet = frameCount>= lightUpdateInterval
-        val cameraMovement = (cameraManager.getCameraPosition() - cameraManager.getLastCameraPosition()).length()
+        val frameIntervalMet = frameCount >= frameCountUpdateInterval
+        val cameraMovement = cameraManager.getCameraMovedUnits()
         val shouldUpdate = frameIntervalMet && cameraMovement > cameraManager.getDynamicUpdateThreshold()
 
         if (shouldUpdate) {
             frameCount = 0
             recreateSunLight()
+            //Log.d("CameraDetection", " updateSunLight shouldUpdate triggered")
         }
     }
 

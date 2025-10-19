@@ -9,7 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.scene3d.manager.CameraManager
+import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
 import com.example.gpssatelliteviewer.scene3d.manager.EarthManager
 import com.example.gpssatelliteviewer.scene3d.manager.LightHandler
 import com.example.gpssatelliteviewer.scene3d.manager.LocationMarkerManager
@@ -38,36 +38,37 @@ class Scene3D(
     private val centerNode = Node(engine)
 
     // Management systems
-    private val camera: CameraManager = CameraManager(
+    private val cameraManager: CameraManager = CameraManager(
         engine = engine,
         view = view,
         centerNode = centerNode,
-        parameters = parameters
+        sceneParameters = parameters
     )
 
-    private var earth: EarthManager = EarthManager(
+    private val earthManager: EarthManager = EarthManager(
         modelLoader = modelLoader,
         centerNode = centerNode,
         parameters = parameters
     )
 
-    private val locationMarker: LocationMarkerManager = LocationMarkerManager(
+    private val locationMarkerManager: LocationMarkerManager = LocationMarkerManager(
         modelLoader = modelLoader,
         centerNode = centerNode,
+        cameraManager = cameraManager,
         parameters = parameters
     )
 
-    private val mainLight: LightHandler = LightHandler(
+    private val mainLightManager: LightHandler = LightHandler(
         engine = engine,
         centerNode = centerNode,
-        cameraManager = camera,
+        cameraManager = cameraManager,
         parameters = parameters
     )
 
-    private val satellites: SatelliteManager = SatelliteManager(
+    private val satellitesManager: SatelliteManager = SatelliteManager(
         modelLoader = modelLoader,
         centerNode = centerNode,
-        cameraManager = camera,
+        cameraManager = cameraManager,
         parameters = parameters
     )
 
@@ -94,22 +95,16 @@ class Scene3D(
         val key = node?.name
         when (key) {
             null -> {
-                // Empty tap or node without a name → hide everything
-                //Log.d("clickingstuff", "Single-tap (empty scene): closing InfoBox")
                 _clickedSatelliteKey.value = null
                 _isSatelliteInfoBoxVisible = false
                 _isEarthInfoBoxVisible = false
             }
-            earth.getEarthNode().name -> {
-                // Earth tapped
-                //Log.d("clickingstuff", "Tapped earth node")
+            earthManager.getEarthNode().name -> {
                 _clickedSatelliteKey.value = null
                 _isSatelliteInfoBoxVisible = false
                 _isEarthInfoBoxVisible = !_isEarthInfoBoxVisible
             }
             else -> {
-                // Satellite tapped
-                //Log.d("clickingstuff", "Tapped node with satellite key: $key")
                 _clickedSatelliteKey.value = key
                 _isSatelliteInfoBoxVisible = true
                 _isEarthInfoBoxVisible = false
@@ -126,69 +121,60 @@ class Scene3D(
             renderer = renderer,
             scene = scene,
             modelLoader = modelLoader,
-            cameraNode = camera.getCameraNode(),
-            cameraManipulator = camera.getCameraManipulator(),
+            cameraNode = cameraManager.getCameraNode(),
+            cameraManipulator = cameraManager.getCameraManipulator(),
             childNodes = listOf(centerNode),
             environment = environmentLoader.createHDREnvironment(parameters.environmentPath)!!,
             onFrame = {
-                camera.onFrame()
-                locationMarker.onFrame()
-                satellites.onFrame()
-                mainLight.onFrame()
+                cameraManager.onFrame()
+                locationMarkerManager.onFrame()
+                satellitesManager.onFrame()
+                mainLightManager.onFrame()
             },
-            mainLightNode = mainLight.getSunLightNode(),
+            mainLightNode = mainLightManager.getSunLightNode(),
             onGestureListener = rememberOnGestureListener(
-                onDown = { event, _ -> true},
+                onDown = { event, _ ->
+                    true
+                },
                 onDoubleTap = { event, _ ->
+                    Log.d("CameraDebug", "Went in onDoubleTap")
                     onSceneDoubleTap()
                 },
                 onSingleTapConfirmed = { event, node ->
+                    Log.d("CameraDebug", "Went in onSingleTapConfirmed")
                     onSceneSingleTapConfirmed(node)
                 },
-                //// sometimes prevents camera PAN ??
-                //onMove = { _, event, _ ->
-                //    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                //    camera.getCameraGestureDetector().onTouchEvent(event)
-                //},
-                //onMoveBegin = { _, event, _ ->
-                //    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                //    camera.getCameraGestureDetector().onTouchEvent(event)
-                //},
-                //onMoveEnd = { _, event, _ ->
-                //    if (event.pointerCount == 2 && event.actionMasked == MotionEvent.ACTION_MOVE) false
-                //    camera.getCameraGestureDetector().onTouchEvent(event)
-                //},
             ),
         )
     }
 
-    fun setLocationMarkerVisible(visible: Boolean) { locationMarker.setVisible(visible) }
-    fun isLocationMarkerVisible() = locationMarker.isLocationMarkerVisible()
+    fun setLocationMarkerVisible(visible: Boolean) { locationMarkerManager.setVisible(visible) }
+    fun isLocationMarkerVisible() = locationMarkerManager.isLocationMarkerVisible()
 
     fun updateSatelliteList(newList: List<GNSSStatusData>){
-        satellites.updateSatelliteList(newList)
+        satellitesManager.updateSatelliteList(newList)
     }
 
     fun updateParameters(newParameters: Scene3DParameters) {
         Log.d("Scene3D", "updateParameters called - intensity: ${newParameters.lightIntensity}, color: ${newParameters.lightColor}")
         parameters = newParameters
 
-        mainLight.updateParameters(newParameters)
-        satellites.updateParameters(newParameters)
-        earth.updateParameters(newParameters)
-        locationMarker.updateParameters(newParameters)
+        mainLightManager.updateParameters(newParameters)
+        satellitesManager.updateParameters(newParameters)
+        earthManager.updateParameters(newParameters)
+        locationMarkerManager.updateParameters(newParameters)
     }
 
     fun updateUserLocation(userLocation: Float3?) { parameters.userLocation = userLocation }
 
     fun cleanup() {
-        satellites.cleanup()
-        locationMarker.cleanup()
-        earth.cleanup()
+        satellitesManager.cleanup()
+        locationMarkerManager.cleanup()
+        earthManager.cleanup()
 
-        mainLight.cleanup()
+        mainLightManager.cleanup()
 
-        camera.cleanup()
+        cameraManager.cleanup()
         centerNode.destroy()
     }
 }

@@ -2,12 +2,12 @@ package com.example.gpssatelliteviewer.scene3d.manager
 
 import android.util.Log
 import com.example.gpssatelliteviewer.data.GNSSStatusData
+import com.example.gpssatelliteviewer.data.frameCountUpdateInterval
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
+import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
-import com.example.gpssatelliteviewer.utils.length
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.loaders.ModelLoader
-import io.github.sceneview.node.CameraNode
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
 import kotlin.math.abs
@@ -53,8 +53,7 @@ class SatelliteManager(
     private val satelliteCache = mutableMapOf<String, SatelliteCache>()
 
     private var frameCount = 0
-    private val lookAtUpdateInterval = 2
-    //private var userLocation = parameters.userLocation //?: Float3(0.0f, 0.0f, 0.0f)
+    private var firstLookAt = true
 
     var onSatelliteClick: ((String) -> Unit)? = null
 
@@ -151,13 +150,17 @@ class SatelliteManager(
     private fun shouldUpdateSatelliteLookAt() {
         frameCount++
 
-        val frameIntervalMet = frameCount>= lookAtUpdateInterval
-        val cameraMovement = (cameraManager.getCameraPosition() - cameraManager.getLastCameraPosition()).length()
+        val frameIntervalMet = frameCount >= frameCountUpdateInterval
+        val cameraMovement = cameraManager.getCameraMovedUnits()
         val shouldUpdate = frameIntervalMet && cameraMovement > cameraManager.getDynamicUpdateThreshold()
 
         if (shouldUpdate) {
             frameCount = 0
+            updateLookAt()
+        }
 
+        if (firstLookAt) {
+            firstLookAt = false
             updateLookAt()
         }
     }
@@ -243,6 +246,7 @@ class SatelliteManager(
         }
 
         node.position = pos
+        node.lookAt(cameraManager.getCameraPosition())
     }
 
     /**
@@ -258,7 +262,7 @@ class SatelliteManager(
 
     private fun updateLookAt() {
         activeSatelliteNodes.values.forEach { satellite ->
-            satellite.lookAt(cameraManager.getCameraNode().worldPosition)
+            satellite.lookAt(cameraManager.getCameraPosition())
         }
     }
 

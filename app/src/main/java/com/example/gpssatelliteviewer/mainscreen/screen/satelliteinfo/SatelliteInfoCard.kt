@@ -2,6 +2,7 @@ package com.example.gpssatelliteviewer.mainscreen.screen.satelliteinfo
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,8 +22,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.data.GNSSCombinedData
-import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.utils.InfoRow
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.gpssatelliteviewer.app.theme.GPSSatelliteViewerTheme
+import com.example.gpssatelliteviewer.app.theme.GreenPrimaryColor
+import com.example.gpssatelliteviewer.app.theme.TextPrimaryColor
 
 @Composable
 fun ConstellationCard(
@@ -63,10 +75,10 @@ fun ConstellationCard(
 fun SatelliteInfoCard(satellite: GNSSCombinedData) {
     Card(
         shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(2.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 1.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
+            .padding(horizontal = 16.dp, vertical = 1.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
 
@@ -106,6 +118,43 @@ fun SatelliteInfoCard(satellite: GNSSCombinedData) {
             satellite.timeOffsetNanos?.let {
                 InfoRow("Time Offset ", "%.6f ns".format(it))
             }
+        }
+    }
+}
+
+@Composable
+fun ShowOnlyUsedInFixCard(
+    showOnlyInfFix: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(2.dp),
+        modifier = Modifier
+            .padding(10.dp)
+            .fillMaxWidth()
+            .clickable { onToggle(!showOnlyInfFix) } // Whole card clickable
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            Checkbox(
+                checked = showOnlyInfFix,
+                onCheckedChange = { onToggle(it) },
+                colors = CheckboxDefaults.colors(
+                    checkedColor = GreenPrimaryColor,
+                    uncheckedColor = TextPrimaryColor
+                )
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Show only used in Fix",
+                color = TextPrimaryColor,
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }

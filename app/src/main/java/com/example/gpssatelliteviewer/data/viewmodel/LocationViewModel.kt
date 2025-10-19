@@ -103,7 +103,6 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                 0f,
                 locationListener
             )
-            checkLocationEnabled()
         } catch (e: SecurityException) {
             e.printStackTrace()
         }
