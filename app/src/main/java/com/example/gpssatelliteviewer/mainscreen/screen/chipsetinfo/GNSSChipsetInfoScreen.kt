@@ -18,6 +18,7 @@ fun GNSSChipsetInfoScreen(
     gnssHardwareInfo: GNSSHardwareInfo,
     modifier: Modifier = Modifier
 ) {
+    // TODO move all horizontal and vertical dp to constant
     LazyColumn(
         modifier = modifier
             .padding(horizontal = 8.dp, vertical = 8.dp)

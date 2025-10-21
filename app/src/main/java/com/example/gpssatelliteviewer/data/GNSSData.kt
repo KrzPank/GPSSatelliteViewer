@@ -18,6 +18,13 @@ data class GNSSHardwareInfo(
     val capabilities: GnssCapabilities? = null
 )
 
+data class AzElHistory(
+    val firstAz: Float,
+    val firstEl: Float,
+    val lastAz: Float,
+    val lastEl: Float
+)
+
 data class GNSSMeasurementData(
     val svid: Int,
     val constellation: String,

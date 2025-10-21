@@ -2,7 +2,6 @@ package com.example.gpssatelliteviewer.scene3d.ui
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -68,6 +67,10 @@ import io.github.sceneview.rememberView
 import io.github.sceneview.rememberRenderer
 import io.github.sceneview.rememberScene
 
+private const val LOADING_SCREEN_ANIMATION_DURATION = 100
+private const val MENU_ANIMATION_DURATION = 300
+private val MENU_WIDTH = 300.dp
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Satellite3DScreen(
@@ -82,6 +85,7 @@ fun Satellite3DScreen(
 
     val satelliteList by gnssViewModel.satelliteList.collectAsState()
     val measurements by gnssViewModel.gnssMeasurements.collectAsState()
+    val azElHistory by gnssViewModel.azElHistory.collectAsState()
 
     val locationAndroidApi by locationViewModel.locationAndroidApi.collectAsState()
 
@@ -117,10 +121,8 @@ fun Satellite3DScreen(
 
     //  menu stuff
     var selectedTab by remember { mutableIntStateOf(0) }
-    val menuWidth = 300.dp
     val safeInsets = WindowInsets.Companion.safeDrawing.asPaddingValues()
-    val totalMenuWidth = menuWidth + safeInsets.calculateLeftPadding(LayoutDirection.Ltr)
-    val menuAnimationDuration = 300
+    val totalMenuWidth = MENU_WIDTH + safeInsets.calculateLeftPadding(LayoutDirection.Ltr)
 
     // SceneView parameters init
     val engine = rememberEngine()
@@ -161,10 +163,10 @@ fun Satellite3DScreen(
         AnimatedVisibility(
             visible = !isSceneReady,
             enter = fadeIn(
-                animationSpec = tween(100)
+                animationSpec = tween(LOADING_SCREEN_ANIMATION_DURATION)
             ),
             exit = fadeOut(
-                animationSpec = tween(100)
+                animationSpec = tween(LOADING_SCREEN_ANIMATION_DURATION)
             )
         ) {
             Scene3DLoadingScreen(
@@ -183,7 +185,7 @@ fun Satellite3DScreen(
 
         LaunchedEffect(filteredSatellites, isSceneReady) {
             if (isSceneReady) {
-                scene.updateSatelliteList(filteredSatellites)
+                scene.updateSatelliteList(filteredSatellites, azElHistory)
             }
         }
 
@@ -197,14 +199,14 @@ fun Satellite3DScreen(
         AnimatedVisibility(
             visible = isSceneReady,
             enter = fadeIn(
-                animationSpec = tween(menuAnimationDuration)
+                animationSpec = tween(MENU_ANIMATION_DURATION)
             )
         ) {
             // Animate horizontal offset
             val targetOffset = if (scene.isMenuVisible()) totalMenuWidth / 2 else 0.dp
             val animatedOffset by animateDpAsState(
                 targetValue = targetOffset,
-                animationSpec = tween(durationMillis = menuAnimationDuration),
+                animationSpec = tween(durationMillis = MENU_ANIMATION_DURATION),
                 label = "sceneOffsetAnim"
             )
 
@@ -225,10 +227,10 @@ fun Satellite3DScreen(
                     transitionSpec = {
                         slideInHorizontally(
                             initialOffsetX = { -it },
-                            animationSpec = tween(menuAnimationDuration)
+                            animationSpec = tween(MENU_ANIMATION_DURATION)
                         ) togetherWith slideOutHorizontally(
                             targetOffsetX = { -it },
-                            animationSpec = tween(menuAnimationDuration)
+                            animationSpec = tween(MENU_ANIMATION_DURATION)
                         )
                     },
                     label = "InfoBoxTransition",
@@ -258,11 +260,11 @@ fun Satellite3DScreen(
                 visible = scene.isMenuVisible(),
                 enter = slideInHorizontally(
                     initialOffsetX = { -it },
-                    animationSpec = tween(menuAnimationDuration)
+                    animationSpec = tween(MENU_ANIMATION_DURATION)
                 ),
                 exit = slideOutHorizontally(
                     targetOffsetX = { -it },
-                    animationSpec = tween(menuAnimationDuration)
+                    animationSpec = tween(MENU_ANIMATION_DURATION)
                 )
             ) {
                 Column(
@@ -304,6 +306,7 @@ fun Satellite3DScreen(
                         0 -> {
                             SatelliteFilterMenu(
                                 satelliteList = satelliteList,
+                                azElHistory = azElHistory,
                                 selectedConstellations = selectedConstellations,
                                 onlyUsedInFix = onlyUsedInFix,
                                 onOnlyUsedInFixChanged = { onlyUsedInFix = it },

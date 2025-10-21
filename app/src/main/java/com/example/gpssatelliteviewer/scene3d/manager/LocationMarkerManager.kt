@@ -5,6 +5,7 @@ import com.example.gpssatelliteviewer.data.frameCountUpdateInterval
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
+import com.example.gpssatelliteviewer.utils.distance
 import com.example.gpssatelliteviewer.utils.normalized
 import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.loaders.ModelLoader
@@ -12,8 +13,9 @@ import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
 import kotlin.math.min
 
-private const val MAX_SCALE_SIZE = 0.15f
-private const val scale = 0.035f
+private const val MAX_SCALE_SIZE = 0.2f
+private const val MIN_SCALE_SIZE = 0.008f
+private const val scale = 0.05f
 private const val locationMarkerUpdateInterval = 60 * 1000 * 5
 
 class LocationMarkerManager(
@@ -75,7 +77,7 @@ class LocationMarkerManager(
             locationMarkerNode.lookTowards(calculateLocationMarkerDirection(followUser = false))
         }
         val updateScale: (Float) -> Unit = { dist ->
-            val s = scale * dist * dist
+            val s = scale * dist + MIN_SCALE_SIZE
             locationMarkerScale = min(s, MAX_SCALE_SIZE)
             locationMarkerNode.scaleToUnitCube(locationMarkerScale)
         }
@@ -101,11 +103,12 @@ class LocationMarkerManager(
 
         if (shouldUpdateScale) {
             frameCount = 0
-            val dist = cameraManager.getCameraDistanceToCenter()
+            val camPos = cameraManager.getCameraPosition()
+            val dist = distance(camPos, locationMarkerNode.position)
             updateScale(dist)
             updatePosition()
             lastLocationMarkerUpdateTime = System.currentTimeMillis()
-            //Log.d("locationMarkerScale", " locationMarkerScale=$locationMarkerScale CameraDist=$dist")
+            Log.d("locationMarkerScale", " locationMarkerScale=$locationMarkerScale distToMarker=$dist")
         }
     }
 

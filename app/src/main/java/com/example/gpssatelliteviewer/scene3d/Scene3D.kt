@@ -3,11 +3,11 @@ package com.example.gpssatelliteviewer.scene3d
 import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.example.gpssatelliteviewer.data.AzElHistory
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
 import com.example.gpssatelliteviewer.scene3d.manager.EarthManager
@@ -101,16 +101,20 @@ class Scene3D(
                 _clickedSatelliteKey.value = null
                 _isSatelliteInfoBoxVisible.value = false
                 _isEarthInfoBoxVisible.value = false
+                satellitesManager.hideOrbit()
             }
             earthManager.getEarthNode().name -> {
                 _clickedSatelliteKey.value = null
                 _isSatelliteInfoBoxVisible.value = false
                 _isEarthInfoBoxVisible.value = !_isEarthInfoBoxVisible.value
+                satellitesManager.hideOrbit()
             }
             else -> {
                 _clickedSatelliteKey.value = key
                 _isSatelliteInfoBoxVisible.value = true
                 _isEarthInfoBoxVisible.value = false
+
+                satellitesManager.showOrbitForSatellite(key)
             }
         }
     }
@@ -154,8 +158,8 @@ class Scene3D(
     fun setLocationMarkerVisible(visible: Boolean) { locationMarkerManager.setVisible(visible) }
     fun isLocationMarkerVisible() = locationMarkerManager.isLocationMarkerVisible()
 
-    fun updateSatelliteList(newList: List<GNSSStatusData>){
-        satellitesManager.updateSatelliteList(newList)
+    fun updateSatelliteList(newList: List<GNSSStatusData>, azElHistory: Map<String, AzElHistory>){
+        satellitesManager.updateSatelliteList(newList, azElHistory)
     }
 
     fun updateParameters(newParameters: Scene3DParameters) {

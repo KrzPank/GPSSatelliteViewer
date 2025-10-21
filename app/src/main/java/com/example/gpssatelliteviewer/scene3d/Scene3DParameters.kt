@@ -27,11 +27,12 @@ data class Scene3DParameters(
     var earthScale: Float = 1.0f,
 
     // Satellite Parameters
+    var orbitModelPath: String = "models/orbit.glb",
     var satelliteModelPath: String = "models/RedCircle.glb",
     var satelliteScale: Float = 0.05f,
 
     // Location marker Parameters
-    var locationMarkerModelPath: String = "models/LocationMarker.glb",
+    var locationMarkerModelPath: String = "models/pointer.glb",
     var locationMarkerScale: Float = 0.05f,
     var userLocation: Float3? = null,
 

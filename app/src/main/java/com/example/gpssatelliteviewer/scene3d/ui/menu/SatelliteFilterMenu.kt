@@ -14,6 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -32,11 +33,16 @@ import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.app.theme.TextSecondaryColor
 import com.example.gpssatelliteviewer.app.theme.OutlineColor
 import com.example.gpssatelliteviewer.app.theme.SelectAllButton
+import com.example.gpssatelliteviewer.app.theme.TextHintColor
+import com.example.gpssatelliteviewer.app.theme.ValueText
+import com.example.gpssatelliteviewer.data.AzElHistory
+import com.example.gpssatelliteviewer.utils.ValueText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SatelliteFilterMenu(
     satelliteList: List<GNSSStatusData>,
+    azElHistory:  Map<String, AzElHistory>,
     selectedConstellations: MutableList<String>,
     onlyUsedInFix: Boolean,
     onOnlyUsedInFixChanged: (Boolean) -> Unit,
@@ -50,21 +56,18 @@ fun SatelliteFilterMenu(
 
     Column(
         modifier = modifier
-            .background(DarkBackground.copy(alpha = 0.95f)) // Use theme background
+            .background(DarkBackground.copy(alpha = 0.95f))
             .padding(16.dp)
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        // Header
+    ) {// Header
         Text(
-            text = "Satellite Filters",
+            text = "Navigation",
             color = TextLabelColor,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
-
         HorizontalDivider(thickness = 1.dp, color = OutlineColor)
-
         // Info Section
         ParameterSection("Navigation") {
             Text(
@@ -73,7 +76,7 @@ fun SatelliteFilterMenu(
                 fontSize = 14.sp
             )
             Text(
-                text = "Click on satellite to show info",
+                text = "Click on satellite to show info and approximate orbit",
                 color = TextSecondaryColor,
                 fontSize = 14.sp
             )
@@ -90,10 +93,26 @@ fun SatelliteFilterMenu(
                 }
             }
         }
+        Spacer(modifier = Modifier.Companion.height(10.dp))
+
+        // Header
+        Text(
+            text = "Satellite Filters",
+            color = TextLabelColor,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Bold
+        )
+        HorizontalDivider(thickness = 1.dp, color = OutlineColor)
 
         // Constellation Filter Section
         ParameterSection("Constellations") {
-            // Select All / Deselect All buttons
+            CustomCheckbox(
+                label = "Only used in fix",
+                checked = onlyUsedInFix,
+                onCheckedChange = onOnlyUsedInFixChanged,
+                description = "Show only satellites that contribute to position calculation"
+            )
+            Spacer(modifier = Modifier.Companion.height(8.dp))
             Row(
                 modifier = Modifier.Companion.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -117,8 +136,6 @@ fun SatelliteFilterMenu(
                 }
             }
 
-            Spacer(modifier = Modifier.Companion.height(8.dp))
-
             // Individual constellation checkboxes
             allConstellations.forEach { constellation ->
                 CustomCheckbox(
@@ -138,14 +155,7 @@ fun SatelliteFilterMenu(
         }
 
         // Filter Options Section
-        ParameterSection("Filter Options") {
-            CustomCheckbox(
-                label = "Only satellites used in fix",
-                checked = onlyUsedInFix,
-                onCheckedChange = onOnlyUsedInFixChanged,
-                description = "Show only satellites that contribute to position calculation"
-            )
-            
+        ParameterSection("Marker Options") {
             CustomCheckbox(
                 label = "Show location marker",
                 checked = showLocationMarker,
@@ -163,9 +173,36 @@ fun SatelliteFilterMenu(
             }
             val usedInFix = satelliteList.count { it.usedInFix }
 
+            val orbitEntries: Map<String, AzElHistory> = azElHistory.filterValues { hist ->
+                (hist.firstAz != hist.lastAz) || (hist.firstEl != hist.lastEl)
+            }
+            val orbitCount = orbitEntries.size
+
+            val orbitKeysList = orbitEntries.keys.sorted()
+            val orbitKeysDisplay = when {
+                orbitKeysList.isEmpty() -> "—"
+                orbitKeysList.size <= 6 -> orbitKeysList.joinToString(", ")
+                else -> orbitKeysList.take(6).joinToString(", ") + ", … (${orbitKeysList.size} total)"
+            }
+
             InfoRow("Total Satellites", totalSatellites.toString())
             InfoRow("Currently Visible", visibleSatellites.toString())
             InfoRow("Used in Fix", usedInFix.toString())
+
+            InfoRow("Orbit estimates (approx)", orbitCount.toString())
+            Text(
+                text = "Note: orbit calculation is ONLY an approximation derived only from first and last known az/el for a satellite.",
+                style = MaterialTheme.typography.labelMedium,
+                color = TextHintColor,
+                modifier = Modifier.padding(start = 15.dp)
+            )
+
+            InfoRow("Satellites with orbit estimate:", "")
+            Text(
+                text = orbitKeysDisplay,
+                style = MaterialTheme.typography.labelLarge,
+                color = TextSecondaryColor
+            )
 
             allConstellations.forEach { constellation ->
                 val count = satelliteList.count { it.constellation == constellation }

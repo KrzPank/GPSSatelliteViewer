@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.example.gpssatelliteviewer.data.AzElHistory
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
 import com.example.gpssatelliteviewer.data.GNSSCombinedData
 import com.example.gpssatelliteviewer.utils.averageOrNull
@@ -24,6 +25,9 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
+
+
+private val AZEL_CHANGE_EPSILON = 0.001f
 
 class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
@@ -36,19 +40,26 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val _gnssMeasurements = MutableStateFlow<List<GNSSMeasurementData>>(listOf())
     val gnssMeasurements: StateFlow<List<GNSSMeasurementData>> = _gnssMeasurements
 
+    private val _azElHistory = MutableStateFlow<Map<String, AzElHistory>>(emptyMap())
+    val azElHistory: StateFlow<Map<String, AzElHistory>> = _azElHistory
+
+
+    private val _gnssHardwareInfo = MutableStateFlow(GNSSHardwareInfo())
+    val gnssHardwareInfo: StateFlow<GNSSHardwareInfo> = _gnssHardwareInfo
+
+
     private val _constellationSNRHistory = MutableStateFlow<Map<String, MutableList<Float>>>(emptyMap())
     val constellationSNRHistory: StateFlow<Map<String, List<Float>>> = _constellationSNRHistory
 
     private val _satelliteSNRHistory = MutableStateFlow<Map<String, MutableList<Float>>>(emptyMap())
     val satelliteSNRHistory: StateFlow<Map<String, MutableList<Float>>> = _satelliteSNRHistory
 
-    private val _gnssHardwareInfo = MutableStateFlow(GNSSHardwareInfo())
-    val gnssHardwareInfo: StateFlow<GNSSHardwareInfo> = _gnssHardwareInfo
 
     private val gnssCallback = object : GnssStatus.Callback() {
         override fun onSatelliteStatusChanged(status: GnssStatus) {
             gnssCallbackScope.launch {
                 val list = mutableListOf<GNSSStatusData>()
+                val newAzElMap = _azElHistory.value.toMutableMap()
                 for (i in 0 until status.satelliteCount) {
                     val constellation = when (status.getConstellationType(i)) {
                         GnssStatus.CONSTELLATION_GPS -> "GPS"
@@ -61,6 +72,36 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                         GnssStatus.CONSTELLATION_UNKNOWN -> "Unknown"
                         else -> "Other"
                     }
+
+                    val svid = status.getSvid(i)
+                    val key = "${constellation}:${svid}"
+
+                    val az = status.getAzimuthDegrees(i)
+                    val el = status.getElevationDegrees(i)
+
+                    val prev = newAzElMap[key]
+                    if (prev == null) {
+                        // first time we see this satellite -> set first==last==current
+                        newAzElMap[key] = AzElHistory(
+                            firstAz = az,
+                            firstEl = el,
+                            lastAz = az,
+                            lastEl = el
+                        )
+                    } else {
+                        // update last if changed
+                        val azChanged = kotlin.math.abs(az - prev.lastAz) > AZEL_CHANGE_EPSILON
+                        val elChanged = kotlin.math.abs(el - prev.lastEl) > AZEL_CHANGE_EPSILON
+                        if (azChanged || elChanged) {
+                            newAzElMap[key] = AzElHistory(
+                                firstAz = prev.firstAz,
+                                firstEl = prev.firstEl,
+                                lastAz = az,
+                                lastEl = el
+                            )
+                        }
+                    }
+
                     list.add(
                         GNSSStatusData(
                             constellation = constellation,
@@ -80,6 +121,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                     _satelliteList.value = list
                     _constellationSNRHistory.value = updatedConstellation
                     _satelliteSNRHistory.value = updatedSatellite
+                    _azElHistory.value = newAzElMap.toMap()
                 }
             }
         }
@@ -188,8 +230,12 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
-        locationManager.unregisterGnssStatusCallback(gnssCallback)
-        locationManager.unregisterGnssMeasurementsCallback(gnssMeasurementCallback)
+        try {
+            locationManager.unregisterGnssStatusCallback(gnssCallback)
+        } catch (_: Exception) { }
+        try {
+            locationManager.unregisterGnssMeasurementsCallback(gnssMeasurementCallback)
+        } catch (_: Exception) { }
         gnssCallbackScope.cancel()
     }
 }

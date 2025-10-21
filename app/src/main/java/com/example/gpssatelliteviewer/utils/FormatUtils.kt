@@ -247,7 +247,6 @@ fun CustomCheckbox(
                 text = it,
                 style = MaterialTheme.typography.labelMedium,
                 color = TextHintColor,
-                fontSize = 12.sp,
                 modifier = Modifier.padding(start = 15.dp)
             )
         }

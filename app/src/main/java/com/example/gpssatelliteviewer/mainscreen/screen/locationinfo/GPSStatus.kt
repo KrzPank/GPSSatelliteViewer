@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocationDisabled
 import androidx.compose.material.icons.filled.LocationOff
@@ -167,7 +168,7 @@ class GPSStatus(
     // Helper functions for GPS status display
     private fun getStatusIcon(gpsStatusState: GPSStatusState): ImageVector {
         return when (gpsStatusState) {
-            is GPSStatusState.Excellent -> Icons.Default.CheckCircle
+            is GPSStatusState.Excellent -> Icons.Default.Check
             is GPSStatusState.Good -> Icons.Default.SignalCellularAlt
             is GPSStatusState.Fair -> Icons.Default.SignalCellularAlt2Bar
             is GPSStatusState.Poor -> Icons.Default.SignalCellularAlt1Bar

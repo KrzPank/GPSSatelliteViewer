@@ -4,7 +4,6 @@ import android.util.Log
 import com.example.gpssatelliteviewer.utils.length
 import com.example.gpssatelliteviewer.utils.normalized
 import com.google.android.filament.utils.Manipulator
-import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.gesture.CameraGestureDetector
 import io.github.sceneview.gesture.transform
 import io.github.sceneview.math.Transform
@@ -12,10 +11,15 @@ import kotlin.math.abs
 
 private const val EPS = 1e-3f
 
+// max distance camera can zoom in
+private const val MAX_SEPARATION = 30f  // 1 = ~0.005 scene distance
+private const val UNIT_SCALE = 0.005f
+
 class ClampedCameraManipulator(
     manipulator: Manipulator,
-    private val minCameraDistance: Float = 0.6f,
-    private val maxPitchDeg: Float = 85f
+    private val minCameraDistance: Float,
+    private val maxCameraDistance: Float,
+    private val maxPitchDeg: Float,
 ) : CameraGestureDetector.DefaultCameraManipulator(manipulator) {
 
     private var mY = 0
@@ -35,7 +39,6 @@ class ClampedCameraManipulator(
     override fun update(deltaTime: Float) {
         super.update(deltaTime)
 
-        // continuously enforce clamps in update, in case other code changes camera
         try {
             val produced = super.getTransform()
             val clamped = clampTransform(produced)
@@ -51,26 +54,130 @@ class ClampedCameraManipulator(
 
     override fun scrollUpdate(x: Int, y: Int, prevSeparation: Float, currSeparation: Float) {
         if (prevSeparation > 0f && currSeparation > 0f && abs(currSeparation - prevSeparation) > 1f) {
-            val scale = prevSeparation / currSeparation
-            val transform = super.getTransform()
-            val camPos = transform.position
-            val camDist = camPos.length()
 
-            if (camDist >= minCameraDistance || scale > 1f) {
-                super.scrollUpdate(x, y, prevSeparation, currSeparation)
-                t = clampTransform(super.getTransform())
-                //Log.d(TAG, "scroll allowed transform=$transform\nclamped t=$t\ncamDist=$camDist")
-            } else {
-                val camDir = if (camDist > 0f) camPos.normalized() else Float3(0f, 0f, -1f)
-                val camClampedDist = camDir * minCameraDistance
+            val before = super.getTransform()
+            val totalDelta = currSeparation - prevSeparation
+            val direction = if (totalDelta > 0f) 1f else -1f
+            val totalAbs = abs(totalDelta)
 
-                val tTransform = transform
-                tTransform.position = camClampedDist
-                t = clampTransform(tTransform)
+            var lastSeparation = prevSeparation
+            var lastTransform = before
 
-                super.scrollUpdate(x, y, 0.0f, 0.0f)
-                //Log.d(TAG, "Blocked pinch; set tTransform=$tTransform camDist=$camDist")
+            val fullSteps = (totalAbs / MAX_SEPARATION).toInt()
+            val remainder = totalAbs % MAX_SEPARATION
+
+            fun applyStep(nextSeparation: Float): Boolean {
+                super.scrollUpdate(x, y, lastSeparation, nextSeparation)
+
+                val produced = super.getTransform()
+                val beforeDist = lastTransform.position.length()
+                val producedDist = produced.position.length()
+
+                val withinBounds = producedDist >= minCameraDistance - EPS && producedDist <= maxCameraDistance + EPS
+                val movedBackTowardAllowed = when {
+                    producedDist > maxCameraDistance + EPS -> producedDist + EPS < beforeDist
+                    producedDist < minCameraDistance - EPS -> producedDist - EPS > beforeDist
+                    else -> false
+                }
+                //val diff = abs(beforeDist - producedDist)
+                //Log.d(TAG, "lastSep=$lastSeparation nextSep=$nextSeparation beforeDist=$beforeDist producedDist=$producedDist diff=${diff}")
+
+                if (withinBounds || movedBackTowardAllowed) {
+                    lastTransform = clampTransform(produced)
+                    lastSeparation = nextSeparation
+                    return true
+                } else {
+                    // revert last attempted change
+                    val distToBound =
+                        if (producedDist < minCameraDistance)
+                            beforeDist - minCameraDistance
+                        else
+                            beforeDist - maxCameraDistance
+                    val allowedSepDelta = distToBound / UNIT_SCALE
+                    val correctedSeparation = lastSeparation + allowedSepDelta + 4 // +4 for edge cases
+                    super.scrollUpdate(x, y, lastSeparation, correctedSeparation)
+                    //super.scrollUpdate(x, y, nextSeparation, lastSeparation)
+                    val corrected = super.getTransform()
+                    lastTransform = clampTransform(corrected)
+                    lastSeparation = correctedSeparation
+
+                    Log.d(
+                        TAG,
+                        "Out of bounds: before=$beforeDist produced=$producedDist " +
+                                "targetBound=${if (producedDist < minCameraDistance) minCameraDistance else maxCameraDistance} " +
+                                "distToBound=$distToBound allowedSepDelta=$allowedSepDelta"
+                    )
+                    return false
+                }
             }
+
+            for (i in 1..fullSteps) {
+                val nextSeparation = lastSeparation + direction * MAX_SEPARATION
+                if (!applyStep(nextSeparation)) break
+            }
+
+            if (remainder > 0f) {
+                val nextSeparation = lastSeparation + direction * remainder
+                applyStep(nextSeparation)
+            }
+
+            t = lastTransform
+
+            /* lerp sized steps
+            val before = super.getTransform()
+
+            val totalDelta = currSeparation - prevSeparation
+            val totalAbs = abs(totalDelta)
+
+            // How many interpolation samples to use (minimum 1)
+            val steps = (totalAbs / maxSeparationDelta).toInt().coerceAtLeast(1)
+            val alphaStep = 1f / steps
+
+            var lastSeparation = prevSeparation
+            var lastTransform = before
+
+            //Log.d(TAG, "$steps currSeparation=$currSeparation lastSep=$prevSeparation delta=${totalDelta} alphaStep=${alphaStep}")
+            for (i in 1..steps) {
+                val alpha = i * alphaStep
+                val desiredSeparation = lerp(prevSeparation, currSeparation, alpha)
+
+                // compute delta from the *last* applied separation (moving window)
+                val delta = desiredSeparation - lastSeparation
+                val clampedDelta = delta.coerceIn(-maxSeparationDelta, maxSeparationDelta)
+
+                // next separation to apply this step
+                val nextSeparation = lastSeparation + clampedDelta
+
+                // IMPORTANT: use lastSeparation as start and nextSeparation as end
+                super.scrollUpdate(x, y, lastSeparation, nextSeparation)
+
+                val produced = super.getTransform()
+
+                val beforeDist = lastTransform.position.length()
+                val producedDist = produced.position.length()
+
+                val withinBounds = producedDist >= minCameraDistance - EPS && producedDist <= maxCameraDistance + EPS
+                val movedBackTowardAllowed = when {
+                    producedDist > maxCameraDistance + EPS -> producedDist + EPS < beforeDist
+                    producedDist < minCameraDistance - EPS -> producedDist - EPS > beforeDist
+                    else -> false
+                }
+
+                //Log.d(TAG, "smoothStep=$i/$steps desired=$desiredSeparation lastSep=$lastSeparation nextSep=$nextSeparation beforeDist=$beforeDist producedDist=$producedDist")
+
+                if (withinBounds || movedBackTowardAllowed) {
+                    lastTransform = clampTransform(produced)
+                    lastSeparation = nextSeparation
+                } else {
+                    // revert the last attempted change and stop
+                    super.scrollUpdate(x, y, nextSeparation, lastSeparation)
+                    break
+                }
+            }
+
+            t = clampTransform(lastTransform)
+
+             */
         }
     }
 
@@ -120,7 +227,7 @@ class ClampedCameraManipulator(
     }
 
     override fun grabEnd() {
-        Log.d(TAG, "grabEnd")
+        //Log.d(TAG, "grabEnd")
         super.grabEnd()
 
         t = clampTransform(super.getTransform())
@@ -130,11 +237,22 @@ class ClampedCameraManipulator(
         val pos = transform.position
         val dist = pos.length()
 
-        if (dist > 0f && dist < minCameraDistance) {
+        if (dist <= 0f) return transform
+
+        if (dist < minCameraDistance) {
             val dir = pos.normalized()
             val newPos = dir * minCameraDistance
             //Log.d(TAG, "Clamping distance: $dist -> ${newPos.length()}")
             transform.position = newPos
+            return transform
+        }
+
+        if (dist > maxCameraDistance) {
+            val dir = pos.normalized()
+            val newPos = dir * maxCameraDistance
+            //Log.d(TAG, "Clamping distance: $dist -> ${newPos.length()}")
+            transform.position = newPos
+            return transform
         }
 
         return transform

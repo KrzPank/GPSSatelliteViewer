@@ -33,6 +33,7 @@ fun NMEAMessageCard(
             .fillMaxWidth()
             .animateContentSize()
     ) {
+        // TODO move all padding dp to constant
         Column(modifier = Modifier.Companion.padding(12.dp)) {
             Text(
                 text = message.messageType,
