@@ -74,7 +74,6 @@ class SatelliteManager(
     fun satelliteKey(sat: GNSSStatusData) = satelliteKey(sat.constellation, sat.prn)
 
     private data class SatelliteCache(
-        var lastData: GNSSStatusData,
         var usedInFix: Boolean,
         var altitude: Float,
         var firstPos: Float3? = null,
@@ -134,18 +133,15 @@ class SatelliteManager(
                     val newAltitude = calculateSatelliteAltitude(sat)
                     updateSatellitePosition(existingNode, sat)
                     //Log.d("SatelliteManager", "Updating satellite:${key} cache=${cache}")
-                    cache?.lastData = sat
                     cache?.usedInFix = sat.usedInFix
                     cache?.altitude = newAltitude
                     cache?.lastPos = existingNode.position
 
-                    Log.d("SatelliteManager", "Updating satellite:${key}, firstPos=${cache?.firstPos} lastPos=${cache?.lastPos}")
+                    //Log.d("SatelliteManager", "Updating satellite:${key}, firstPos=${cache?.firstPos} lastPos=${cache?.lastPos}")
                     // If this satellite currently has orbit shown, update orbit orientation/scale
                     if (currentOrbitKey == key) {
                         updateOrbitForCache(satelliteCache[key])
                     }
-                } else {
-                    cache?.lastData = sat
                 }
             } else {
                 val satelliteNode = getOrCreateSatelliteNode()
@@ -165,7 +161,6 @@ class SatelliteManager(
                 )
 
                 satelliteCache[key] = SatelliteCache(
-                    lastData = sat,
                     usedInFix = sat.usedInFix,
                     altitude = altitude,
                     firstPos = pos,
@@ -428,8 +423,8 @@ class SatelliteManager(
 private fun computeRingRotationEulerDeg(p2: Float3, p3: Float3, sourceNormal: Float3 = Float3(0f, 1f, 0f)): Float3 {
     val raw = cross(p2, p3)
     val rawLen = length(raw)
-    //if (rawLen <= 1e-8f) return Float3(0f, 0f, 0f) // degenerate
-    if (rawLen <= EPS) return Float3(0f, 0f, 0f) // degenerate
+    //if (rawLen <= 1e-8f) return Float3(0f, 0f, 0f)
+    if (rawLen <= EPS) return Float3(0f, 0f, 0f)
 
     val target = normalize(raw)
 

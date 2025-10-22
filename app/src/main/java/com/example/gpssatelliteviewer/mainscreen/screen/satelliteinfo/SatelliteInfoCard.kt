@@ -2,7 +2,6 @@ package com.example.gpssatelliteviewer.mainscreen.screen.satelliteinfo
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,18 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.data.GNSSCombinedData
 import com.example.gpssatelliteviewer.utils.InfoRow
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.gpssatelliteviewer.app.theme.GPSSatelliteViewerTheme
-import com.example.gpssatelliteviewer.app.theme.GreenPrimaryColor
-import com.example.gpssatelliteviewer.app.theme.TextPrimaryColor
+import com.example.gpssatelliteviewer.utils.CustomCheckbox
 
 @Composable
 fun ConstellationCard(
@@ -133,28 +121,12 @@ fun ShowOnlyUsedInFixCard(
         modifier = Modifier
             .padding(10.dp)
             .fillMaxWidth()
-            .clickable { onToggle(!showOnlyInfFix) } // Whole card clickable
+            .clickable { onToggle(!showOnlyInfFix) }
     ) {
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-        ) {
-            Checkbox(
-                checked = showOnlyInfFix,
-                onCheckedChange = { onToggle(it) },
-                colors = CheckboxDefaults.colors(
-                    checkedColor = GreenPrimaryColor,
-                    uncheckedColor = TextPrimaryColor
-                )
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "Show only used in Fix",
-                color = TextPrimaryColor,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
+        CustomCheckbox(
+            label = "Show only used in Fix",
+            checked = showOnlyInfFix,
+            onCheckedChange = onToggle
+        )
     }
 }

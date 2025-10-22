@@ -77,7 +77,7 @@ fun LocationInfoScreen(
         while (true) {
             val date = Date(System.currentTimeMillis())
             currentSystemTime = sdf.format(date)
-            delay(330L) // wait 330ms more and updates seem not consistent?
+            delay(330L) // wait 330ms. More and updates seem not consistent?
         }
     }
 

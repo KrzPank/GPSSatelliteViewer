@@ -131,6 +131,7 @@ class Scene3D(
             cameraNode = cameraManager.getCameraNode(),
             cameraManipulator = cameraManager.getCameraManipulator(),
             childNodes = listOf(centerNode),
+            // hind better environment
             environment = environmentLoader.createHDREnvironment(parameters.environmentPath)!!,
             onFrame = {
                 cameraManager.onFrame()

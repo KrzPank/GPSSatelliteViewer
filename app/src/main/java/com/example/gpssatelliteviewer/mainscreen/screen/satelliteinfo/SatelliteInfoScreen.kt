@@ -1,27 +1,13 @@
 package com.example.gpssatelliteviewer.mainscreen.screen.satelliteinfo
 
-import android.widget.Space
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SatelliteAlt
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateMapOf
@@ -32,9 +18,6 @@ import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import com.example.gpssatelliteviewer.app.theme.GreenPrimaryColor
-import com.example.gpssatelliteviewer.app.theme.TextPrimaryColor
 import com.example.gpssatelliteviewer.data.mergeLists
 import com.example.gpssatelliteviewer.utils.EmptyStateCard
 
@@ -64,14 +47,13 @@ fun SatelliteInfoScreen(
             .fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        item {
-            ShowOnlyUsedInFixCard(
-                showOnlyInfFix = showOnlyInfFix,
-                onToggle = { showOnlyInfFix = it }
-            )
-        }
-
         if (filteredSatellites.isNotEmpty()) {
+            item {
+                ShowOnlyUsedInFixCard(
+                    showOnlyInfFix = showOnlyInfFix,
+                    onToggle = { showOnlyInfFix = it }
+                )
+            }
             filteredSatellites.forEach { (constellation, satellitesInGroup) ->
                 val expanded = expandedMap.getOrPut(constellation) { false }
 

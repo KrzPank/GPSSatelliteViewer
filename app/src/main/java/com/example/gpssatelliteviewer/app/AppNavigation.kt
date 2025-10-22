@@ -68,11 +68,9 @@ fun AppNavigation(
                 )
             }
             composable("MainStatisticsScreen") {
-                val nmeaMessageStatistics by nmeaViewModel.messageStatistics.collectAsState()
                 MainStatisticsScreen(
                     navController = navController,
-                    gnssViewModel = gnssViewModel,
-                    nmeaMessageStatistics = nmeaMessageStatistics
+                    gnssViewModel = gnssViewModel
                 )
             }
         }

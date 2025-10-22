@@ -1,41 +1,32 @@
 package com.example.gpssatelliteviewer.statisticscreen
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
-import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
-import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
-import com.example.gpssatelliteviewer.mainscreen.screen.chipsetinfo.GNSSChipsetInfoScreen
-import com.example.gpssatelliteviewer.mainscreen.screen.livenmea.LiveNMEADataScreen
-import com.example.gpssatelliteviewer.mainscreen.screen.locationinfo.LocationInfoScreen
-import com.example.gpssatelliteviewer.mainscreen.screen.satelliteinfo.SatelliteInfoScreen
+import com.example.gpssatelliteviewer.statisticscreen.constellationSNRstatistic.ConstellationSNRStatisticsScreen
+import com.example.gpssatelliteviewer.statisticscreen.satelliteSNRstatistic.SatelliteSNRStatisticScreen
 import com.example.gpssatelliteviewer.utils.NavigationTopAppBar
-import androidx.compose.runtime.getValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainStatisticsScreen(
     navController: NavController,
-    gnssViewModel: GNSSViewModel,
-    nmeaMessageStatistics: Map<String, Int>
+    gnssViewModel: GNSSViewModel
 ) {
-    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 1 })
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { 2 })
     val expandedMap = remember { mutableStateMapOf<String, Boolean>() }
 
-    // Determine label based on current page
     val topAppBarLabel = when (pagerState.currentPage) {
-        0 -> "Avg. SNR per constellation in Fix"
+        0 -> "Constellation"
+        1 -> "Satellite"
         else -> ""
     }
 
@@ -56,10 +47,13 @@ fun MainStatisticsScreen(
             state = pagerState,
             modifier = Modifier.Companion
                 .padding(innerPadding),
-            //beyondViewportPageCount = 1
+            beyondViewportPageCount = 1
         ) { page ->
             when (page) {
-                0 -> SNRStatisticsScreen(
+                0 -> ConstellationSNRStatisticsScreen(
+                    gnssViewModel = gnssViewModel
+                )
+                1 -> SatelliteSNRStatisticScreen(
                     gnssViewModel = gnssViewModel
                 )
             }

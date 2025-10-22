@@ -79,7 +79,6 @@ fun Satellite3DScreen(
     locationNMEA: NMEALocationData,
     locationViewModel: LocationViewModel
 ) {
-    // Immersive mode
     HideSystemUI()
     LockOrientationLandscape()
 
@@ -183,7 +182,7 @@ fun Satellite3DScreen(
             }
         }
 
-        LaunchedEffect(filteredSatellites, isSceneReady) {
+        LaunchedEffect(filteredSatellites) {
             if (isSceneReady) {
                 scene.updateSatelliteList(filteredSatellites, azElHistory)
             }

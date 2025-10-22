@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -24,19 +26,16 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.app.theme.DarkBackground
+import com.example.gpssatelliteviewer.app.theme.DarkSurface
 import com.example.gpssatelliteviewer.utils.CustomCheckbox
 import com.example.gpssatelliteviewer.utils.ParameterSection
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.app.theme.DeselectAllButton
-import com.example.gpssatelliteviewer.app.theme.GPSDisabledColor
 import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.app.theme.TextSecondaryColor
-import com.example.gpssatelliteviewer.app.theme.OutlineColor
 import com.example.gpssatelliteviewer.app.theme.SelectAllButton
 import com.example.gpssatelliteviewer.app.theme.TextHintColor
-import com.example.gpssatelliteviewer.app.theme.ValueText
 import com.example.gpssatelliteviewer.data.AzElHistory
-import com.example.gpssatelliteviewer.utils.ValueText
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,48 +50,56 @@ fun SatelliteFilterMenu(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
-    val scrollState = rememberScrollState()
     val allConstellations = satelliteList.map { it.constellation }.distinct()
 
     Column(
         modifier = modifier
             .background(DarkBackground.copy(alpha = 0.95f))
             .padding(16.dp)
-            .verticalScroll(scrollState),
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {// Header
+    ) {
         Text(
             text = "Navigation",
             color = TextLabelColor,
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
-        HorizontalDivider(thickness = 1.dp, color = OutlineColor)
-        // Info Section
-        ParameterSection("Navigation") {
-            Text(
-                text = "Double tap on scene to open/close menu",
-                color = TextSecondaryColor,
-                fontSize = 14.sp
-            )
-            Text(
-                text = "Click on satellite to show info and approximate orbit",
-                color = TextSecondaryColor,
-                fontSize = 14.sp
-            )
-            Row(
-                modifier = Modifier.Companion.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+        HorizontalDivider()
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(8.dp),
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Button(
-                    onClick = { navController.navigate("MainScreen") },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = GPSDisabledColor)
+                Row(
+                    modifier = Modifier.Companion.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Main screen", color = TextLabelColor, fontSize = 12.sp)
+                    Button(
+                        onClick = { navController.navigate("MainScreen") },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkSurface)
+                    ) {
+                        Text("Main screen", color = TextLabelColor, fontSize = 12.sp)
+                    }
                 }
+                Text(
+                    text = "Double tap on scene to open/close menu",
+                    color = TextSecondaryColor,
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = "Click on satellite to show info and approximate orbit",
+                    color = TextSecondaryColor,
+                    fontSize = 14.sp
+                )
             }
         }
+
         Spacer(modifier = Modifier.Companion.height(10.dp))
 
         // Header
@@ -102,7 +109,7 @@ fun SatelliteFilterMenu(
             fontSize = 20.sp,
             fontWeight = FontWeight.Bold
         )
-        HorizontalDivider(thickness = 1.dp, color = OutlineColor)
+        HorizontalDivider()
 
         // Constellation Filter Section
         ParameterSection("Constellations") {
@@ -135,8 +142,6 @@ fun SatelliteFilterMenu(
                     Text("Deselect All", color = TextLabelColor, fontSize = 12.sp)
                 }
             }
-
-            // Individual constellation checkboxes
             allConstellations.forEach { constellation ->
                 CustomCheckbox(
                     label = constellation,
@@ -168,8 +173,7 @@ fun SatelliteFilterMenu(
         ParameterSection("Statistics") {
             val totalSatellites = satelliteList.size
             val visibleSatellites = satelliteList.count { sat ->
-                selectedConstellations.contains(sat.constellation) &&
-                        (!onlyUsedInFix || sat.usedInFix)
+                selectedConstellations.contains(sat.constellation) && (!onlyUsedInFix || sat.usedInFix)
             }
             val usedInFix = satelliteList.count { it.usedInFix }
 
@@ -189,6 +193,11 @@ fun SatelliteFilterMenu(
             InfoRow("Currently Visible", visibleSatellites.toString())
             InfoRow("Used in Fix", usedInFix.toString())
 
+            allConstellations.forEach { constellation ->
+                val count = satelliteList.count { it.constellation == constellation }
+                InfoRow(constellation, count.toString())
+            }
+
             InfoRow("Orbit estimates (approx)", orbitCount.toString())
             Text(
                 text = "Note: orbit calculation is ONLY an approximation derived only from first and last known az/el for a satellite.",
@@ -203,11 +212,6 @@ fun SatelliteFilterMenu(
                 style = MaterialTheme.typography.labelLarge,
                 color = TextSecondaryColor
             )
-
-            allConstellations.forEach { constellation ->
-                val count = satelliteList.count { it.constellation == constellation }
-                InfoRow(constellation, count.toString())
-            }
         }
     }
 }

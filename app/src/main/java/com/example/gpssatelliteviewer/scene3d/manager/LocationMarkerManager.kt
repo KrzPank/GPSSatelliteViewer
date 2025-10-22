@@ -33,6 +33,7 @@ class LocationMarkerManager(
     private var firstLocationMarkerUpdate = true
     private var locationMarkerScale = 0.1f
 
+    // need to call it from init
     init {
         locationMarkerNode = createLocationMarker()
         if (shouldUpdateLocationMarker()) updateLocationMarker()
@@ -108,7 +109,7 @@ class LocationMarkerManager(
             updateScale(dist)
             updatePosition()
             lastLocationMarkerUpdateTime = System.currentTimeMillis()
-            Log.d("locationMarkerScale", " locationMarkerScale=$locationMarkerScale distToMarker=$dist")
+            //Log.d("locationMarkerScale", " locationMarkerScale=$locationMarkerScale distToMarker=$dist")
         }
     }
 
@@ -116,19 +117,19 @@ class LocationMarkerManager(
 
     private fun shouldUpdateLocationMarker(): Boolean {
         if (parameters.userLocation == null) {
-            Log.d("LocationMarkerPos", "userLocation == null")
+            //Log.d("LocationMarkerPos", "userLocation == null")
             setVisible(false)
             return false
         }
 
         if (!isVisible) {
-            Log.d("LocationMarkerPos", "isVisible == false")
+            //Log.d("LocationMarkerPos", "isVisible == false")
             setVisible(false)
             return false
         }
 
         if (locationMarkerNode.parent == null) {
-            Log.d("LocationMarkerPos", "locationMarkerNode.parent == null")
+            //Log.d("LocationMarkerPos", "locationMarkerNode.parent == null")
             return false
         }
 
