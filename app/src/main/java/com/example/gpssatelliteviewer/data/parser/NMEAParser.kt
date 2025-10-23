@@ -215,4 +215,3 @@ object NMEAParser {
         }
     }
 }
-

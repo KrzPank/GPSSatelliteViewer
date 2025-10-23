@@ -18,7 +18,7 @@ import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
 import com.example.gpssatelliteviewer.locationdeny.LocationDenyScreen
 import com.example.gpssatelliteviewer.mainscreen.MainScreen
 import com.example.gpssatelliteviewer.scene3d.ui.Satellite3DScreen
-import com.example.gpssatelliteviewer.statisticscreen.MainStatisticsScreen
+import com.example.gpssatelliteviewer.satellitescreen.SatelliteInfoMainScreen
 
 @Composable
 fun AppNavigation(
@@ -48,9 +48,9 @@ fun AppNavigation(
 
         NavHost(
             navController = navController,
-            startDestination = "MainScreen"
+            startDestination = "LocationMainScreen"
         ) {
-            composable("MainScreen") {
+            composable("LocationMainScreen") {
                 MainScreen(
                     navController = navController,
                     gnssViewModel =  gnssViewModel,
@@ -67,8 +67,8 @@ fun AppNavigation(
                     locationViewModel = locationViewModel
                 )
             }
-            composable("MainStatisticsScreen") {
-                MainStatisticsScreen(
+            composable("SatelliteInfoMainScreen") {
+                SatelliteInfoMainScreen(
                     navController = navController,
                     gnssViewModel = gnssViewModel
                 )

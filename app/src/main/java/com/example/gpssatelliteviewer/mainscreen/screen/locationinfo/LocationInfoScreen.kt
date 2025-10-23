@@ -85,7 +85,7 @@ fun LocationInfoScreen(
         modifier = Modifier.Companion
             .padding(horizontal = 8.dp, vertical = 8.dp)
             .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         // --- Location Card ---
         item {

@@ -1,10 +1,12 @@
-package com.example.gpssatelliteviewer.mainscreen.screen.satelliteinfo
+package com.example.gpssatelliteviewer.satellitescreen.satellite
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -20,9 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.data.GNSSCombinedData
+import com.example.gpssatelliteviewer.satellitescreen.IndividualSNRChart
+import com.example.gpssatelliteviewer.satellitescreen.getConstellationColor
 import com.example.gpssatelliteviewer.utils.InfoRow
-import com.example.gpssatelliteviewer.utils.CustomCheckbox
 
 @Composable
 fun ConstellationCard(
@@ -60,19 +64,22 @@ fun ConstellationCard(
 }
 
 @Composable
-fun SatelliteInfoCard(satellite: GNSSCombinedData) {
+fun SatelliteInfoCard(
+    satellite: GNSSCombinedData,
+    snrHistory: Map<String, MutableList<Float>>,
+    modifier: Modifier = Modifier
+) {
     Card(
-        shape = RoundedCornerShape(12.dp),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(2.dp),
-        modifier = Modifier
+        modifier = Modifier.Companion
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.Companion.padding(12.dp)) {
 
-            // Always show constellation and SVID
             InfoRow("Constellation ", satellite.constellation)
-            InfoRow("SVID/PRN ", "${satellite.svid ?:"N/A"} / ${satellite.prn}")
+            InfoRow("SVID/PRN ", "${satellite.svid ?: "N/A"} / ${satellite.prn}")
             InfoRow("SNR", "%.1f dBHz ".format(satellite.cn0DbHz))
 
             satellite.snrInDb?.let {
@@ -84,7 +91,7 @@ fun SatelliteInfoCard(satellite: GNSSCombinedData) {
             InfoRow("Elevation ", "%.1f°".format(satellite.elevation))
 
             satellite.carrierFrequencyRangeHz?.let {
-                InfoRow("Carrier Frequency ", "%.3f MHz".format(it/1_000_000))
+                InfoRow("Carrier Frequency ", "%.3f MHz".format(it / 1_000_000))
             }
 
             satellite.accumulatedDeltaRangeMeters?.let {
@@ -106,27 +113,21 @@ fun SatelliteInfoCard(satellite: GNSSCombinedData) {
             satellite.timeOffsetNanos?.let {
                 InfoRow("Time Offset ", "%.6f ns".format(it))
             }
-        }
-    }
-}
 
-@Composable
-fun ShowOnlyUsedInFixCard(
-    showOnlyInfFix: Boolean,
-    onToggle: (Boolean) -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(2.dp),
-        modifier = Modifier
-            .padding(10.dp)
-            .fillMaxWidth()
-            .clickable { onToggle(!showOnlyInfFix) }
-    ) {
-        CustomCheckbox(
-            label = "Show only used in Fix",
-            checked = showOnlyInfFix,
-            onCheckedChange = onToggle
-        )
+            if (snrHistory.isNotEmpty()) {
+                val key = snrHistory.keys.first()
+                Spacer(Modifier.Companion.height(8.dp))
+                Text(
+                    text = "SNR in time",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextLabelColor
+                )
+                IndividualSNRChart(
+                    snrHistory = snrHistory[key]!!,
+                    lineColor = getConstellationColor(key.substringBefore(":").trim()),
+                    modifier = modifier.height(150.dp),
+                )
+            }
+        }
     }
 }

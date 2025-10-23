@@ -1,7 +1,5 @@
 package com.example.gpssatelliteviewer.mainscreen
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -19,7 +17,7 @@ import com.example.gpssatelliteviewer.data.viewmodel.NMEAViewModel
 import com.example.gpssatelliteviewer.mainscreen.screen.chipsetinfo.GNSSChipsetInfoScreen
 import com.example.gpssatelliteviewer.mainscreen.screen.livenmea.LiveNMEADataScreen
 import com.example.gpssatelliteviewer.mainscreen.screen.locationinfo.LocationInfoScreen
-import com.example.gpssatelliteviewer.mainscreen.screen.satelliteinfo.SatelliteInfoScreen
+import com.example.gpssatelliteviewer.satellitescreen.satellite.SatelliteInfoScreen
 import com.example.gpssatelliteviewer.utils.NavigationTopAppBar
 import androidx.compose.runtime.getValue
 
@@ -31,7 +29,7 @@ fun MainScreen(
     nmeaViewModel: NMEAViewModel,
     locationViewModel: LocationViewModel
 ) {
-    val pagerState = rememberPagerState(initialPage = 1, pageCount = { 4 })
+    val pagerState = rememberPagerState(initialPage = 1, pageCount = { 3 })
     val expandedMap = remember { mutableStateMapOf<String, Boolean>() }
 
     val gnssChipsetInfo by gnssViewModel.gnssHardwareInfo.collectAsState()
@@ -40,8 +38,7 @@ fun MainScreen(
     val topAppBarLabel = when (pagerState.currentPage) {
         0 -> "GNSS Chipset Info"
         1 -> "Location Info"
-        2 -> "Satellite Info"
-        3 -> "Live NMEA Messages"
+        2 -> "Live NMEA Messages"
         else -> ""
     }
 
@@ -49,12 +46,11 @@ fun MainScreen(
         topBar = {
             NavigationTopAppBar(
                 label = topAppBarLabel,
-                //navController = navController,
                 expandedMap = expandedMap,
                 menuKey = "mainMenu",
                 menuItems = listOf(
                     "Satellite 3D View" to { navController.navigate("Satellite3DScreen") },
-                    "SNR Statistics" to { navController.navigate("MainStatisticsScreen") }
+                    "Satellite data" to { navController.navigate("SatelliteInfoMainScreen") }
                 )
             )
         }
@@ -63,13 +59,12 @@ fun MainScreen(
             state = pagerState,
             modifier = Modifier.Companion
                 .padding(innerPadding),
-            beyondViewportPageCount = 3
+            beyondViewportPageCount = 2 //3
         ) { page ->
             when (page) {
                 0 -> GNSSChipsetInfoScreen(gnssChipsetInfo)
                 1 -> LocationInfoScreen(gnssViewModel, nmeaViewModel, locationViewModel)
-                2 -> SatelliteInfoScreen(gnssViewModel)
-                3 -> LiveNMEADataScreen(nmeaViewModel)
+                2 -> LiveNMEADataScreen(nmeaViewModel)
             }
         }
     }

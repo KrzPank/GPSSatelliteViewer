@@ -1,11 +1,10 @@
-package com.example.gpssatelliteviewer.statisticscreen.constellationSNRstatistic
+package com.example.gpssatelliteviewer.satellitescreen.constellation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,19 +23,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.gpssatelliteviewer.app.theme.ChartBeoDouColor
-import com.example.gpssatelliteviewer.app.theme.ChartGLONASSColor
-import com.example.gpssatelliteviewer.app.theme.ChartGPSColor
-import com.example.gpssatelliteviewer.app.theme.ChartGalileoColor
-import com.example.gpssatelliteviewer.app.theme.ChartIRNSSColor
-import com.example.gpssatelliteviewer.app.theme.ChartQZSSColor
-import com.example.gpssatelliteviewer.app.theme.ChartSBASColor
 import com.example.gpssatelliteviewer.app.theme.TextHintColor
-import com.example.gpssatelliteviewer.statisticscreen.GroupedSNRChart
-import com.example.gpssatelliteviewer.statisticscreen.IndividualSNRChart
-import com.example.gpssatelliteviewer.statisticscreen.getConstellationColor
+import com.example.gpssatelliteviewer.satellitescreen.GroupedSNRChart
+import com.example.gpssatelliteviewer.satellitescreen.IndividualSNRChart
+import com.example.gpssatelliteviewer.satellitescreen.getConstellationColor
 import kotlin.collections.plus
 
 @Composable

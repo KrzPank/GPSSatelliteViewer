@@ -4,6 +4,7 @@ import android.util.Log
 import kotlin.math.asin
 import kotlin.math.atan2
 import com.example.gpssatelliteviewer.data.AzElHistory
+import com.example.gpssatelliteviewer.data.EPS
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.data.frameCountUpdateInterval
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
@@ -27,8 +28,6 @@ import kotlin.math.sqrt
 
 private const val AZIMUTH_THRESHOLD_DEG = 0.1f
 private const val ELEVATION_THRESHOLD_DEG = 0.1f
-
-private const val EPS = 1e-3f
 
 class SatelliteManager(
     private val modelLoader: ModelLoader,

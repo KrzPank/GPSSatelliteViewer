@@ -40,7 +40,6 @@ import kotlin.math.log10
 import kotlin.math.pow
 import androidx.compose.runtime.*
 import com.example.gpssatelliteviewer.app.theme.DarkBackground
-import com.example.gpssatelliteviewer.utils.format
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -312,3 +311,5 @@ private fun LogarithmicSliderParameter(
         )
     }
 }
+
+private fun Float.format(digits: Int) = "%.${digits}f".format(this)

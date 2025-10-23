@@ -1,4 +1,4 @@
-package com.example.gpssatelliteviewer.statisticscreen
+package com.example.gpssatelliteviewer.satellitescreen
 
 import android.content.Context
 import android.icu.text.SimpleDateFormat
@@ -107,8 +107,8 @@ fun GroupedSNRChart(
 fun IndividualSNRChart(
     snrHistory: List<Float>,
     lineColor: Color,
-    label: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    label: String? = null,
 ) {
     AndroidView(
         modifier = modifier
@@ -132,7 +132,7 @@ fun IndividualSNRChart(
                 val x = (startX + i).toFloat()
                 if (snr == 0f) {
                     if (currentEntries.isNotEmpty()) {
-                        val ds = LineDataSet(currentEntries, label).apply {
+                        val ds = LineDataSet(currentEntries, label.toString()).apply {
                             color = lineColor.toArgb()
                             setDrawCircles(false)
                             lineWidth = 2f
@@ -162,6 +162,7 @@ fun IndividualSNRChart(
 
             lineChart.data = LineData(datasets as List<ILineDataSet>)
             applyDistinctLegend(lineChart, datasets)
+            lineChart.legend.isEnabled = label != null
 
             lineChart.setVisibleXRangeMaximum(CHART_UPDATE_WINDOW.toFloat())
             lineChart.notifyDataSetChanged()

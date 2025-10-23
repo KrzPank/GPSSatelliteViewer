@@ -290,5 +290,3 @@ fun mapTalker(talker: String): String {
         else -> "Unknown"
     }
 }
-
-fun Float.format(digits: Int) = "%.${digits}f".format(this)

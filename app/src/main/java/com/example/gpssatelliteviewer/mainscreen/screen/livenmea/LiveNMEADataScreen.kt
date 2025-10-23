@@ -38,7 +38,7 @@ fun LiveNMEADataScreen(
         modifier = Modifier
             .padding(horizontal = 8.dp, vertical = 8.dp)
             .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         if (messageStatistics.isNotEmpty()) {
             item {

@@ -1,6 +1,7 @@
 package com.example.gpssatelliteviewer.scene3d.manager.camera
 
 import android.util.Log
+import com.example.gpssatelliteviewer.data.EPS
 import com.example.gpssatelliteviewer.utils.length
 import com.example.gpssatelliteviewer.utils.normalized
 import com.google.android.filament.utils.Manipulator
@@ -8,8 +9,6 @@ import io.github.sceneview.gesture.CameraGestureDetector
 import io.github.sceneview.gesture.transform
 import io.github.sceneview.math.Transform
 import kotlin.math.abs
-
-private const val EPS = 1e-3f
 
 // max distance camera can zoom in
 private const val MAX_SEPARATION = 30f  // 1 = ~0.005 scene distance
@@ -96,7 +95,6 @@ class ClampedCameraManipulator(
                     val allowedSepDelta = distToBound / UNIT_SCALE
                     val correctedSeparation = lastSeparation + allowedSepDelta + 4 // +4 for edge cases
                     super.scrollUpdate(x, y, lastSeparation, correctedSeparation)
-                    //super.scrollUpdate(x, y, nextSeparation, lastSeparation)
                     val corrected = super.getTransform()
                     lastTransform = clampTransform(corrected)
                     lastSeparation = correctedSeparation

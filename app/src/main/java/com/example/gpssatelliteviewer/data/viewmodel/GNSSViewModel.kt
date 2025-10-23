@@ -1,7 +1,6 @@
 package com.example.gpssatelliteviewer.data.viewmodel
 
 import android.app.Application
-import android.location.GnssCapabilities
 import android.location.GnssMeasurementsEvent
 import android.location.GnssStatus
 import android.location.LocationManager
@@ -13,10 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import com.example.gpssatelliteviewer.data.AzElHistory
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
-import com.example.gpssatelliteviewer.data.GNSSCombinedData
+import com.example.gpssatelliteviewer.data.EPS
 import com.example.gpssatelliteviewer.utils.averageOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,9 +23,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
-
-
-private val AZEL_CHANGE_EPSILON = 0.001f
 
 class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
@@ -53,7 +48,6 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _satelliteSNRHistory = MutableStateFlow<Map<String, MutableList<Float>>>(emptyMap())
     val satelliteSNRHistory: StateFlow<Map<String, MutableList<Float>>> = _satelliteSNRHistory
-
 
     private val gnssCallback = object : GnssStatus.Callback() {
         override fun onSatelliteStatusChanged(status: GnssStatus) {
@@ -90,8 +84,8 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                         )
                     } else {
                         // update last if changed
-                        val azChanged = kotlin.math.abs(az - prev.lastAz) > AZEL_CHANGE_EPSILON
-                        val elChanged = kotlin.math.abs(el - prev.lastEl) > AZEL_CHANGE_EPSILON
+                        val azChanged = kotlin.math.abs(az - prev.lastAz) > EPS
+                        val elChanged = kotlin.math.abs(el - prev.lastEl) > EPS
                         if (azChanged || elChanged) {
                             newAzElMap[key] = AzElHistory(
                                 firstAz = prev.firstAz,
