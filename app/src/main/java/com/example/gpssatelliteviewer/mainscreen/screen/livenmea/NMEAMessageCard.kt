@@ -20,7 +20,6 @@ import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.ValueText
 import com.example.gpssatelliteviewer.utils.mapFixQuality
 import com.example.gpssatelliteviewer.utils.mapFixType
-import com.example.gpssatelliteviewer.utils.mapTalker
 
 @Composable
 fun NMEAMessageCard(
@@ -161,4 +160,15 @@ private fun RenderVTGInfo(vtg: NMEAMessage.VTG) {
     InfoRow("Course Magnetic", vtg.courseMagnetic?.toString() ?: "N/A")
     InfoRow("Speed Knots", vtg.speedKnots.toString())
     InfoRow("Speed Km/h", vtg.speedKmph.toString())
+}
+
+private fun mapTalker(talker: String): String {
+    return when (talker) {
+        "GPGSV" -> "GPS/SBAS"
+        "GLGSV" -> "GLONASS"
+        "GBGSV" -> "BeiDou"
+        "GAGSV" -> "Galileo"
+        "GQGSV" -> "QZSS"
+        else -> "Unknown"
+    }
 }

@@ -2,6 +2,7 @@ package com.example.gpssatelliteviewer.data
 
 import android.location.GnssCapabilities
 import com.example.gpssatelliteviewer.data.GNSSCombinedData.Companion.from
+import dev.romainguy.kotlin.math.Float3
 
 data class GNSSStatusData(
     val constellation: String,
@@ -23,6 +24,18 @@ data class AzElHistory(
     val firstEl: Float,
     val lastAz: Float,
     val lastEl: Float
+)
+
+data class TimestampedSNR(
+    val timestamp: Long,
+    val snr: Float
+)
+
+data class SatelliteCache(
+    var usedInFix: Boolean,
+    var altitude: Float,
+    var firstPos: Float3? = null,
+    var lastPos: Float3? = null
 )
 
 data class GNSSMeasurementData(

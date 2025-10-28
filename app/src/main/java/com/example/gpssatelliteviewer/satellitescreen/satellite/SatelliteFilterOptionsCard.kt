@@ -90,14 +90,12 @@ fun FilterDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Used in Fix toggle
-                Row(verticalAlignment = Alignment.Companion.CenterVertically) {
-                    Checkbox(
-                        checked = showOnlyInFix,
-                        onCheckedChange = onShowOnlyInFixChange
-                    )
-                    Text("Show only used in Fix")
-                }
+
+                CustomCheckbox(
+                    label = "Show only used in Fix",
+                    checked = showOnlyInFix,
+                    onCheckedChange = onShowOnlyInFixChange
+                )
 
                 HorizontalDivider()
 
@@ -145,5 +143,4 @@ fun FilterDialog(
     )
 }
 
-// helper extension for toggling selection in a Set
 private fun <T> Set<T>.toggle(item: T): Set<T> = if (contains(item)) this - item else this + item

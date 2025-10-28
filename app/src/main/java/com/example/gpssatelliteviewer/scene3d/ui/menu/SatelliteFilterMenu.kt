@@ -36,6 +36,7 @@ import com.example.gpssatelliteviewer.app.theme.TextSecondaryColor
 import com.example.gpssatelliteviewer.app.theme.SelectAllButton
 import com.example.gpssatelliteviewer.app.theme.TextHintColor
 import com.example.gpssatelliteviewer.data.AzElHistory
+import com.example.gpssatelliteviewer.utils.Description
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -178,39 +179,34 @@ fun SatelliteFilterMenu(
             val usedInFix = satelliteList.count { it.usedInFix }
 
             val orbitEntries: Map<String, AzElHistory> = azElHistory.filterValues { hist ->
-                (hist.firstAz != hist.lastAz) || (hist.firstEl != hist.lastEl)
+                (hist.firstAz != hist.lastAz) && (hist.firstEl != hist.lastEl)
             }
-            val orbitCount = orbitEntries.size
 
             val orbitKeysList = orbitEntries.keys.sorted()
             val orbitKeysDisplay = when {
                 orbitKeysList.isEmpty() -> "—"
-                orbitKeysList.size <= 6 -> orbitKeysList.joinToString(", ")
-                else -> orbitKeysList.take(6).joinToString(", ") + ", … (${orbitKeysList.size} total)"
+                orbitKeysList.size <= 10 -> orbitKeysList.joinToString(", ")
+                else -> orbitKeysList.take(10).joinToString(", ") + ", … (${orbitKeysList.size} total)"
             }
 
-            InfoRow("Total Satellites", totalSatellites.toString())
-            InfoRow("Currently Visible", visibleSatellites.toString())
-            InfoRow("Used in Fix", usedInFix.toString())
+            InfoRow("Total Satellites", "$totalSatellites")
+            InfoRow("Currently Visible", "$visibleSatellites")
+            InfoRow("Used in Fix", "$usedInFix")
 
             allConstellations.forEach { constellation ->
                 val count = satelliteList.count { it.constellation == constellation }
-                InfoRow(constellation, count.toString())
+                InfoRow(constellation, "$count")
             }
 
-            InfoRow("Orbit estimates (approx)", orbitCount.toString())
-            Text(
-                text = "Note: orbit calculation is ONLY an approximation derived only from first and last known az/el for a satellite.",
-                style = MaterialTheme.typography.labelMedium,
-                color = TextHintColor,
-                modifier = Modifier.padding(start = 15.dp)
-            )
+            InfoRow("Orbit estimates (approx)", "${orbitEntries.size}")
+            Description("Note: orbit calculation is ONLY an approximation derived only from first and last known azimuth and elevation for a satellite.")
 
             InfoRow("Satellites with orbit estimate:", "")
             Text(
                 text = orbitKeysDisplay,
                 style = MaterialTheme.typography.labelLarge,
-                color = TextSecondaryColor
+                color = TextSecondaryColor,
+                fontSize = 12.sp
             )
         }
     }

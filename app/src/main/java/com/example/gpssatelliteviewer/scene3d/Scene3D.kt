@@ -13,7 +13,7 @@ import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
 import com.example.gpssatelliteviewer.scene3d.manager.EarthManager
 import com.example.gpssatelliteviewer.scene3d.manager.LightHandler
 import com.example.gpssatelliteviewer.scene3d.manager.LocationMarkerManager
-import com.example.gpssatelliteviewer.scene3d.manager.SatelliteManager
+import com.example.gpssatelliteviewer.scene3d.manager.satellite.SatelliteManager
 import com.google.android.filament.Engine
 import com.google.android.filament.Renderer
 import com.google.android.filament.Scene
@@ -101,13 +101,13 @@ class Scene3D(
                 _clickedSatelliteKey.value = null
                 _isSatelliteInfoBoxVisible.value = false
                 _isEarthInfoBoxVisible.value = false
-                satellitesManager.hideOrbit()
+                satellitesManager.clearOrbit()
             }
             earthManager.getEarthNode().name -> {
                 _clickedSatelliteKey.value = null
                 _isSatelliteInfoBoxVisible.value = false
                 _isEarthInfoBoxVisible.value = !_isEarthInfoBoxVisible.value
-                satellitesManager.hideOrbit()
+                satellitesManager.clearOrbit()
             }
             else -> {
                 _clickedSatelliteKey.value = key

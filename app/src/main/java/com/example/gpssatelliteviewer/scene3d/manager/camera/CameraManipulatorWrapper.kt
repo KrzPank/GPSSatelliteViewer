@@ -14,7 +14,7 @@ import kotlin.math.abs
 private const val MAX_SEPARATION = 30f  // 1 = ~0.005 scene distance
 private const val UNIT_SCALE = 0.005f
 
-class ClampedCameraManipulator(
+class CameraManipulatorWrapper(
     manipulator: Manipulator,
     private val minCameraDistance: Float,
     private val maxCameraDistance: Float,

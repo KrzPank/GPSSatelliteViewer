@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -41,8 +39,6 @@ import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.app.theme.ValueText
 import com.example.gpssatelliteviewer.app.theme.GreenPrimaryColor
-import com.example.gpssatelliteviewer.app.theme.StatusError
-import com.example.gpssatelliteviewer.app.theme.StatusGood
 import com.example.gpssatelliteviewer.app.theme.TextHintColor
 
 @Composable
@@ -88,27 +84,13 @@ fun InfoRow(
 }
 
 @Composable
-fun CapabilityRow(
-    label: String,
-    supported: Boolean
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 2.dp)
-    ) {
-        Icon(
-            imageVector = if (supported) Icons.Default.Check else Icons.Default.Close,
-            contentDescription = if (supported) "Supported" else "Not supported",
-            tint = if (supported) StatusGood else StatusError,
-            modifier = Modifier.size(16.dp)
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextLabelColor,
-        )
-    }
+fun Description(description: String) {
+    Text(
+        text = description,
+        style = MaterialTheme.typography.labelMedium,
+        color = TextHintColor,
+        modifier = Modifier.padding(start = 15.dp)
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -246,12 +228,7 @@ fun CustomCheckbox(
 
         // Only show description if provided
         description?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.labelMedium,
-                color = TextHintColor,
-                modifier = Modifier.padding(start = 15.dp)
-            )
+            Description(it)
         }
     }
 }
@@ -276,17 +253,6 @@ fun mapFixType(fixType: Int): String {
         1 -> "N/A"
         2 -> "2D Fix"
         3 -> "3D Fix"
-        else -> "Unknown"
-    }
-}
-
-fun mapTalker(talker: String): String {
-    return when (talker) {
-        "GPGSV" -> "GPS/SBAS"
-        "GLGSV" -> "GLONASS"
-        "GBGSV" -> "BeiDou"
-        "GAGSV" -> "Galileo"
-        "GQGSV" -> "QZSS"
         else -> "Unknown"
     }
 }

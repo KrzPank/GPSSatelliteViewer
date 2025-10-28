@@ -5,7 +5,6 @@ import com.example.gpssatelliteviewer.data.frameCountUpdateInterval
 import com.example.gpssatelliteviewer.scene3d.LightParameters
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
-import com.example.gpssatelliteviewer.utils.length
 import com.example.gpssatelliteviewer.utils.normalized
 import com.google.android.filament.Engine
 import com.google.android.filament.EntityManager

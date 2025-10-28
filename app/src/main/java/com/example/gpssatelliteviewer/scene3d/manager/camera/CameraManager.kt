@@ -69,7 +69,7 @@ class CameraManager(
             .zoomSpeed(ZOOM_SPEED)
             .build(Manipulator.Mode.ORBIT)
 
-        val clampedManipulator = ClampedCameraManipulator(
+        val clampedManipulator = CameraManipulatorWrapper(
             manipulator = baseManipulator,
             minCameraDistance = MIN_CAMERA_DISTANCE,
             maxCameraDistance = MAX_CAMERA_DISTANCE,

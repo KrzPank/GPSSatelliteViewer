@@ -3,24 +3,32 @@ package com.example.gpssatelliteviewer.mainscreen.screen.chipsetinfo
 import android.location.GnssCapabilities
 import android.os.Build
 import android.util.Log
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.gpssatelliteviewer.app.theme.ValueText
+import com.example.gpssatelliteviewer.app.theme.StatusError
+import com.example.gpssatelliteviewer.app.theme.StatusGood
+import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.data.GNSSHardwareInfo
-import com.example.gpssatelliteviewer.utils.CapabilityRow
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.ValueText
 import kotlin.math.sign
@@ -193,4 +201,28 @@ private fun tryToGetSOCManufacturer(
     }
 
     return vendor
+}
+
+@Composable
+private fun CapabilityRow(
+    label: String,
+    supported: Boolean
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 2.dp)
+    ) {
+        Icon(
+            imageVector = if (supported) Icons.Default.Check else Icons.Default.Close,
+            contentDescription = if (supported) "Supported" else "Not supported",
+            tint = if (supported) StatusGood else StatusError,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextLabelColor,
+        )
+    }
 }

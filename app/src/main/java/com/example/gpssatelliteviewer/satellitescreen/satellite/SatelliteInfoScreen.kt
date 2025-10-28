@@ -75,7 +75,7 @@ fun SatelliteInfoScreen(
         if (filteredSatellites.isNotEmpty()) {
             filteredSatellites.forEach { (constellation, satellitesInGroup) ->
 
-                val expanded = expandedMap.getOrPut(constellation) { true }
+                val expanded = expandedMap.getOrPut(constellation) { false }
 
                 item {
                     ConstellationCard(
