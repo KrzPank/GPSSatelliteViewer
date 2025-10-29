@@ -16,7 +16,7 @@ import kotlin.math.min
 private const val MAX_SCALE_SIZE = 0.2f
 private const val MIN_SCALE_SIZE = 0.008f
 private const val scale = 0.05f
-private const val locationMarkerUpdateInterval = 60 * 1000 * 5
+private const val locationMarkerUpdateInterval = 60 * 1000 * 5 // every 5 min
 
 class LocationMarkerManager(
     private val modelLoader: ModelLoader,
@@ -40,12 +40,19 @@ class LocationMarkerManager(
     }
 
     fun isLocationMarkerVisible() = isVisible
+
     fun setVisible(visible: Boolean) {
         isVisible = visible
         if (visible) {
-            if (locationMarkerNode.parent == null) centerNode.addChildNode(locationMarkerNode)
+            if (locationMarkerNode.parent == null) {
+                centerNode.addChildNode(locationMarkerNode)
+                firstLocationMarkerUpdate = true
+            }
         } else {
-            if (locationMarkerNode.parent != null) centerNode.removeChildNode(locationMarkerNode)
+            if (locationMarkerNode.parent != null) {
+                centerNode.removeChildNode(locationMarkerNode)
+                firstLocationMarkerUpdate = false
+            }
         }
     }
 
@@ -84,7 +91,8 @@ class LocationMarkerManager(
         }
 
         if (firstLocationMarkerUpdate) {
-            val dist = cameraManager.getCameraDistanceToCenter()
+            val camPos = cameraManager.getCameraPosition()
+            val dist = distance(camPos, locationMarkerNode.position)
             updateScale(dist)
             updatePosition()
             lastLocationMarkerUpdateTime = now
@@ -113,27 +121,21 @@ class LocationMarkerManager(
         }
     }
 
-    //locationMarkerNode.scaleToUnitCube(parameters.locationMarkerScale)
-
     private fun shouldUpdateLocationMarker(): Boolean {
         if (parameters.userLocation == null) {
-            //Log.d("LocationMarkerPos", "userLocation == null")
             setVisible(false)
             return false
         }
 
         if (!isVisible) {
-            //Log.d("LocationMarkerPos", "isVisible == false")
             setVisible(false)
             return false
         }
 
         if (locationMarkerNode.parent == null) {
-            //Log.d("LocationMarkerPos", "locationMarkerNode.parent == null")
             return false
         }
 
-        //Log.d("LocationMarkerPos", "shouldUpdateLocationMarker == true")
         return true
     }
 
@@ -154,9 +156,7 @@ class LocationMarkerManager(
         return CoordinateConverter.ecefToScenePos(ecef)
     }
 
-    private fun calculateLocationMarkerDirection(
-        followUser: Boolean
-    ): Float3 {
+    private fun calculateLocationMarkerDirection(followUser: Boolean): Float3 {
         val dir = if (followUser) cameraManager.getCameraPosition().normalized()
             else locationMarkerNode.position.normalized()
         return Float3(dir.x, 0.0f, dir.z).normalized()

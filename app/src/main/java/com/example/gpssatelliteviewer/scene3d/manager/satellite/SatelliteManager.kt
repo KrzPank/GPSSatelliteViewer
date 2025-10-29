@@ -14,8 +14,8 @@ import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
 import kotlin.math.abs
 
-private const val AZIMUTH_THRESHOLD_DEG = 0.1f
-private const val ELEVATION_THRESHOLD_DEG = 0.1f
+private const val AZIMUTH_THRESHOLD_DEG = 0.2f
+private const val ELEVATION_THRESHOLD_DEG = 0.2f
 
 
 
@@ -108,21 +108,24 @@ class SatelliteManager(
                 val shouldUpdate = if (cache == null) {
                     true
                 } else {
-                    val azChanged = abs(sat.azimuth - satAzEl.lastAz) > AZIMUTH_THRESHOLD_DEG
-                    val elChanged = abs(sat.elevation - satAzEl.lastEl) > ELEVATION_THRESHOLD_DEG
+                    val azChanged = abs(cache.currentAz - satAzEl.lastAz) > AZIMUTH_THRESHOLD_DEG
+                    val elChanged = abs(cache.currentEl - satAzEl.lastEl) > ELEVATION_THRESHOLD_DEG
                     val usedChanged = sat.usedInFix != cache.usedInFix
                     azChanged || elChanged || usedChanged
                 }
+                //if (abs(cache.currentEl - satAzEl.lastEl) > ELEVATION_THRESHOLD_DEG || abs(cache.currentAz - satAzEl.lastAz) > AZIMUTH_THRESHOLD_DEG)
+
                 // Only update node if the satellite data meaningfully changed (to avoid unnecessary rerenders)
                 if (shouldUpdate) {
+                    //Log.d("SatelliteManager", "for sat:${key}  sat Az/El:${cache?.currentAz}/${cache?.currentEl}  azElHist:${satAzEl.lastAz}/${satAzEl.lastEl}")
                     val newAltitude = calculateSatelliteAltitude(sat)
                     updateSatellitePosition(existingNode, sat)
-                    //Log.d("SatelliteManager", "Updating satellite:${key} cache=${cache}")
                     cache?.usedInFix = sat.usedInFix
                     cache?.altitude = newAltitude
+                    cache?.currentAz = satAzEl.lastAz
+                    cache?.currentEl = satAzEl.lastEl
                     cache?.lastPos = existingNode.position
 
-                    //Log.d("SatelliteManager", "Updating satellite:${key}, firstPos=${cache?.firstPos} lastPos=${cache?.lastPos}")
                     if (orbitManager.getCurrentOrbitKey() == key) {
                         orbitManager.updateOrbitForCache(satelliteCache[key])
                     }
@@ -147,6 +150,8 @@ class SatelliteManager(
                 satelliteCache[key] = SatelliteCache(
                     usedInFix = sat.usedInFix,
                     altitude = altitude,
+                    currentAz = azEl.firstAz,
+                    currentEl = azEl.firstEl,
                     firstPos = pos,
                     lastPos = satelliteNode.position
                 )
@@ -210,10 +215,7 @@ class SatelliteManager(
      * Return a node to the pool for reuse
      */
     private fun returnNodeToPool(node: ModelNode) {
-        // Reset node state before returning to pool
         node.position = Float3(0f, 0f, 0f)
-        //node.rotation = Float3(0f, 0f, 0f)
-        // clear click handler to avoid capturing stale references
         node.onSingleTapUp = null
         node.name = ""
 

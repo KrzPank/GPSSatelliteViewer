@@ -178,14 +178,7 @@ fun SatelliteFilterMenu(
             val usedInFix = satelliteList.count { it.usedInFix }
 
             val orbitEntries: Map<String, AzElHistory> = azElHistory.filterValues { hist ->
-                (hist.firstAz != hist.lastAz) && (hist.firstEl != hist.lastEl)
-            }
-
-            val orbitKeysList = orbitEntries.keys.sorted()
-            val orbitKeysDisplay = when {
-                orbitKeysList.isEmpty() -> "—"
-                orbitKeysList.size <= 10 -> orbitKeysList.joinToString(", ")
-                else -> orbitKeysList.take(10).joinToString(", ") + ", … (${orbitKeysList.size} total)"
+                (hist.firstAz != hist.lastAz) || (hist.firstEl != hist.lastEl)
             }
 
             InfoRow("Total Satellites", "$totalSatellites")
@@ -199,14 +192,6 @@ fun SatelliteFilterMenu(
 
             InfoRow("Orbit estimates (approx)", "${orbitEntries.size}")
             Description("Note: orbit calculation is ONLY an approximation derived only from first and last known azimuth and elevation for a satellite.")
-
-            InfoRow("Satellites with orbit estimate:", "")
-            Text(
-                text = orbitKeysDisplay,
-                style = MaterialTheme.typography.labelLarge,
-                color = TextSecondaryColor,
-                fontSize = 12.sp
-            )
         }
     }
 }

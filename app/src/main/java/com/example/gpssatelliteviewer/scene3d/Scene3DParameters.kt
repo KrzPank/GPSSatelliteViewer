@@ -27,7 +27,7 @@ data class Scene3DParameters(
     var earthScale: Float = 1.0f,
 
     // Satellite Parameters
-    var orbitModelPath: String = "models/orbit.glb",
+    var orbitModelPath: String = "models/b.glb",
     var satelliteModelPath: String = "models/RedCircle.glb",
     var satelliteScale: Float = 0.05f,
 
@@ -37,7 +37,7 @@ data class Scene3DParameters(
     var userLocation: Float3? = null,
 
     // Environment Parameters
-    var environmentPath: String = "envs/NightSkyHDRI002_2K.hdr",
+    var environmentPath: String = "envs/NightSkyHDRI002_2K.hdr", //"envs/hiptyc_2020_4k_gal.hdr", //
     var environmentIntensity: Float = 1.0f,
 
     // Camera Parameters - positioned for better Earth view

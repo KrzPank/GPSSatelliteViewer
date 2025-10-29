@@ -34,6 +34,8 @@ data class TimestampedSNR(
 data class SatelliteCache(
     var usedInFix: Boolean,
     var altitude: Float,
+    var currentAz: Float,
+    var currentEl: Float,
     var firstPos: Float3? = null,
     var lastPos: Float3? = null
 )

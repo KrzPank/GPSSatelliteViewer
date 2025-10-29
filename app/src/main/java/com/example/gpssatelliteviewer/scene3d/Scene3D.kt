@@ -113,7 +113,6 @@ class Scene3D(
                 _clickedSatelliteKey.value = key
                 _isSatelliteInfoBoxVisible.value = true
                 _isEarthInfoBoxVisible.value = false
-
                 satellitesManager.showOrbitForSatellite(key)
             }
         }
@@ -131,7 +130,7 @@ class Scene3D(
             cameraNode = cameraManager.getCameraNode(),
             cameraManipulator = cameraManager.getCameraManipulator(),
             childNodes = listOf(centerNode),
-            // hind better environment
+            // find better environment
             environment = environmentLoader.createHDREnvironment(parameters.environmentPath)!!,
             onFrame = {
                 cameraManager.onFrame()
