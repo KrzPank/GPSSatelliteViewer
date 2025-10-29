@@ -4,10 +4,10 @@ import androidx.compose.ui.graphics.Color
 
 // Dark Theme Colors
 // Background Colors
-val DarkBackground = Color(0xFF1E1E1E)
-val DarkSurface = Color(0xFF2D2D2D)
-val DarkSurfaceVariant = Color(0xFF3A3A3A)
-val CardBackground = Color(0xFF3A3A3A)
+val DarkBackgroundColor = Color(0xFF1E1E1E)
+val DarkSurfaceColor = Color(0xFF2D2D2D)
+val DarkSurfaceVariantColor = Color(0xFF3A3A3A)
+val CardBackgroundColor = Color(0xFF3A3A3A)
 
 // Text Colors
 val TextPrimaryColor = Color(0xFFFFFFFF)
@@ -17,17 +17,17 @@ val TextHintColor = Color(0xFFC2C2C2)
 
 // Green Accent Colors for Values
 val GreenPrimaryColor = Color(0xFF4CAF50)
-val GreenLight = Color(0xFF81C784)
-val GreenDark = Color(0xFF388E3C)
-val ValueText = Color(0xFF4CAF50)
+val GreenLightColor = Color(0xFF81C784)
+val GreenDarkColor = Color(0xFF388E3C)
+val ValueTextColor = Color(0xFF4CAF50)
 
-val SelectAllButton = Color(0xFF46984B)
-val DeselectAllButton = Color(0xFFA63830)
+val SelectAllButtonColor = Color(0xFF46984B)
+val DeselectAllButtonColor = Color(0xFFA63830)
 
 // Status Colors
-val StatusGood = Color(0xFF4CAF50)
-val StatusWarning = Color(0xFFFF9800)
-val StatusError = Color(0xFFF44336)
+val StatusGoodColor = Color(0xFF4CAF50)
+val StatusWarningColor = Color(0xFFFF9800)
+val StatusErrorColor = Color(0xFFF44336)
 
 // GPS Status Colors
 val GPSExcellentColor = Color(0xFF4CAF50)    // Green

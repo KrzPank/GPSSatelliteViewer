@@ -25,16 +25,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.app.theme.DarkBackground
-import com.example.gpssatelliteviewer.app.theme.DarkSurface
+import com.example.gpssatelliteviewer.app.theme.DarkBackgroundColor
+import com.example.gpssatelliteviewer.app.theme.DarkSurfaceColor
 import com.example.gpssatelliteviewer.utils.CustomCheckbox
 import com.example.gpssatelliteviewer.utils.ParameterSection
 import com.example.gpssatelliteviewer.utils.InfoRow
-import com.example.gpssatelliteviewer.app.theme.DeselectAllButton
+import com.example.gpssatelliteviewer.app.theme.DeselectAllButtonColor
 import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.app.theme.TextSecondaryColor
-import com.example.gpssatelliteviewer.app.theme.SelectAllButton
-import com.example.gpssatelliteviewer.app.theme.TextHintColor
+import com.example.gpssatelliteviewer.app.theme.SelectAllButtonColor
 import com.example.gpssatelliteviewer.data.AzElHistory
 import com.example.gpssatelliteviewer.utils.Description
 
@@ -55,7 +54,7 @@ fun SatelliteFilterMenu(
 
     Column(
         modifier = modifier
-            .background(DarkBackground.copy(alpha = 0.95f))
+            .background(DarkBackgroundColor.copy(alpha = 0.95f))
             .padding(16.dp)
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -83,7 +82,7 @@ fun SatelliteFilterMenu(
                     Button(
                         onClick = { navController.navigate("MainScreen") },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = DarkSurface)
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkSurfaceColor)
                     ) {
                         Text("Main screen", color = TextLabelColor, fontSize = 12.sp)
                     }
@@ -131,14 +130,14 @@ fun SatelliteFilterMenu(
                         selectedConstellations.addAll(allConstellations)
                     },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = SelectAllButton)
+                    colors = ButtonDefaults.buttonColors(containerColor = SelectAllButtonColor)
                 ) {
                     Text("Select All", color = TextLabelColor, fontSize = 12.sp)
                 }
                 Button(
                     onClick = { selectedConstellations.clear() },
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = DeselectAllButton)
+                    colors = ButtonDefaults.buttonColors(containerColor = DeselectAllButtonColor)
                 ) {
                     Text("Deselect All", color = TextLabelColor, fontSize = 12.sp)
                 }

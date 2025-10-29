@@ -26,12 +26,12 @@ import androidx.compose.ui.unit.sp
 fun ConstellationSNRStatisticsScreen(
     gnssViewModel: GNSSViewModel
 ) {
-    val snrStatistic by gnssViewModel.constellationSNRHistory.collectAsState()
-    val constellation = snrStatistic.keys.toList()
+    val snrConstellationHistory by gnssViewModel.constellationSNRHistory.collectAsState()
+    val constellation = snrConstellationHistory.keys.toList()
 
     val validConstellation = constellation.filter { key ->
-        val snrList = snrStatistic[key]
-        !snrList.isNullOrEmpty() && snrList.any { it != 0f }
+        val snrList = snrConstellationHistory[key]
+        !snrList.isNullOrEmpty() && snrList.any { it.snr != 0f }
     }
 
     LazyColumn(
@@ -56,7 +56,7 @@ fun ConstellationSNRStatisticsScreen(
                 )
                 Spacer(Modifier.height(6.dp))
                 GroupedConstellationSNRChartCard(
-                    snrHistory = snrStatistic,
+                    snrHistory = snrConstellationHistory,
                     modifier = Modifier.Companion.height(240.dp)
                 )
             }
@@ -70,7 +70,7 @@ fun ConstellationSNRStatisticsScreen(
             }
             items(validConstellation) { constellation ->
                 IndividualConstellationSNRChartCard(
-                    constellationSNRHistory = snrStatistic[constellation]!!,
+                    constellationSNRHistory = snrConstellationHistory[constellation]!!,
                     constellation = constellation,
                     modifier = Modifier.Companion.height(200.dp)
                 )

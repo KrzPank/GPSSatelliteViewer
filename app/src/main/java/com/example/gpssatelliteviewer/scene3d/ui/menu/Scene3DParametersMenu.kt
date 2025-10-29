@@ -34,12 +34,12 @@ import com.example.gpssatelliteviewer.scene3d.Scene3DParametersState
 import com.example.gpssatelliteviewer.utils.ParameterSection
 import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.app.theme.GreenPrimaryColor
-import com.example.gpssatelliteviewer.app.theme.StatusError
+import com.example.gpssatelliteviewer.app.theme.StatusErrorColor
 import com.example.gpssatelliteviewer.app.theme.OutlineColor
 import kotlin.math.log10
 import kotlin.math.pow
 import androidx.compose.runtime.*
-import com.example.gpssatelliteviewer.app.theme.DarkBackground
+import com.example.gpssatelliteviewer.app.theme.DarkBackgroundColor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +52,7 @@ fun Scene3DParametersMenu(
 
     Column(
         modifier = modifier
-            .background(DarkBackground.copy(alpha = 0.95f))
+            .background(DarkBackgroundColor.copy(alpha = 0.95f))
             .padding(16.dp)
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -77,7 +77,7 @@ fun Scene3DParametersMenu(
                     onParametersChanged(parametersState.parameters)
                 },
                 modifier = Modifier.Companion.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = StatusError)
+                colors = ButtonDefaults.buttonColors(containerColor = StatusErrorColor)
             ) {
                 Text("Reset", color = TextLabelColor, fontSize = 12.sp)
             }

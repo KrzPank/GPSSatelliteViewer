@@ -16,17 +16,19 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.gpssatelliteviewer.app.theme.DeselectAllButtonColor
+import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.utils.CustomCheckbox
 
 @Composable
@@ -67,20 +69,39 @@ fun FilterOptionsCard(
 fun FilterDialog(
     showOnlyInFix: Boolean,
     onShowOnlyInFixChange: (Boolean) -> Unit,
-    constellations: List<String>,
+    satellites: List<GNSSStatusData>,
     selectedConstellations: Set<String>,
     onConstellationsChange: (Set<String>) -> Unit,
-    satellites: Set<String>,
     selectedSatellites: Set<String>,
     onSatellitesChange: (Set<String>) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val constellations = remember(satellites) { satellites.map { it.constellation }.distinct() }
+    val allSatellites = remember(satellites) { satellites.map { "${it.constellation}:${it.prn}"} }
+    val usedInFixKeys = remember(satellites) {
+        satellites
+            .asSequence()
+            .filter { it.usedInFix == true}
+            .map { "${it.constellation}:${it.prn}" }
+            .toSet()
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
+        dismissButton = {
+            TextButton(onClick = {
+                onShowOnlyInFixChange(false)
+                onConstellationsChange(emptySet())
+                onSatellitesChange(emptySet())
+            }) {
+                Text(
+                    text = "Reset selection",
+                    color = DeselectAllButtonColor
+                )
+            }
         },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
         title = { Text("Filter Satellites") },
         text = {
             Column(
@@ -90,6 +111,7 @@ fun FilterDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                HorizontalDivider()
 
                 CustomCheckbox(
                     label = "Show only used in Fix",
@@ -97,13 +119,12 @@ fun FilterDialog(
                     onCheckedChange = onShowOnlyInFixChange
                 )
 
-                HorizontalDivider()
-
                 // Constellation selection
                 Text(
                     text = "Filter by Constellation",
                     style = MaterialTheme.typography.titleMedium
                 )
+                HorizontalDivider()
                 constellations.forEach { constellation ->
                     CustomCheckbox(
                         label = constellation,
@@ -116,16 +137,30 @@ fun FilterDialog(
                     )
                 }
 
+                Text("Select Satellites", style = MaterialTheme.typography.titleMedium)
                 HorizontalDivider()
 
-                Text("Select Satellites", style = MaterialTheme.typography.titleMedium)
+                val filteredSatellites = remember(
+                    allSatellites,
+                    usedInFixKeys,
+                    selectedConstellations,
+                    showOnlyInFix
+                ) {
+                    allSatellites.filter { satKey ->
+                        val constellationPrefix = satKey.substringBefore(":")
+                        val matchesConstellation = selectedConstellations.isEmpty() ||
+                                selectedConstellations.contains(constellationPrefix)
 
-                val filteredSatellites = satellites.filter { satKey ->
-                    val constellationPrefix = satKey.substringBefore(":")
-                    selectedConstellations.isEmpty() || selectedConstellations.contains(
-                        constellationPrefix
-                    )
-                }
+                        if (showOnlyInFix) {
+                            matchesConstellation && (satKey in usedInFixKeys)
+                        } else {
+                            matchesConstellation
+                        }
+                    }
+                }.sortedWith(compareBy(
+                    { it.substringBefore(":") },
+                    { it.substringAfter(":").toIntOrNull() ?: Int.MAX_VALUE }
+                ))
 
                 filteredSatellites.forEach { satKey ->
                     CustomCheckbox(

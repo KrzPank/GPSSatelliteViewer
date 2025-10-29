@@ -14,31 +14,31 @@ private val DarkColorScheme = darkColorScheme(
     // Primary colors - using green as accent
     primary = GreenPrimaryColor,
     onPrimary = Color.Black,
-    primaryContainer = GreenDark,
+    primaryContainer = GreenDarkColor,
     onPrimaryContainer = Color.White,
     
     // Secondary colors
-    secondary = GreenLight,
+    secondary = GreenLightColor,
     onSecondary = Color.Black,
-    secondaryContainer = DarkSurfaceVariant,
+    secondaryContainer = DarkSurfaceVariantColor,
     onSecondaryContainer = TextPrimaryColor,
     
     // Tertiary colors
-    tertiary = StatusWarning,
+    tertiary = StatusWarningColor,
     onTertiary = Color.Black,
     
     // Background colors
-    background = DarkBackground,
+    background = DarkBackgroundColor,
     onBackground = TextPrimaryColor,
     
     // Surface colors (for cards and elevated elements)
-    surface = DarkSurface,
+    surface = DarkSurfaceColor,
     onSurface = TextPrimaryColor,
-    surfaceVariant = CardBackground,
+    surfaceVariant = CardBackgroundColor,
     onSurfaceVariant = TextSecondaryColor,
     
     // Error colors
-    error = StatusError,
+    error = StatusErrorColor,
     onError = Color.White,
     errorContainer = Color(0xFF93000A),
     onErrorContainer = Color(0xFFFFDAD6),
@@ -50,9 +50,9 @@ private val DarkColorScheme = darkColorScheme(
 
 // Light color scheme - using same colors but inverted where appropriate
 private val LightColorScheme = lightColorScheme(
-    primary = GreenDark,
+    primary = GreenDarkColor,
     onPrimary = Color.White,
-    primaryContainer = GreenLight,
+    primaryContainer = GreenLightColor,
     onPrimaryContainer = Color.Black,
     
     secondary = GreenPrimaryColor,
@@ -60,7 +60,7 @@ private val LightColorScheme = lightColorScheme(
     secondaryContainer = Color(0xFFE8F5E8),
     onSecondaryContainer = Color.Black,
     
-    tertiary = StatusWarning,
+    tertiary = StatusWarningColor,
     onTertiary = Color.White,
     
     background = Color.White,
@@ -71,7 +71,7 @@ private val LightColorScheme = lightColorScheme(
     surfaceVariant = Color(0xFFF5F5F5),
     onSurfaceVariant = Color(0xFF424242),
     
-    error = StatusError,
+    error = StatusErrorColor,
     onError = Color.White,
     
     outline = Color(0xFF757575),

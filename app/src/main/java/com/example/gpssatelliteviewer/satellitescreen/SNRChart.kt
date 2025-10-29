@@ -19,6 +19,7 @@ import com.example.gpssatelliteviewer.app.theme.ChartQZSSColor
 import com.example.gpssatelliteviewer.app.theme.ChartSBASColor
 import com.example.gpssatelliteviewer.app.theme.TextPrimaryColor
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
+import com.example.gpssatelliteviewer.data.TimestampedSNR
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.Legend
 import com.github.mikephil.charting.components.LegendEntry
@@ -33,9 +34,21 @@ import java.util.Locale
 import kotlin.collections.component1
 import kotlin.collections.component2
 
+class TimeAxisFormatter(
+    var lastTimestampMillis: Long = System.currentTimeMillis()
+) : ValueFormatter() {
+    override fun getFormattedValue(value: Float): String {
+        val secondsAgo = (CHART_UPDATE_WINDOW - value.toInt()) * 1 // 1 second per entry
+        val timestampMillis = System.currentTimeMillis() - secondsAgo * 1000
+        val date = Date(timestampMillis)
+        val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        return if (value % 10 == 0f) sdf.format(date) else ""
+    }
+}
+
 @Composable
 fun GroupedSNRChart(
-    snrHistory: Map<String, List<Float>>,
+    snrHistory: Map<String, List<TimestampedSNR>>,
     selectedConstellations: Set<String>,
     modifier: Modifier = Modifier
 ) {
@@ -43,25 +56,44 @@ fun GroupedSNRChart(
         modifier = modifier
             .fillMaxSize(),
         factory = { context -> applyChartSettings(context) },
-        update = { lineChart ->
-            // Filter only selected constellations
+        update = update@{ lineChart ->
             val filteredSnr = snrHistory.filterKeys { it in selectedConstellations }
+            val dataSets = mutableListOf<ILineDataSet>()
 
-            val dataSets = filteredSnr.entries.flatMap { (constellation, snrList) ->
+            var overallLastTs: Long? = null
+
+            filteredSnr.values.forEach { list ->
+                if (list.isNotEmpty()) {
+                    val lastTs = list.last().timestamp
+                    overallLastTs = maxOf(overallLastTs ?: lastTs, lastTs)
+                }
+            }
+
+            if (overallLastTs == null) {
+                lineChart.data = LineData()
+                applyDistinctLegend(lineChart, emptyList())
+                lineChart.invalidate()
+                return@update
+            }
+
+            val lastTs = overallLastTs
+
+            filteredSnr.forEach { (constellation, snrList) ->
                 val clipped = if (snrList.size > CHART_UPDATE_WINDOW)
                     snrList.takeLast(CHART_UPDATE_WINDOW)
                 else snrList
 
-                if (clipped.isEmpty()) return@flatMap emptyList<ILineDataSet>()
+                if (clipped.isEmpty()) return@forEach
 
-                val startX = (CHART_UPDATE_WINDOW - clipped.size).coerceAtLeast(0)
-
-                val dataset = mutableListOf<LineDataSet>()
                 var currentEntries = mutableListOf<Entry>()
+                clipped.forEach { tsSnr ->
+                    // map timestamp -> x where newest sample (lastTs) -> CHART_UPDATE_WINDOW - 1
+                    val secondsDiff = (lastTs - tsSnr.timestamp) / 1000f
+                    var x = (CHART_UPDATE_WINDOW - 1) - secondsDiff
+                    x = x.coerceIn(0f, (CHART_UPDATE_WINDOW - 1).toFloat())
+                    val y = tsSnr.snr
 
-                clipped.forEachIndexed { i, snr ->
-                    val x = (startX + i).toFloat()
-                    if (snr == 0f) {
+                    if (y == 0f) {
                         if (currentEntries.isNotEmpty()) {
                             val ds = LineDataSet(currentEntries, constellation).apply {
                                 color = getConstellationColor(constellation).toArgb()
@@ -71,11 +103,11 @@ fun GroupedSNRChart(
                                 mode = LineDataSet.Mode.LINEAR
                                 isHighlightEnabled = false
                             }
-                            dataset.add(ds)
+                            dataSets.add(ds)
                             currentEntries = mutableListOf()
                         }
                     } else {
-                        currentEntries.add(Entry(x, snr))
+                        currentEntries.add(Entry(x, y))
                     }
                 }
 
@@ -88,15 +120,14 @@ fun GroupedSNRChart(
                         mode = LineDataSet.Mode.LINEAR
                         isHighlightEnabled = false
                     }
-                    dataset.add(ds)
+                    dataSets.add(ds)
                 }
-
-                dataset
             }
+            (lineChart.xAxis.valueFormatter as? TimeAxisFormatter)?.lastTimestampMillis = lastTs
 
             lineChart.data = LineData(dataSets)
             applyDistinctLegend(lineChart, dataSets)
-            lineChart.setVisibleXRangeMaximum(CHART_UPDATE_WINDOW.toFloat())
+            lineChart.setVisibleXRangeMaximum((CHART_UPDATE_WINDOW - 1).toFloat())
             lineChart.notifyDataSetChanged()
             lineChart.invalidate()
         }
@@ -105,7 +136,7 @@ fun GroupedSNRChart(
 
 @Composable
 fun IndividualSNRChart(
-    snrHistory: List<Float>,
+    snrHistory: List<TimestampedSNR>,
     lineColor: Color,
     modifier: Modifier = Modifier,
     label: String? = null,
@@ -118,21 +149,34 @@ fun IndividualSNRChart(
             applyChartSettings(context)
         },
         update = update@{ lineChart ->
-            val clipped = if (snrHistory.size > CHART_UPDATE_WINDOW)
-                snrHistory.takeLast(CHART_UPDATE_WINDOW)
-            else snrHistory
+            // ensure chronological order then clip to window
+            val sorted = snrHistory.sortedBy { it.timestamp }
+            val clipped = if (sorted.size > CHART_UPDATE_WINDOW)
+                sorted.takeLast(CHART_UPDATE_WINDOW)
+            else sorted
 
-            val startX = (CHART_UPDATE_WINDOW - clipped.size).coerceAtLeast(0)
+            if (clipped.isEmpty()) {
+                lineChart.data = LineData()
+                applyDistinctLegend(lineChart, emptyList())
+                lineChart.invalidate()
+                return@update
+            }
 
-            // Build contiguous segments: each non-zero run becomes its own dataset
+            val lastTs = clipped.last().timestamp
+
             val datasets = mutableListOf<LineDataSet>()
             var currentEntries = mutableListOf<Entry>()
 
-            clipped.forEachIndexed { i, snr ->
-                val x = (startX + i).toFloat()
-                if (snr == 0f) {
+            clipped.forEach { tsSnr ->
+                // Map timestamp -> x where newest sample (lastTs) -> CHART_UPDATE_WINDOW - 1
+                val secondsDiff = (lastTs - tsSnr.timestamp) / 1000f
+                var x = (CHART_UPDATE_WINDOW - 1) - secondsDiff
+                x = x.coerceIn(0f, (CHART_UPDATE_WINDOW - 1).toFloat())
+                val y = tsSnr.snr
+
+                if (y == 0f) {
                     if (currentEntries.isNotEmpty()) {
-                        val ds = LineDataSet(currentEntries, label.toString()).apply {
+                        val ds = LineDataSet(currentEntries, label).apply {
                             color = lineColor.toArgb()
                             setDrawCircles(false)
                             lineWidth = 2f
@@ -144,7 +188,7 @@ fun IndividualSNRChart(
                         currentEntries = mutableListOf()
                     }
                 } else {
-                    currentEntries.add(Entry(x, snr))
+                    currentEntries.add(Entry(x, y))
                 }
             }
 
@@ -160,11 +204,13 @@ fun IndividualSNRChart(
                 datasets.add(ds)
             }
 
+            (lineChart.xAxis.valueFormatter as? TimeAxisFormatter)?.lastTimestampMillis = lastTs
+
             lineChart.data = LineData(datasets as List<ILineDataSet>)
             applyDistinctLegend(lineChart, datasets)
             lineChart.legend.isEnabled = label != null
 
-            lineChart.setVisibleXRangeMaximum(CHART_UPDATE_WINDOW.toFloat())
+            lineChart.setVisibleXRangeMaximum((CHART_UPDATE_WINDOW - 1).toFloat())
             lineChart.notifyDataSetChanged()
             lineChart.invalidate()
         }
@@ -220,18 +266,12 @@ private fun applyChartSettings(context: Context): LineChart {
             granularity = 1f
             isGranularityEnabled = true
             axisMinimum = 0f
-            axisMaximum = CHART_UPDATE_WINDOW.toFloat()
+            axisMaximum = (CHART_UPDATE_WINDOW - 1).toFloat()
             textColor = TextPrimaryColor.toArgb()
             textSize = 10f
-            valueFormatter = object : ValueFormatter() {
-                override fun getFormattedValue(value: Float): String {
-                    val secondsAgo = (CHART_UPDATE_WINDOW - value.toInt()) * 1 // 1 second per entry
-                    val timestampMillis = System.currentTimeMillis() - secondsAgo * 1000
-                    val date = Date(timestampMillis)
-                    val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-                    return if (value % 10 == 0f) sdf.format(date) else ""
-                }
-            }
+
+            // install a TimeAxisFormatter instance that will be updated by chart update blocks
+            valueFormatter = TimeAxisFormatter(System.currentTimeMillis())
         }
 
         legend.apply {

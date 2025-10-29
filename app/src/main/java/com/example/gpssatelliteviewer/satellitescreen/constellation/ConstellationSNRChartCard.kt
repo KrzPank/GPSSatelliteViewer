@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.app.theme.TextHintColor
+import com.example.gpssatelliteviewer.data.TimestampedSNR
 import com.example.gpssatelliteviewer.satellitescreen.GroupedSNRChart
 import com.example.gpssatelliteviewer.satellitescreen.IndividualSNRChart
 import com.example.gpssatelliteviewer.satellitescreen.getConstellationColor
@@ -32,11 +33,11 @@ import kotlin.collections.plus
 
 @Composable
 fun GroupedConstellationSNRChartCard(
-    snrHistory: Map<String, List<Float>>,
+    snrHistory: Map<String, List<TimestampedSNR>>,
     modifier: Modifier = Modifier
 ) {
     val meaningfulSnrHistory = snrHistory.filterValues { list ->
-        list.any { it != 0f }
+        list.any { it.snr != 0f }
     }
 
     val allConstellations = meaningfulSnrHistory.keys.toList()
@@ -115,7 +116,7 @@ fun GroupedConstellationSNRChartCard(
 
 @Composable
 fun IndividualConstellationSNRChartCard(
-    constellationSNRHistory: List<Float>,
+    constellationSNRHistory: List<TimestampedSNR>,
     constellation: String,
     modifier: Modifier = Modifier
 ) {

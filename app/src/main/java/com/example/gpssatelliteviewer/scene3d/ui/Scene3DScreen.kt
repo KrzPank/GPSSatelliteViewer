@@ -48,7 +48,7 @@ import com.example.gpssatelliteviewer.scene3d.Scene3D
 import com.example.gpssatelliteviewer.scene3d.Scene3DParametersState
 import com.example.gpssatelliteviewer.scene3d.ui.menu.SatelliteFilterMenu
 import com.example.gpssatelliteviewer.scene3d.ui.menu.Scene3DParametersMenu
-import com.example.gpssatelliteviewer.app.theme.DarkBackground
+import com.example.gpssatelliteviewer.app.theme.DarkBackgroundColor
 import com.example.gpssatelliteviewer.app.theme.GreenPrimaryColor
 import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.data.GNSSCombinedData
@@ -151,7 +151,7 @@ fun Satellite3DScreen(
     Box(
         modifier = Modifier.Companion
             .fillMaxSize()
-            .background(DarkBackground)
+            .background(DarkBackgroundColor)
     ) {
         // Smooth transition not wanted but i don't know other way
         var isSceneReady by remember { mutableStateOf(false) }
@@ -270,7 +270,7 @@ fun Satellite3DScreen(
                     modifier = Modifier.Companion
                         .fillMaxHeight()
                         .requiredWidth(totalMenuWidth)
-                        .background(DarkBackground)
+                        .background(DarkBackgroundColor)
                         .padding(
                             start = safeInsets.calculateLeftPadding(LayoutDirection.Ltr),
                             top = 0.dp,

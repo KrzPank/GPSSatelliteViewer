@@ -2,7 +2,6 @@ package com.example.gpssatelliteviewer.mainscreen.screen.chipsetinfo
 
 import android.location.GnssCapabilities
 import android.os.Build
-import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,13 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.gpssatelliteviewer.app.theme.StatusError
-import com.example.gpssatelliteviewer.app.theme.StatusGood
+import com.example.gpssatelliteviewer.app.theme.StatusErrorColor
+import com.example.gpssatelliteviewer.app.theme.StatusGoodColor
 import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.data.GNSSHardwareInfo
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.ValueText
-import kotlin.math.sign
 
 @Composable
 fun GNSSChipsetInfoCard(
@@ -215,7 +213,7 @@ private fun CapabilityRow(
         Icon(
             imageVector = if (supported) Icons.Default.Check else Icons.Default.Close,
             contentDescription = if (supported) "Supported" else "Not supported",
-            tint = if (supported) StatusGood else StatusError,
+            tint = if (supported) StatusGoodColor else StatusErrorColor,
             modifier = Modifier.size(16.dp)
         )
         Spacer(Modifier.width(8.dp))

@@ -41,9 +41,6 @@ fun SatelliteInfoScreen(
     var selectedConstellations by remember { mutableStateOf(setOf<String>()) }
     var selectedSatellites by remember { mutableStateOf(setOf<String>()) }
 
-    val allConstellations = remember(satelliteInfo) { satelliteInfo.map { it.constellation }.distinct() }
-    val allSatellites = remember(satelliteInfo) { satelliteInfo.map { "${it.constellation}:${it.prn}" }.toSet() }
-
     val filteredSatellites = satelliteInfo
         .filter { sat ->
             (!showOnlyInFix || sat.usedInFix) &&
@@ -91,7 +88,7 @@ fun SatelliteInfoScreen(
                         val key = "${satellite.constellation}:${satellite.prn}"
                         SatelliteInfoCard(
                             satellite = satellite,
-                            snrHistory = satelliteSNRHistory.filter { it.key == key && it.value.any() { it != 0f} },
+                            snrHistory = satelliteSNRHistory.filter { it.key == key && it.value.any() { it.snr != 0f} },
                             modifier = Modifier.Companion.height(150.dp)
                         )
                     }
@@ -115,10 +112,9 @@ fun SatelliteInfoScreen(
         FilterDialog(
             showOnlyInFix = showOnlyInFix,
             onShowOnlyInFixChange = { showOnlyInFix = it },
-            constellations = allConstellations,
+            satellites =  satellites,
             selectedConstellations = selectedConstellations,
             onConstellationsChange = { selectedConstellations = it },
-            satellites = allSatellites,
             selectedSatellites = selectedSatellites,
             onSatellitesChange = { selectedSatellites = it },
             onDismiss = { showFilterDialog = false }

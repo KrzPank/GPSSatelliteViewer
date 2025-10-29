@@ -15,6 +15,7 @@ import android.util.Log
 import com.example.gpssatelliteviewer.data.AzElHistory
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
 import com.example.gpssatelliteviewer.data.EPS
+import com.example.gpssatelliteviewer.data.TimestampedSNR
 import com.example.gpssatelliteviewer.utils.averageOrNull
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -43,11 +44,11 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     val gnssHardwareInfo: StateFlow<GNSSHardwareInfo> = _gnssHardwareInfo
 
 
-    private val _constellationSNRHistory = MutableStateFlow<Map<String, MutableList<Float>>>(emptyMap())
-    val constellationSNRHistory: StateFlow<Map<String, List<Float>>> = _constellationSNRHistory
+    private val _constellationSNRHistory = MutableStateFlow<Map<String, MutableList<TimestampedSNR>>>(emptyMap())
+    val constellationSNRHistory: StateFlow<Map<String, List<TimestampedSNR>>> = _constellationSNRHistory
 
-    private val _satelliteSNRHistory = MutableStateFlow<Map<String, MutableList<Float>>>(emptyMap())
-    val satelliteSNRHistory: StateFlow<Map<String, MutableList<Float>>> = _satelliteSNRHistory
+    private val _satelliteSNRHistory = MutableStateFlow<Map<String, MutableList<TimestampedSNR>>>(emptyMap())
+    val satelliteSNRHistory: StateFlow<Map<String, List<TimestampedSNR>>> = _satelliteSNRHistory
 
     private val gnssCallback = object : GnssStatus.Callback() {
         override fun onSatelliteStatusChanged(status: GnssStatus) {
@@ -183,28 +184,29 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    private fun updateSatelliteSNRHistory(gnssStatusData: List<GNSSStatusData>): MutableMap<String, MutableList<Float>> {
-        val allSatellites = (_satelliteSNRHistory.value.keys + gnssStatusData.map { "${it.constellation}:${it.prn}"}).toSet()
-        val updated = mutableMapOf<String, MutableList<Float>>()
+    private fun updateSatelliteSNRHistory(gnssStatusData: List<GNSSStatusData>): MutableMap<String, MutableList<TimestampedSNR>> {
+        val allSatellites = (_satelliteSNRHistory.value.keys + gnssStatusData.map { "${it.constellation}:${it.prn}" }).toSet()
+        val updated = mutableMapOf<String, MutableList<TimestampedSNR>>()
+        val now = System.currentTimeMillis()
 
         allSatellites.forEach { satelliteKey ->
             val oldHistory = _satelliteSNRHistory.value[satelliteKey] ?: emptyList()
             val (constellation, prn) = satelliteKey.split(":")
-            val newValue = gnssStatusData
+            val newValues = gnssStatusData
                 .filter { it.constellation == constellation && it.prn.toString() == prn }
-                .map { it.cn0DbHz }
+                .map { TimestampedSNR(now, it.cn0DbHz) }
 
-            val newHistory = (oldHistory.takeLast(CHART_UPDATE_WINDOW - 1) + newValue).toMutableList()
+            val newHistory = (oldHistory.takeLast(CHART_UPDATE_WINDOW - 1) + newValues).toMutableList()
             updated[satelliteKey] = newHistory
         }
 
         return updated
     }
 
-    private fun updateConstellationSNRHistory(gnssStatusList: List<GNSSStatusData>): MutableMap<String, MutableList<Float>> {
+    private fun updateConstellationSNRHistory(gnssStatusList: List<GNSSStatusData>): MutableMap<String, MutableList<TimestampedSNR>> {
         val allConstellations = (_constellationSNRHistory.value.keys + gnssStatusList.map { it.constellation }).toSet()
-
-        val updated = mutableMapOf<String, MutableList<Float>>()
+        val updated = mutableMapOf<String, MutableList<TimestampedSNR>>()
+        val now = System.currentTimeMillis()
 
         allConstellations.forEach { constellation ->
             val oldHistory = _constellationSNRHistory.value[constellation] ?: emptyList()
@@ -215,7 +217,8 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                 .averageOrNull()
                 ?.toFloat() ?: 0f
 
-            val newHistory = (oldHistory.takeLast(CHART_UPDATE_WINDOW - 1) + newValue).toMutableList()
+            val newEntry = TimestampedSNR(now, newValue)
+            val newHistory = (oldHistory.takeLast(CHART_UPDATE_WINDOW - 1) + newEntry).toMutableList()
             updated[constellation] = newHistory
         }
 

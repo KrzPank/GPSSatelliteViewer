@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.data.GNSSCombinedData
+import com.example.gpssatelliteviewer.data.TimestampedSNR
 import com.example.gpssatelliteviewer.satellitescreen.IndividualSNRChart
 import com.example.gpssatelliteviewer.satellitescreen.getConstellationColor
 import com.example.gpssatelliteviewer.utils.InfoRow
@@ -66,7 +67,7 @@ fun ConstellationCard(
 @Composable
 fun SatelliteInfoCard(
     satellite: GNSSCombinedData,
-    snrHistory: Map<String, MutableList<Float>>,
+    snrHistory: Map<String, List<TimestampedSNR>>,
     modifier: Modifier = Modifier
 ) {
     Card(

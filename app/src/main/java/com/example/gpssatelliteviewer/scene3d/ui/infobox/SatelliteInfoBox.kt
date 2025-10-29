@@ -22,9 +22,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.example.gpssatelliteviewer.app.theme.CardBackground
+import com.example.gpssatelliteviewer.app.theme.CardBackgroundColor
 import com.example.gpssatelliteviewer.data.GNSSCombinedData
-import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.utils.InfoRow
 
 @Composable
@@ -49,7 +48,7 @@ fun SatelliteInfoBox(
                     .padding(8.dp)
                     .width(IntrinsicSize.Max),
                 colors = CardDefaults.cardColors(
-                    containerColor = CardBackground.copy(alpha = 0.7f)
+                    containerColor = CardBackgroundColor.copy(alpha = 0.7f)
                 ),
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)

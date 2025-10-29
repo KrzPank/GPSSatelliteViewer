@@ -37,7 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.app.theme.TextLabelColor
-import com.example.gpssatelliteviewer.app.theme.ValueText
+import com.example.gpssatelliteviewer.app.theme.ValueTextColor
 import com.example.gpssatelliteviewer.app.theme.GreenPrimaryColor
 import com.example.gpssatelliteviewer.app.theme.TextHintColor
 
@@ -52,7 +52,7 @@ fun ValueText(
     Text(
         text = value,
         style = style,
-        color = ValueText,
+        color = ValueTextColor,
         fontWeight = fontWeight,
         textAlign = textAlign,
         modifier = modifier,
