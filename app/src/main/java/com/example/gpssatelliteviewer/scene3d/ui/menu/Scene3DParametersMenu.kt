@@ -126,6 +126,7 @@ fun Scene3DParametersMenu(
             )
         }
 
+
         ParameterSection("Satellites") {
             val params = parametersState.parameters
 

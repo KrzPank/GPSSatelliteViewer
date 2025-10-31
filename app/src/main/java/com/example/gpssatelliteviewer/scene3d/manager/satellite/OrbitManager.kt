@@ -105,8 +105,8 @@ class OrbitManager(
         val euler = computeRingRotationEulerDeg(first, last)
         node.rotation = euler
 
-        Log.d("SatelliteManager", "euler=${euler}")
-        Log.d("SatelliteManager", "first=${first} last${last}")
+        //Log.d("SatelliteManager", "euler=${euler}")
+        //Log.d("SatelliteManager", "first=${first} last${last}")
 
         val r1 = first.length()
         val r2 = last.length()
@@ -131,16 +131,16 @@ class OrbitManager(
 
         //  special cases
         val quat = if (d > 0.999999f) {
-            Log.d("SatelliteManager", "if (d > 0.999999f)")
+            //Log.d("SatelliteManager", "if (d > 0.999999f)")
             doubleArrayOf(1.0, 0.0, 0.0, 0.0)
         } else if (d < -0.999999f) {
-            Log.d("SatelliteManager", "else if (d < -0.999999f)")
+            //Log.d("SatelliteManager", "else if (d < -0.999999f)")
             var axis = cross(sourceNormal, Float3(1f, 0f, 0f))
             if (dev.romainguy.kotlin.math.length(axis) <= 1e-6f) axis = cross(sourceNormal, Float3(0f, 1f, 0f))
             axis = normalize(axis)
             axisAngleToQuat(axis, Math.PI.toFloat())
         } else {
-            Log.d("SatelliteManager", "else")
+            //Log.d("SatelliteManager", "else")
             val axis = normalize(cross(sourceNormal, target))
             val angle = acos(d.toDouble()).toFloat()
             axisAngleToQuat(axis, angle)

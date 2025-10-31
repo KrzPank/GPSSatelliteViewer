@@ -12,12 +12,11 @@ import dev.romainguy.kotlin.math.Float3
 import io.github.sceneview.loaders.ModelLoader
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
+import kotlinx.serialization.builtins.FloatArraySerializer
 import kotlin.math.abs
 
 private const val AZIMUTH_THRESHOLD_DEG = 0.2f
 private const val ELEVATION_THRESHOLD_DEG = 0.2f
-
-
 
 class SatelliteManager(
     private val modelLoader: ModelLoader,
@@ -50,6 +49,12 @@ class SatelliteManager(
         modelLoader = modelLoader,
         centerNode = centerNode,
         parameters = parameters
+    )
+
+    private val auraManager: AuraManager = AuraManager(
+        modelLoader = modelLoader,
+        centerNode = centerNode,
+        cameraManager = cameraManager,
     )
 
     private val satelliteNodePool = mutableListOf<ModelNode>()
@@ -90,6 +95,8 @@ class SatelliteManager(
                 activeSatelliteNodes.remove(key)
             }
 
+            auraManager.removeAura(key)
+
             if (orbitManager.getCurrentOrbitKey() == key) {
                 orbitManager.clearOrbit()
             }
@@ -105,31 +112,46 @@ class SatelliteManager(
                 val cache = satelliteCache[key]
                 val satAzEl = azElHistory[key]!!
 
-                val shouldUpdate = if (cache == null) {
-                    true
-                } else {
-                    val azChanged = abs(cache.currentAz - satAzEl.lastAz) > AZIMUTH_THRESHOLD_DEG
-                    val elChanged = abs(cache.currentEl - satAzEl.lastEl) > ELEVATION_THRESHOLD_DEG
-                    val usedChanged = sat.usedInFix != cache.usedInFix
-                    azChanged || elChanged || usedChanged
-                }
-                //if (abs(cache.currentEl - satAzEl.lastEl) > ELEVATION_THRESHOLD_DEG || abs(cache.currentAz - satAzEl.lastAz) > AZIMUTH_THRESHOLD_DEG)
+                val azChanged = cache == null || abs(cache.currentAz - satAzEl.lastAz) > AZIMUTH_THRESHOLD_DEG
+                val elChanged = cache == null || abs(cache.currentEl - satAzEl.lastEl) > ELEVATION_THRESHOLD_DEG
+                val usedChanged = cache == null || sat.usedInFix != cache.usedInFix
 
-                // Only update node if the satellite data meaningfully changed (to avoid unnecessary rerenders)
+                val shouldUpdate = if (cache == null) true
+                else azChanged || elChanged || usedChanged
+
+                val prevSNR = cache?.currentSNR ?: 0f
+                val bucketChanged = cache == null || snrBucket(prevSNR) != snrBucket(sat.cn0DbHz)
+                val shouldUpdateAura = usedChanged || bucketChanged
+
                 if (shouldUpdate) {
                     //Log.d("SatelliteManager", "for sat:${key}  sat Az/El:${cache?.currentAz}/${cache?.currentEl}  azElHist:${satAzEl.lastAz}/${satAzEl.lastEl}")
                     val newAltitude = calculateSatelliteAltitude(sat)
                     updateSatellitePosition(existingNode, sat)
-                    cache?.usedInFix = sat.usedInFix
-                    cache?.altitude = newAltitude
-                    cache?.currentAz = satAzEl.lastAz
-                    cache?.currentEl = satAzEl.lastEl
-                    cache?.lastPos = existingNode.position
+
+                    if (cache != null) {
+                        cache.usedInFix = sat.usedInFix
+                        cache.altitude = newAltitude
+                        cache.currentAz = satAzEl.lastAz
+                        cache.currentEl = satAzEl.lastEl
+                        cache.lastPos = existingNode.position
+                    }
+
+                    // update aura here
+                    if (cache!!.usedInFix) auraManager.updateAuraFor(key, cache)
+                    else auraManager.removeAura(key)
 
                     if (orbitManager.getCurrentOrbitKey() == key) {
                         orbitManager.updateOrbitForCache(satelliteCache[key])
                     }
+
                 }
+
+                if (shouldUpdateAura) {
+                    if (cache!!.usedInFix) auraManager.updateAuraFor(key, cache)
+                    else auraManager.removeAura(key)
+                }
+
+                cache.currentSNR = sat.cn0DbHz
             } else {
                 val satelliteNode = getOrCreateSatelliteNode()
                 setupSatelliteNode(satelliteNode, sat)
@@ -149,12 +171,15 @@ class SatelliteManager(
 
                 satelliteCache[key] = SatelliteCache(
                     usedInFix = sat.usedInFix,
+                    currentSNR = sat.cn0DbHz,
                     altitude = altitude,
                     currentAz = azEl.firstAz,
                     currentEl = azEl.firstEl,
                     firstPos = pos,
                     lastPos = satelliteNode.position
                 )
+
+                if (sat.usedInFix) auraManager.updateAuraFor(key, satelliteCache[key]!!)
             }
         }
     }
@@ -200,9 +225,10 @@ class SatelliteManager(
     private fun getOrCreateSatelliteNode(): ModelNode {
         return if (satelliteNodePool.isNotEmpty()) {
             // Reuse node from pool
+            Log.d("SatelliteManager", "Reused satellite")
             satelliteNodePool.removeAt(satelliteNodePool.size - 1)
         } else {
-            // Create new node when pool is empty
+            Log.d("SatelliteManager", "Created sat node")
             val instance = modelLoader.createModelInstance(parameters.satelliteModelPath)
             ModelNode(
                 modelInstance = instance,
@@ -258,7 +284,8 @@ class SatelliteManager(
         }
 
         node.position = pos
-        node.lookAt(cameraManager.getCameraPosition())
+        node.lookAt(Float3(0f))    // lookAt earth
+        //node.lookAt(cameraManager.getCameraPosition())
     }
 
     /**
@@ -274,8 +301,19 @@ class SatelliteManager(
 
     private fun updateLookAt() {
         activeSatelliteNodes.values.forEach { satellite ->
-            satellite.lookAt(cameraManager.getCameraPosition())
+            satellite.lookAt(Float3(0f))    // lookAt earth
+
+            //satellite.lookAt(cameraManager.getCameraPosition())   // lookAt camera
         }
+
+        auraManager.updateLookAt()
+    }
+
+    private fun snrBucket(snr: Float): Int = when {
+        snr <= 10f -> 0
+        snr <= 20f -> 1
+        snr <= 30f -> 2
+        else -> 3
     }
 
     /**
@@ -321,15 +359,13 @@ class SatelliteManager(
             centerNode.removeChildNode(node)
             node.destroy()
         }
-        activeSatelliteNodes.clear()
-
         satelliteNodePool.forEach { node ->
             node.destroy()
         }
+        activeSatelliteNodes.clear()
         satelliteNodePool.clear()
-
         satelliteCache.clear()
-
+        auraManager.cleanup()
         orbitManager.clearOrbit()
     }
 }

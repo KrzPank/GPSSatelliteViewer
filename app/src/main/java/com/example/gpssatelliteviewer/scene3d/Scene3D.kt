@@ -96,6 +96,7 @@ class Scene3D(
 
     private fun onSceneSingleTapConfirmed(node: Node?) {
         val key = node?.name
+        Log.d("NodeHit", "Hit node name: $key")
         when (key) {
             null -> {
                 _clickedSatelliteKey.value = null
@@ -110,13 +111,16 @@ class Scene3D(
                 satellitesManager.clearOrbit()
             }
             else -> {
-                _clickedSatelliteKey.value = key
+                val tKey = if (key.contains("aura")) key.substring(0, key.length - 5)
+                    else key
+                _clickedSatelliteKey.value = tKey
                 _isSatelliteInfoBoxVisible.value = true
                 _isEarthInfoBoxVisible.value = false
-                satellitesManager.showOrbitForSatellite(key)
+                satellitesManager.showOrbitForSatellite(tKey)
             }
         }
     }
+
 
     @Composable
     fun Render() {

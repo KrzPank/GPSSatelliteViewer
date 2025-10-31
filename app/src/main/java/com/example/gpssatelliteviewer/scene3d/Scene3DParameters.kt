@@ -3,6 +3,7 @@ package com.example.gpssatelliteviewer.scene3d
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.style.LineBreak
 import com.google.android.filament.LightManager
 import dev.romainguy.kotlin.math.Float3
 
@@ -27,9 +28,11 @@ data class Scene3DParameters(
     var earthScale: Float = 1.0f,
 
     // Satellite Parameters
-    var orbitModelPath: String = "models/b.glb",
-    var satelliteModelPath: String = "models/RedCircle.glb",
-    var satelliteScale: Float = 0.05f,
+    val orbitModelPath: String = "models/orbit.glb",
+    val auraModelPath: String = "models/Circle.glb",
+    val auraScale: Float = 0.2f,
+    val satelliteModelPath: String = "models/TDRS_A.glb",
+    var satelliteScale: Float = 0.08f,
 
     // Location marker Parameters
     var locationMarkerModelPath: String = "models/pointer.glb",
