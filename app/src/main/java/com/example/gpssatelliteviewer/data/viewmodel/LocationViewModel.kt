@@ -21,27 +21,27 @@ import kotlinx.coroutines.withContext
 import java.util.Date
 import java.util.Locale
 
-data class ListenerData(
-    val time: String = "",
-    val latitude: Double = 0.0,
-    val longitude: Double = 0.0,
-    val altitude: Double = 0.0,
-    val accuracy: Float = 0f,
-    val speed: Float = 0f,
-    val bearing: Float = 0f,
-    val verticalAccuracy: Float? = null,
-    val speedAccuracy: Float? = null,
-    val bearingAccuracy: Float? = null,
-    val provider: String = "",
-    val latHemisphere: Char = 0.toChar(),
-    val longHemisphere: Char = 0.toChar(),
-    val elapsedRealtimeNanos: Long = 0L,
-)
-
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
     private val handler = Handler(Looper.getMainLooper())
     private val listenerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    data class ListenerData(
+        val time: String = "",
+        val latitude: Double = 0.0,
+        val longitude: Double = 0.0,
+        val altitude: Double = 0.0,
+        val accuracy: Float = 0f,
+        val speed: Float = 0f,
+        val bearing: Float = 0f,
+        val verticalAccuracy: Float? = null,
+        val speedAccuracy: Float? = null,
+        val bearingAccuracy: Float? = null,
+        val provider: String = "",
+        val latHemisphere: Char = 0.toChar(),
+        val longHemisphere: Char = 0.toChar(),
+        val elapsedRealtimeNanos: Long = 0L,
+    )
 
     private val _locationAndroidApi = MutableStateFlow<ListenerData>(ListenerData())
     val locationAndroidApi: StateFlow<ListenerData> = _locationAndroidApi

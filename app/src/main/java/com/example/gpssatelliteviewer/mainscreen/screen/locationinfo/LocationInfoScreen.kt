@@ -130,7 +130,7 @@ fun LocationInfoScreen(
             text = {
                 Column {
                     Text(
-                        "NMEA",
+                        "NMEA Location",
                         modifier = Modifier.Companion
                             .fillMaxWidth()
                             .clickable {
@@ -140,7 +140,7 @@ fun LocationInfoScreen(
                             .padding(12.dp)
                     )
                     Text(
-                        "Location Listener",
+                        "Android Api Location",
                         modifier = Modifier.Companion
                             .fillMaxWidth()
                             .clickable {
