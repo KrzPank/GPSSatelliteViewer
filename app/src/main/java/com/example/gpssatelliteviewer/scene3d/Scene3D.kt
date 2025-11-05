@@ -68,7 +68,7 @@ class Scene3D(
         parameters = parameters
     )
 
-    private val satellitesManager: SatelliteManager = SatelliteManager(
+    private val satelliteManager: SatelliteManager = SatelliteManager(
         modelLoader = modelLoader,
         centerNode = centerNode,
         cameraManager = cameraManager,
@@ -102,25 +102,27 @@ class Scene3D(
                 _clickedSatelliteKey.value = null
                 _isSatelliteInfoBoxVisible.value = false
                 _isEarthInfoBoxVisible.value = false
-                satellitesManager.clearOrbit()
+                satelliteManager.clearOrbit()
+                satelliteManager.setClickedSatelliteKey(null)
             }
             earthManager.getEarthNode().name -> {
                 _clickedSatelliteKey.value = null
                 _isSatelliteInfoBoxVisible.value = false
                 _isEarthInfoBoxVisible.value = !_isEarthInfoBoxVisible.value
-                satellitesManager.clearOrbit()
+                satelliteManager.clearOrbit()
+                satelliteManager.setClickedSatelliteKey(null)
             }
             else -> {
-                val tKey = if (key.contains("aura")) key.substring(0, key.length - 5)
-                    else key
-                _clickedSatelliteKey.value = tKey
+                //val tKey = if (key.contains("aura")) key.substring(0, key.length - 5)
+                //    else key
+                _clickedSatelliteKey.value = key
                 _isSatelliteInfoBoxVisible.value = true
                 _isEarthInfoBoxVisible.value = false
-                satellitesManager.showOrbitForSatellite(tKey)
+                satelliteManager.setClickedSatelliteKey(key)
+                satelliteManager.showOrbitForSatellite(key)
             }
         }
     }
-
 
     @Composable
     fun Render() {
@@ -139,7 +141,7 @@ class Scene3D(
             onFrame = {
                 cameraManager.onFrame()
                 locationMarkerManager.onFrame()
-                satellitesManager.onFrame()
+                satelliteManager.onFrame()
                 mainLightManager.onFrame()
             },
             mainLightNode = mainLightManager.getSunLightNode(),
@@ -147,7 +149,7 @@ class Scene3D(
                 onDown = { event, _ ->
                     true
                 },
-                onDoubleTap = { event, _ ->
+                onDoubleTap = { _, _ ->
                     Log.d("CameraDebug", "Went in onDoubleTap")
                     onSceneDoubleTap()
                 },
@@ -163,7 +165,7 @@ class Scene3D(
     fun isLocationMarkerVisible() = locationMarkerManager.isLocationMarkerVisible()
 
     fun updateSatelliteList(newList: List<GNSSStatusData>, azElHistory: Map<String, AzElHistory>){
-        satellitesManager.updateSatelliteList(newList, azElHistory)
+        satelliteManager.updateSatelliteList(newList, azElHistory)
     }
 
     fun updateParameters(newParameters: Scene3DParameters) {
@@ -171,7 +173,7 @@ class Scene3D(
         parameters = newParameters
 
         mainLightManager.updateParameters(newParameters)
-        satellitesManager.updateParameters(newParameters)
+        satelliteManager.updateParameters(newParameters)
         earthManager.updateParameters(newParameters)
         locationMarkerManager.updateParameters(newParameters)
     }
@@ -179,7 +181,7 @@ class Scene3D(
     fun updateUserLocation(userLocation: Float3?) { parameters.userLocation = userLocation }
 
     fun cleanup() {
-        satellitesManager.cleanup()
+        satelliteManager.cleanup()
         locationMarkerManager.cleanup()
         earthManager.cleanup()
 

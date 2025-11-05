@@ -1,10 +1,13 @@
 package com.example.gpssatelliteviewer.satellitescreen.constellation
 
+import android.widget.Space
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,6 +18,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -24,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.app.theme.TextHintColor
 import com.example.gpssatelliteviewer.data.TimestampedSNR
 import com.example.gpssatelliteviewer.satellitescreen.GroupedSNRChart
@@ -34,6 +39,7 @@ import kotlin.collections.plus
 @Composable
 fun GroupedConstellationSNRChartCard(
     snrHistory: Map<String, List<TimestampedSNR>>,
+    label: String,
     modifier: Modifier = Modifier
 ) {
     val meaningfulSnrHistory = snrHistory.filterValues { list ->
@@ -65,6 +71,12 @@ fun GroupedConstellationSNRChartCard(
                 .fillMaxSize()
                 .padding(top = 16.dp, bottom = 8.dp, start = 16.dp, end = 16.dp)
         ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 20.sp
+            )
+            Spacer(Modifier.height(5.dp))
             GroupedSNRChart(
                 snrHistory = meaningfulSnrHistory,
                 selectedConstellations = selectedConstellations,

@@ -81,7 +81,7 @@ fun SatelliteInfoCard(
 
             InfoRow("Constellation ", satellite.constellation)
             InfoRow("SVID/PRN ", "${satellite.svid ?: "N/A"} / ${satellite.prn}")
-            InfoRow("SNR", "%.1f dBHz ".format(satellite.cn0DbHz))
+            InfoRow("C/N0", "%.1f dBHz ".format(satellite.cn0DbHz))
 
             satellite.snrInDb?.let {
                 InfoRow("SNR (dB) ", "%.1f dB".format(it))

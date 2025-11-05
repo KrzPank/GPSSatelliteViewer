@@ -2,17 +2,22 @@ package com.example.gpssatelliteviewer.scene3d.manager.satellite
 
 import android.util.Log
 import com.example.gpssatelliteviewer.data.AzElHistory
+import com.example.gpssatelliteviewer.data.FAIR_SNR
 import com.example.gpssatelliteviewer.data.GNSSStatusData
+import com.example.gpssatelliteviewer.data.GOOD_SNR
+import com.example.gpssatelliteviewer.data.NO_SNR
+import com.example.gpssatelliteviewer.data.POOR_SNR
 import com.example.gpssatelliteviewer.data.SatelliteCache
 import com.example.gpssatelliteviewer.data.frameCountUpdateInterval
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import dev.romainguy.kotlin.math.Float3
+import dev.romainguy.kotlin.math.Float4
 import io.github.sceneview.loaders.ModelLoader
+import io.github.sceneview.material.setBaseColorFactor
 import io.github.sceneview.node.ModelNode
 import io.github.sceneview.node.Node
-import kotlinx.serialization.builtins.FloatArraySerializer
 import kotlin.math.abs
 
 private const val AZIMUTH_THRESHOLD_DEG = 0.2f
@@ -51,12 +56,6 @@ class SatelliteManager(
         parameters = parameters
     )
 
-    private val auraManager: AuraManager = AuraManager(
-        modelLoader = modelLoader,
-        centerNode = centerNode,
-        cameraManager = cameraManager,
-    )
-
     private val satelliteNodePool = mutableListOf<ModelNode>()
     val activeSatelliteNodes = mutableMapOf<String, ModelNode>() // "constellation:prn" -> node
 
@@ -65,7 +64,9 @@ class SatelliteManager(
     private var frameCount = 0
     private var firstLookAt = true
 
-    var onSatelliteClick: ((String) -> Unit)? = null
+    private var clickedSatelliteKey: String? = null
+
+    //var onSatelliteClick: ((String) -> Unit)? = null
 
     private fun satelliteKey(constellation: String, prn: Int) = "$constellation:$prn"
     fun satelliteKey(sat: GNSSStatusData) = satelliteKey(sat.constellation, sat.prn)
@@ -95,8 +96,6 @@ class SatelliteManager(
                 activeSatelliteNodes.remove(key)
             }
 
-            auraManager.removeAura(key)
-
             if (orbitManager.getCurrentOrbitKey() == key) {
                 orbitManager.clearOrbit()
             }
@@ -109,49 +108,51 @@ class SatelliteManager(
             val existingNode = activeSatelliteNodes[key]
 
             if (existingNode != null) {
-                val cache = satelliteCache[key]
+                val cache = satelliteCache[key]!!
                 val satAzEl = azElHistory[key]!!
 
-                val azChanged = cache == null || abs(cache.currentAz - satAzEl.lastAz) > AZIMUTH_THRESHOLD_DEG
-                val elChanged = cache == null || abs(cache.currentEl - satAzEl.lastEl) > ELEVATION_THRESHOLD_DEG
-                val usedChanged = cache == null || sat.usedInFix != cache.usedInFix
+                val azChanged = abs(cache.currentAz - satAzEl.lastAz) > AZIMUTH_THRESHOLD_DEG
+                val elChanged = abs(cache.currentEl - satAzEl.lastEl) > ELEVATION_THRESHOLD_DEG
+                val usedChanged = sat.usedInFix != cache.usedInFix
 
-                val shouldUpdate = if (cache == null) true
-                else azChanged || elChanged || usedChanged
+                val shouldUpdate = azChanged || elChanged || usedChanged
 
-                val prevSNR = cache?.currentSNR ?: 0f
-                val bucketChanged = cache == null || snrBucket(prevSNR) != snrBucket(sat.cn0DbHz)
-                val shouldUpdateAura = usedChanged || bucketChanged
+                val prevSNR = cache.currentSNR
+                val bucketChanged = snrBucket(prevSNR) != snrBucket(sat.cn0DbHz)
+                val shouldUpdateColor = usedChanged || bucketChanged
 
                 if (shouldUpdate) {
                     //Log.d("SatelliteManager", "for sat:${key}  sat Az/El:${cache?.currentAz}/${cache?.currentEl}  azElHist:${satAzEl.lastAz}/${satAzEl.lastEl}")
                     val newAltitude = calculateSatelliteAltitude(sat)
                     updateSatellitePosition(existingNode, sat)
 
-                    if (cache != null) {
-                        cache.usedInFix = sat.usedInFix
-                        cache.altitude = newAltitude
-                        cache.currentAz = satAzEl.lastAz
-                        cache.currentEl = satAzEl.lastEl
-                        cache.lastPos = existingNode.position
-                    }
+                    cache.usedInFix = sat.usedInFix
+                    cache.altitude = newAltitude
+                    cache.currentAz = satAzEl.lastAz
+                    cache.currentEl = satAzEl.lastEl
+                    cache.lastPos = existingNode.position
+                    cache.currentSNR = sat.cn0DbHz
 
-                    // update aura here
-                    if (cache!!.usedInFix) auraManager.updateAuraFor(key, cache)
-                    else auraManager.removeAura(key)
+                    if (shouldUpdateColor) {
+                        updateColor(key, existingNode)
+                    }
 
                     if (orbitManager.getCurrentOrbitKey() == key) {
                         orbitManager.updateOrbitForCache(satelliteCache[key])
                     }
-
+                } else {
+                    // If we don't need to update position, we may still need to update color (bucket changed or used flag changed)
+                    if (shouldUpdateColor) {
+                        // update the cache SNR first, then color
+                        cache.currentSNR = sat.cn0DbHz
+                        cache.usedInFix = sat.usedInFix
+                        updateColor(key, existingNode)
+                    } else {
+                        // No visual changes required — still keep SNR in cache up to date for next comparison
+                        cache.currentSNR = sat.cn0DbHz
+                        cache.usedInFix = sat.usedInFix
+                    }
                 }
-
-                if (shouldUpdateAura) {
-                    if (cache!!.usedInFix) auraManager.updateAuraFor(key, cache)
-                    else auraManager.removeAura(key)
-                }
-
-                cache.currentSNR = sat.cn0DbHz
             } else {
                 val satelliteNode = getOrCreateSatelliteNode()
                 setupSatelliteNode(satelliteNode, sat)
@@ -179,8 +180,56 @@ class SatelliteManager(
                     lastPos = satelliteNode.position
                 )
 
-                if (sat.usedInFix) auraManager.updateAuraFor(key, satelliteCache[key]!!)
+                updateColor(key, satelliteNode)
             }
+        }
+    }
+
+    fun setClickedSatelliteKey(key: String?) {
+        val previousKey = clickedSatelliteKey
+        clickedSatelliteKey = key
+
+        // Recolor previous clicked satellite (revert to SNR color) if present
+        previousKey?.let { prev ->
+            activeSatelliteNodes[prev]?.let { node ->
+                updateColor(prev, node)
+            }
+        }
+
+        // Color the newly clicked satellite blue if present
+        key?.let { newKey ->
+            activeSatelliteNodes[newKey]?.let { node ->
+                updateColor(newKey, node)
+            }
+        }
+    }
+
+    private fun updateColor(key: String, node: ModelNode) {
+        if (key == clickedSatelliteKey) {
+            val blue = Float4(0.1f, 0.4f, 1.0f, 1f)
+            try {
+                node.materialInstances.forEach { matInst ->
+                    matInst.forEach { material ->
+                        material.setBaseColorFactor(blue)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w("SatelliteManager", "Failed to update material color for (clicked) $key: ${e.message}")
+            }
+            return
+        }
+
+        val snr = satelliteCache[key]?.currentSNR ?: NO_SNR
+        val desiredColor = getColorForSNR(snr)
+
+        try {
+            node.materialInstances.forEach { matInst ->
+                matInst.forEach { material ->
+                    material.setBaseColorFactor(desiredColor)
+                }
+            }
+        } catch (e: Exception) {
+            Log.w("SatelliteManager", "Failed to update material color for $key: ${e.message}")
         }
     }
 
@@ -257,10 +306,6 @@ class SatelliteManager(
 
         // "CONSTELLATION:PRN"
         node.name = satelliteKey(sat)
-        node.onSingleTapUp = {
-            onSatelliteClick?.invoke(node.name.toString())
-            true
-        }
     }
 
     /**
@@ -284,8 +329,7 @@ class SatelliteManager(
         }
 
         node.position = pos
-        node.lookAt(Float3(0f))    // lookAt earth
-        //node.lookAt(cameraManager.getCameraPosition())
+        node.lookAt(cameraManager.getCameraPosition())
     }
 
     /**
@@ -301,19 +345,26 @@ class SatelliteManager(
 
     private fun updateLookAt() {
         activeSatelliteNodes.values.forEach { satellite ->
-            satellite.lookAt(Float3(0f))    // lookAt earth
-
-            //satellite.lookAt(cameraManager.getCameraPosition())   // lookAt camera
+            satellite.lookAt(cameraManager.getCameraPosition())   // lookAt camera
         }
+    }
 
-        auraManager.updateLookAt()
+    private fun getColorForSNR(snr: Float): Float4 {
+        return when {
+            snr == NO_SNR -> Float4(1.0f, 0.0f, 0.0f, 1f)
+            snr <= POOR_SNR -> Float4(0.89f, 0.18f, 0.14f, 1f) // red-ish (#E42E23)
+            snr <= FAIR_SNR -> Float4(1.0f, 0.65f, 0.0f, 1f)  // orange-ish (#F78C18)
+            snr <= GOOD_SNR -> Float4(0.97f, 0.97f, 0.0f, 1f) // yellow-ish (#FBE02A)
+            else -> Float4(0.0f, 1.0f, 0.4f, 1f)        // green-ish (#28BD55)
+        }
     }
 
     private fun snrBucket(snr: Float): Int = when {
-        snr <= 10f -> 0
-        snr <= 20f -> 1
-        snr <= 30f -> 2
-        else -> 3
+        snr == NO_SNR -> 0
+        snr <= POOR_SNR -> 1
+        snr <= FAIR_SNR -> 2
+        snr <= GOOD_SNR -> 3
+        else -> 4
     }
 
     /**
@@ -365,7 +416,6 @@ class SatelliteManager(
         activeSatelliteNodes.clear()
         satelliteNodePool.clear()
         satelliteCache.clear()
-        auraManager.cleanup()
         orbitManager.clearOrbit()
     }
 }

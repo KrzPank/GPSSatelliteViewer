@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocationDisabled
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.LocationSearching
@@ -54,7 +53,12 @@ import com.example.gpssatelliteviewer.app.theme.SNROrangeColor
 import com.example.gpssatelliteviewer.app.theme.SNRRedColor
 import com.example.gpssatelliteviewer.app.theme.SNRYellowColor
 import com.example.gpssatelliteviewer.app.theme.TextPrimaryColor
+import com.example.gpssatelliteviewer.data.EXCELLENT_SNR
+import com.example.gpssatelliteviewer.data.FAIR_SNR
 import com.example.gpssatelliteviewer.data.GNSSStatusData
+import com.example.gpssatelliteviewer.data.GOOD_SNR
+import com.example.gpssatelliteviewer.data.NO_SNR
+import com.example.gpssatelliteviewer.data.POOR_SNR
 
 class GPSStatus(
     private val satellites: List<GNSSStatusData>,
@@ -88,19 +92,19 @@ class GPSStatus(
         val satellitesUsedInFix = satellites.count { it.usedInFix }
 
         return when {
-            satellitesUsedInFix >= 20 && averageSNRInFix >= 30f -> {
+            satellitesUsedInFix >= 20 && averageSNRInFix >= EXCELLENT_SNR -> {
                 GPSStatusState.Excellent
             }
-            satellitesUsedInFix >= 10 && averageSNRInFix >= 22f -> {
+            satellitesUsedInFix >= 10 && averageSNRInFix >= GOOD_SNR -> {
                 GPSStatusState.Good
             }
-            satellitesUsedInFix >= 4 && averageSNRInFix >= 15f -> {
+            satellitesUsedInFix >= 4 && averageSNRInFix >= FAIR_SNR -> {
                 GPSStatusState.Fair
             }
-            satellitesUsedInFix >= 1 && averageSNRInFix >= 5f -> {
+            satellitesUsedInFix >= 1 && averageSNRInFix >= POOR_SNR -> {
                 GPSStatusState.Poor
             }
-            satellitesUsedInFix == 0 && averageSNRInFix == 0f -> {
+            satellitesUsedInFix == 0 && averageSNRInFix == NO_SNR -> {
                 GPSStatusState.Searching
             }
             else -> GPSStatusState.NoFix

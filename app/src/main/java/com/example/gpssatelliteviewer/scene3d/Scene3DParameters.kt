@@ -31,7 +31,7 @@ data class Scene3DParameters(
     val orbitModelPath: String = "models/orbit.glb",
     val auraModelPath: String = "models/Circle.glb",
     val auraScale: Float = 0.2f,
-    val satelliteModelPath: String = "models/TDRS_A.glb",
+    val satelliteModelPath: String = "models/RedCircle.glb",
     var satelliteScale: Float = 0.08f,
 
     // Location marker Parameters

@@ -3,12 +3,17 @@ package com.example.gpssatelliteviewer.satellitescreen.constellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.WrongLocation
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,30 +48,30 @@ fun ConstellationSNRStatisticsScreen(
         if (validConstellation.isEmpty()) {
             item {
                 EmptyStateCard(
-                    message = "No valid SNR data available",
+                    message = "No valid data available",
                     icon = Icons.Default.WrongLocation
                 )
             }
         } else {
             item {
-                Text(
-                    text = "Avg. SNR for all constellations in fix",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontSize = 20.sp
-                )
+
                 Spacer(Modifier.height(6.dp))
                 GroupedConstellationSNRChartCard(
                     snrHistory = snrConstellationHistory,
+                    label = "Avg. C/N0 for all constellations in fix",
                     modifier = Modifier.Companion.height(240.dp)
                 )
             }
 
             item {
                 Text(
-                    text = "Avg. SNR for individual constellations in fix",
+                    text = "Avg. C/N0 for individual constellations in fix",
                     style = MaterialTheme.typography.headlineMedium,
-                    fontSize = 20.sp
+                    fontSize = 20.sp,
+                    modifier = Modifier
+                        .padding(12.dp)
                 )
+                HorizontalDivider()
             }
             items(validConstellation) { constellation ->
                 IndividualConstellationSNRChartCard(

@@ -26,7 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.data.NMEALocationData
-import com.example.gpssatelliteviewer.data.viewmodel.ListenerData
+import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel.ListenerData
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.mapFixQuality
@@ -101,12 +101,23 @@ fun NMEALocationCard(
                 else CoordinateConverter.nmeaCoordinateToDMS(nmea.longitude, nmea.lonHemisphere)
             )
             InfoRow(
-                label = "Altitude MSL",
-                value = nmea.mslAltitude.let { "%.1f m".format(it) }
-            )
-            InfoRow(
                 label = "Accuracy (2D)",
                 value = CoordinateConverter.getAccuracyEstimate(nmea).let { "%.1f m".format(it) }
+            )
+            InfoRow(
+                label = "H / V / PDOP",
+                value = listOf(
+                    nmea.hdop.let { "%.1f m".format(it) },
+                    nmea.vdop.let { "%.1f m".format(it) },
+                    nmea.pdop.let { "%.1f m".format(it) }
+                ).joinToString(" / ")
+            )
+            InfoRow(
+                label = "Alt / Alt MSL",
+                value = listOf(
+                    nmea.altitude.let { "%.1f m".format(it) },
+                    nmea.mslAltitude.let { "%.1f m".format(it) }
+                ).joinToString(" / ")
             )
             val speedkmh = nmea.speedKnots * 1.852
             InfoRow(
@@ -192,14 +203,14 @@ fun AndroidApiLocationCard(
                 else CoordinateConverter.decimalToDMS(locationData.longitude, locationData.longHemisphere)
             )
             InfoRow(
-                label = "Altitude (MSL)",
-                value = if (locationData.altitude == 0.0) "N/A"
-                else "%.1f m".format(locationData.altitude)
-            )
-            InfoRow(
                 label = "Accuracy (2D)", value =
                     if (locationData.accuracy == 0f) "Do data"
                     else "%.1f m".format(locationData.accuracy)
+            )
+            InfoRow(
+                label = "Altitude (MSL)",
+                value = if (locationData.altitude == 0.0) "N/A"
+                else "%.1f m".format(locationData.altitude)
             )
             InfoRow(
                 label = "Vertical Accuracy",
