@@ -59,25 +59,15 @@ fun ConstellationSNRStatisticsScreen(
                 GroupedConstellationSNRChartCard(
                     snrHistory = snrConstellationHistory,
                     label = "Avg. C/N0 for all constellations in fix",
-                    modifier = Modifier.Companion.height(240.dp)
+                    modifier = Modifier.Companion.height(280.dp)
                 )
             }
 
-            item {
-                Text(
-                    text = "Avg. C/N0 for individual constellations in fix",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontSize = 20.sp,
-                    modifier = Modifier
-                        .padding(12.dp)
-                )
-                HorizontalDivider()
-            }
             items(validConstellation) { constellation ->
                 IndividualConstellationSNRChartCard(
                     constellationSNRHistory = snrConstellationHistory[constellation]!!,
                     constellation = constellation,
-                    modifier = Modifier.Companion.height(200.dp)
+                    modifier = Modifier.Companion.height(240.dp)
                 )
             }
         }

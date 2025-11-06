@@ -13,8 +13,8 @@ const val frameCountUpdateInterval = 2
 const val EPS = 1e-3f
 
 // C/N0 buckets
-const val NO_SNR = 0.0f
-const val POOR_SNR = 8.0f
-const val FAIR_SNR = 15.0f
-const val GOOD_SNR = 22.0f
-const val EXCELLENT_SNR = 30.0f
+const val NO_CNO = 0.0f
+const val POOR_CNO = 8.0f
+const val FAIR_CNO = 15.0f
+const val GOOD_CNO = 22.0f
+const val EXCELLENT_CNO = 30.0f

@@ -79,12 +79,15 @@ fun Scene3DLoadingScreen(
                 repeat(2) { ring ->
                     val ringSize = 60.dp + (ring * 30).dp
                     CircularProgressIndicator(
+                        progress = {
+                            0.75f
+                        },
                         modifier = Modifier.Companion
                             .size(ringSize)
                             .graphicsLayer(rotationZ = orbitalRotation + (ring * 45f)),
                         color = Color.Companion.Green.copy(alpha = 0.3f),
                         strokeWidth = 2.dp,
-                        progress = 0.75f
+                        gapSize = 5.dp
                     )
                 }
             }

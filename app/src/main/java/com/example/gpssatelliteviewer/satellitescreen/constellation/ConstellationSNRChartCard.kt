@@ -1,6 +1,5 @@
 package com.example.gpssatelliteviewer.satellitescreen.constellation
 
-import android.widget.Space
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -27,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.gpssatelliteviewer.app.theme.TextHintColor
@@ -138,11 +138,22 @@ fun IndividualConstellationSNRChartCard(
             .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        IndividualSNRChart(
-            snrHistory = constellationSNRHistory,
-            lineColor = getConstellationColor(constellation),
-            label = constellation,
-            modifier = modifier
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 8.dp, start = 8.dp, end = 8.dp)
+        ) {
+            Text(
+                text = "Avg. C/N0 for $constellation in time",
+                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 20.sp
+            )
+            IndividualSNRChart(
+                snrHistory = constellationSNRHistory,
+                lineColor = getConstellationColor(constellation),
+                label = constellation,
+                modifier = modifier
+            )
+        }
     }
 }

@@ -126,6 +126,7 @@ class Scene3D(
 
     @Composable
     fun Render() {
+        applyVisualEffects(view, parameters)
         Scene(
             modifier = modifier,
             engine = engine,
@@ -169,13 +170,37 @@ class Scene3D(
     }
 
     fun updateParameters(newParameters: Scene3DParameters) {
-        Log.d("Scene3D", "updateParameters called - intensity: ${newParameters.lightIntensity}, color: ${newParameters.lightColor}")
+        val oldParameters = parameters
+
+        // Assign new parameters (single source of truth)
         parameters = newParameters
 
+        // Update sub-systems that depend on parameters
         mainLightManager.updateParameters(newParameters)
         satelliteManager.updateParameters(newParameters)
         earthManager.updateParameters(newParameters)
         locationMarkerManager.updateParameters(newParameters)
+
+        // If any render-quality parameter changed, re-apply visual effects to the View
+        if (qualityParametersChanged(oldParameters, newParameters)) {
+            Log.d("Scene3D", "Render quality changed — applying visual effects")
+            applyVisualEffects(view, parameters)
+        }
+    }
+
+    private fun qualityParametersChanged(
+        oldParams: Scene3DParameters,
+        newParams: Scene3DParameters
+    ): Boolean {
+        return oldParams.hdrColorBufferQuality != newParams.hdrColorBufferQuality
+                || oldParams.dynamicResolutionEnabled != newParams.dynamicResolutionEnabled
+                || oldParams.dynamicResolutionQuality != newParams.dynamicResolutionQuality
+                || oldParams.msaaEnabled != newParams.msaaEnabled
+                || oldParams.fxaaEnabled != newParams.fxaaEnabled
+                || oldParams.temporalAntiAliasingEnabled != newParams.temporalAntiAliasingEnabled
+                || oldParams.ambientOcclusionEnabled != newParams.ambientOcclusionEnabled
+                || oldParams.bloomEnabled != newParams.bloomEnabled
+                || oldParams.screenSpaceReflectionsEnabled != newParams.screenSpaceReflectionsEnabled
     }
 
     fun updateUserLocation(userLocation: Float3?) { parameters.userLocation = userLocation }
@@ -191,3 +216,62 @@ class Scene3D(
         centerNode.destroy()
     }
 }
+
+
+private fun applyVisualEffects(view: View, sceneParameters: Scene3DParameters) {
+    // HDR Color Buffer Quality
+    view.renderQuality = view.renderQuality.apply {
+        hdrColorBuffer = when (sceneParameters.hdrColorBufferQuality) {
+            Scene3DParameters.QualityLevel.LOW -> View.QualityLevel.LOW
+            Scene3DParameters.QualityLevel.MEDIUM -> View.QualityLevel.MEDIUM
+            Scene3DParameters.QualityLevel.HIGH -> View.QualityLevel.HIGH
+            Scene3DParameters.QualityLevel.ULTRA -> View.QualityLevel.ULTRA
+        }
+    }
+
+    // Dynamic Resolution
+    view.dynamicResolutionOptions = view.dynamicResolutionOptions.apply {
+        if (sceneParameters.dynamicResolutionEnabled) {
+            quality = when (sceneParameters.dynamicResolutionQuality) {
+                Scene3DParameters.QualityLevel.LOW -> View.QualityLevel.LOW
+                Scene3DParameters.QualityLevel.MEDIUM -> View.QualityLevel.MEDIUM
+                Scene3DParameters.QualityLevel.HIGH -> View.QualityLevel.HIGH
+                Scene3DParameters.QualityLevel.ULTRA -> View.QualityLevel.ULTRA
+            }
+        }
+    }
+
+    // MSAA (Multi-Sample Anti-Aliasing)
+    view.multiSampleAntiAliasingOptions = view.multiSampleAntiAliasingOptions.apply {
+        enabled = sceneParameters.msaaEnabled
+    }
+
+    // FXAA (Fast Approximate Anti-Aliasing)
+    view.antiAliasing = if (sceneParameters.fxaaEnabled) {
+        View.AntiAliasing.FXAA
+    } else {
+        View.AntiAliasing.NONE
+    }
+
+    // Temporal Anti-Aliasing
+    view.temporalAntiAliasingOptions = view.temporalAntiAliasingOptions.apply {
+        enabled = sceneParameters.temporalAntiAliasingEnabled
+    }
+
+    // Ambient Occlusion
+    view.ambientOcclusionOptions = view.ambientOcclusionOptions.apply {
+        enabled = sceneParameters.ambientOcclusionEnabled
+    }
+
+    // Bloom
+    view.bloomOptions = view.bloomOptions.apply {
+        enabled = sceneParameters.bloomEnabled
+    }
+
+    // Screen Space Reflections
+    view.screenSpaceReflectionsOptions = view.screenSpaceReflectionsOptions.apply {
+        enabled = sceneParameters.screenSpaceReflectionsEnabled
+    }
+
+}
+

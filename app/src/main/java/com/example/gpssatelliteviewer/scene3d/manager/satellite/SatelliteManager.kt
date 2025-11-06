@@ -2,11 +2,11 @@ package com.example.gpssatelliteviewer.scene3d.manager.satellite
 
 import android.util.Log
 import com.example.gpssatelliteviewer.data.AzElHistory
-import com.example.gpssatelliteviewer.data.FAIR_SNR
+import com.example.gpssatelliteviewer.data.FAIR_CNO
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.data.GOOD_SNR
-import com.example.gpssatelliteviewer.data.NO_SNR
-import com.example.gpssatelliteviewer.data.POOR_SNR
+import com.example.gpssatelliteviewer.data.GOOD_CNO
+import com.example.gpssatelliteviewer.data.NO_CNO
+import com.example.gpssatelliteviewer.data.POOR_CNO
 import com.example.gpssatelliteviewer.data.SatelliteCache
 import com.example.gpssatelliteviewer.data.frameCountUpdateInterval
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
@@ -66,8 +66,6 @@ class SatelliteManager(
 
     private var clickedSatelliteKey: String? = null
 
-    //var onSatelliteClick: ((String) -> Unit)? = null
-
     private fun satelliteKey(constellation: String, prn: Int) = "$constellation:$prn"
     fun satelliteKey(sat: GNSSStatusData) = satelliteKey(sat.constellation, sat.prn)
 
@@ -122,7 +120,6 @@ class SatelliteManager(
                 val shouldUpdateColor = usedChanged || bucketChanged
 
                 if (shouldUpdate) {
-                    //Log.d("SatelliteManager", "for sat:${key}  sat Az/El:${cache?.currentAz}/${cache?.currentEl}  azElHist:${satAzEl.lastAz}/${satAzEl.lastEl}")
                     val newAltitude = calculateSatelliteAltitude(sat)
                     updateSatellitePosition(existingNode, sat)
 
@@ -141,14 +138,11 @@ class SatelliteManager(
                         orbitManager.updateOrbitForCache(satelliteCache[key])
                     }
                 } else {
-                    // If we don't need to update position, we may still need to update color (bucket changed or used flag changed)
                     if (shouldUpdateColor) {
-                        // update the cache SNR first, then color
                         cache.currentSNR = sat.cn0DbHz
                         cache.usedInFix = sat.usedInFix
                         updateColor(key, existingNode)
                     } else {
-                        // No visual changes required — still keep SNR in cache up to date for next comparison
                         cache.currentSNR = sat.cn0DbHz
                         cache.usedInFix = sat.usedInFix
                     }
@@ -219,15 +213,14 @@ class SatelliteManager(
             return
         }
 
-        val snr = satelliteCache[key]?.currentSNR ?: NO_SNR
+        val snr = satelliteCache[key]?.currentSNR ?: NO_CNO
         val desiredColor = getColorForSNR(snr)
 
         try {
-            node.materialInstances.forEach { matInst ->
-                matInst.forEach { material ->
-                    material.setBaseColorFactor(desiredColor)
-                }
-            }
+            val primIdx = 0
+            val matIdx = 0
+            val mat = node.materialInstances.getOrNull(primIdx)?.getOrNull(matIdx)
+            mat?.setBaseColorFactor(desiredColor)
         } catch (e: Exception) {
             Log.w("SatelliteManager", "Failed to update material color for $key: ${e.message}")
         }
@@ -329,7 +322,9 @@ class SatelliteManager(
         }
 
         node.position = pos
-        node.lookAt(cameraManager.getCameraPosition())
+
+        if (parameters.satelliteModelPath.contains("Circle")) node.lookAt(cameraManager.getCameraPosition())
+        else node.lookAt(centerNode.position)
     }
 
     /**
@@ -344,26 +339,32 @@ class SatelliteManager(
     }
 
     private fun updateLookAt() {
-        activeSatelliteNodes.values.forEach { satellite ->
-            satellite.lookAt(cameraManager.getCameraPosition())   // lookAt camera
+        if (parameters.satelliteModelPath.contains("Circle")) {
+            activeSatelliteNodes.values.forEach { satellite ->
+                satellite.lookAt(cameraManager.getCameraPosition())   // lookAt camera}
+            }
+        } else {
+            activeSatelliteNodes.values.forEach { sat ->
+                sat.lookAt(centerNode.position)     // lookAt center
+            }
         }
     }
 
     private fun getColorForSNR(snr: Float): Float4 {
         return when {
-            snr == NO_SNR -> Float4(1.0f, 0.0f, 0.0f, 1f)
-            snr <= POOR_SNR -> Float4(0.89f, 0.18f, 0.14f, 1f) // red-ish (#E42E23)
-            snr <= FAIR_SNR -> Float4(1.0f, 0.65f, 0.0f, 1f)  // orange-ish (#F78C18)
-            snr <= GOOD_SNR -> Float4(0.97f, 0.97f, 0.0f, 1f) // yellow-ish (#FBE02A)
+            snr == NO_CNO -> Float4(1.0f, 0.0f, 0.0f, 1f)
+            snr <= POOR_CNO -> Float4(0.89f, 0.18f, 0.14f, 1f) // red-ish (#E42E23)
+            snr <= FAIR_CNO -> Float4(1.0f, 0.65f, 0.0f, 1f)  // orange-ish (#F78C18)
+            snr <= GOOD_CNO -> Float4(0.97f, 0.97f, 0.0f, 1f) // yellow-ish (#FBE02A)
             else -> Float4(0.0f, 1.0f, 0.4f, 1f)        // green-ish (#28BD55)
         }
     }
 
     private fun snrBucket(snr: Float): Int = when {
-        snr == NO_SNR -> 0
-        snr <= POOR_SNR -> 1
-        snr <= FAIR_SNR -> 2
-        snr <= GOOD_SNR -> 3
+        snr == NO_CNO -> 0
+        snr <= POOR_CNO -> 1
+        snr <= FAIR_CNO -> 2
+        snr <= GOOD_CNO -> 3
         else -> 4
     }
 

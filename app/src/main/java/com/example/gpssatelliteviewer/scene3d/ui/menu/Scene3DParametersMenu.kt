@@ -16,6 +16,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -23,6 +24,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -57,6 +60,7 @@ fun Scene3DParametersMenu(
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        val params = parametersState.parameters
         // Header
         Text(
             text = "Scene3D Parameters",
@@ -86,8 +90,6 @@ fun Scene3DParametersMenu(
         Spacer(modifier = Modifier.Companion.height(8.dp))
 
         ParameterSection("Light Parameters") {
-            val params = parametersState.parameters
-
             LogarithmicSliderParameter(
                 label = "Light Intensity",
                 value = params.lightIntensity,
@@ -113,8 +115,6 @@ fun Scene3DParametersMenu(
         }
 
         ParameterSection("Earth Model") {
-            val params = parametersState.parameters
-
             ModelSelector(
                 label = "Earth Model",
                 options = Scene3DParameters.Companion.EARTH_MODEL_OPTIONS,
@@ -128,8 +128,6 @@ fun Scene3DParametersMenu(
 
 
         ParameterSection("Satellites") {
-            val params = parametersState.parameters
-
             ModelSelector(
                 label = "Satellite Model",
                 options = Scene3DParameters.Companion.SATELLITE_MODEL_OPTIONS,
@@ -139,6 +137,118 @@ fun Scene3DParametersMenu(
                     onParametersChanged(parametersState.parameters)
                 }
             )
+        }
+
+        ParameterSection("Rendering Quality") {
+            QualitySelector(
+                label = "HDR Color Buffer",
+                current = params.hdrColorBufferQuality,
+                onQualitySelected = {
+                    parametersState.updateHdrColorBufferQuality(it)
+                    onParametersChanged(parametersState.parameters)
+                }
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "Dynamic Resolution", color = TextLabelColor, fontSize = 14.sp)
+                Switch(
+                    checked = params.dynamicResolutionEnabled,
+                    onCheckedChange = {
+                        parametersState.updateDynamicResolutionEnabled(it)
+                        onParametersChanged(parametersState.parameters)
+                    },
+                    colors = SwitchDefaults.colors(checkedThumbColor = GreenPrimaryColor)
+                )
+            }
+
+            if (params.dynamicResolutionEnabled) {
+                QualitySelector(
+                    label = "Dynamic Resolution Quality",
+                    current = params.dynamicResolutionQuality,
+                    onQualitySelected = {
+                        parametersState.updateDynamicResolutionQuality(it)
+                        onParametersChanged(parametersState.parameters)
+                    }
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "MSAA (Multi-sample AA)", color = TextLabelColor, fontSize = 14.sp)
+                Switch(
+                    checked = params.msaaEnabled,
+                    onCheckedChange = {
+                        parametersState.updateMsaaEnabled(it)
+                        onParametersChanged(parametersState.parameters)
+                    },
+                    colors = SwitchDefaults.colors(checkedThumbColor = GreenPrimaryColor)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "FXAA (Fast AA)", color = TextLabelColor, fontSize = 14.sp)
+                Switch(
+                    checked = params.fxaaEnabled,
+                    onCheckedChange = {
+                        parametersState.updateFxaaEnabled(it)
+                        onParametersChanged(parametersState.parameters)
+                    },
+                    colors = SwitchDefaults.colors(checkedThumbColor = GreenPrimaryColor)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "Temporal Anti-Aliasing (TAA)", color = TextLabelColor, fontSize = 14.sp)
+                Switch(
+                    checked = params.temporalAntiAliasingEnabled,
+                    onCheckedChange = {
+                        parametersState.updateTemporalAntiAliasingEnabled(it)
+                        onParametersChanged(parametersState.parameters)
+                    },
+                    colors = SwitchDefaults.colors(checkedThumbColor = GreenPrimaryColor)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "Ambient Occlusion", color = TextLabelColor, fontSize = 14.sp)
+                Switch(
+                    checked = params.ambientOcclusionEnabled,
+                    onCheckedChange = {
+                        parametersState.updateAmbientOcclusionEnabled(it)
+                        onParametersChanged(parametersState.parameters)
+                    },
+                    colors = SwitchDefaults.colors(checkedThumbColor = GreenPrimaryColor)
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(text = "Bloom", color = TextLabelColor, fontSize = 14.sp)
+                Switch(
+                    checked = params.bloomEnabled,
+                    onCheckedChange = {
+                        parametersState.updateBloomEnabled(it)
+                        onParametersChanged(parametersState.parameters)
+                    },
+                    colors = SwitchDefaults.colors(checkedThumbColor = GreenPrimaryColor)
+                )
+            }
         }
     }
 }
@@ -251,7 +361,7 @@ private fun ModelSelector(
                 ),
                 modifier = Modifier.Companion
                     .fillMaxWidth()
-                    .menuAnchor()
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
             )
 
             ExposedDropdownMenu(
@@ -276,8 +386,8 @@ private fun ModelSelector(
 private fun LogarithmicSliderParameter(
     label: String,
     value: Float,
-    minValue: Float,
-    maxValue: Float,
+    minValue: Float = 10_000f,
+    maxValue: Float = 100_000_000f,
     onValueChange: (Float) -> Unit,
     valueFormatter: (Float) -> String
 ) {
@@ -312,5 +422,57 @@ private fun LogarithmicSliderParameter(
         )
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun QualitySelector(
+    label: String,
+    current: Scene3DParameters.QualityLevel,
+    onQualitySelected: (Scene3DParameters.QualityLevel) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val currentDisplayName = current.displayName
+
+    Column {
+        Text(text = label, color = TextLabelColor, fontSize = 14.sp)
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            OutlinedTextField(
+                value = currentDisplayName,
+                onValueChange = { },
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = TextLabelColor,
+                    unfocusedTextColor = TextLabelColor,
+                    focusedBorderColor = GreenPrimaryColor,
+                    unfocusedBorderColor = OutlineColor
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
+            )
+
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                Scene3DParameters.QualityLevel.entries.forEach { q ->
+                    DropdownMenuItem(
+                        text = { Text(q.displayName) },
+                        onClick = {
+                            onQualitySelected(q)
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
 
 private fun Float.format(digits: Int) = "%.${digits}f".format(this)

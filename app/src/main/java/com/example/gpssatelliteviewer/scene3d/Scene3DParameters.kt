@@ -29,8 +29,6 @@ data class Scene3DParameters(
 
     // Satellite Parameters
     val orbitModelPath: String = "models/orbit.glb",
-    val auraModelPath: String = "models/Circle.glb",
-    val auraScale: Float = 0.2f,
     val satelliteModelPath: String = "models/RedCircle.glb",
     var satelliteScale: Float = 0.08f,
 
@@ -46,17 +44,13 @@ data class Scene3DParameters(
     // Camera Parameters - positioned for better Earth view
     var startingCameraLocation: Float3 = Float3(3.0f, 1.0f, 3.0f),
 
-    // Performance Parameters
-    var enableLevelOfDetail: Boolean = true,
-    var enableOcclusion: Boolean = false,
-
     // Rendering Quality Parameters - Medium Quality Preset
     var hdrColorBufferQuality: QualityLevel = QualityLevel.MEDIUM,
     var dynamicResolutionEnabled: Boolean = true,
     var dynamicResolutionQuality: QualityLevel = QualityLevel.MEDIUM,
-    var msaaEnabled: Boolean = false, // Disabled for better performance
-    var fxaaEnabled: Boolean = true,  // Faster alternative to MSAA
-    var ambientOcclusionEnabled: Boolean = false, // Disabled for medium preset
+    var msaaEnabled: Boolean = false,
+    var fxaaEnabled: Boolean = true,
+    var ambientOcclusionEnabled: Boolean = false,
     var bloomEnabled: Boolean = true,
     var screenSpaceReflectionsEnabled: Boolean = false, // Disabled for better performance
     var temporalAntiAliasingEnabled: Boolean = false
@@ -87,7 +81,7 @@ data class Scene3DParameters(
 
         // Predefined satellite model options
         val SATELLITE_MODEL_OPTIONS = listOf(
-            "models/RedCircle.glb" to "Red Circle",
+            "models/RedCircle.glb" to "Circle",
             "models/TDRS_A.glb" to "Simple Satellite",
         )
     }
@@ -118,6 +112,38 @@ class Scene3DParametersState {
 
     fun updateSatelliteModel(path: String) {
         parameters = parameters.copy(satelliteModelPath = path)
+    }
+
+    fun updateHdrColorBufferQuality(quality: Scene3DParameters.QualityLevel) {
+        parameters = parameters.copy(hdrColorBufferQuality = quality)
+    }
+
+    fun updateDynamicResolutionEnabled(enabled: Boolean) {
+        parameters = parameters.copy(dynamicResolutionEnabled = enabled)
+    }
+
+    fun updateDynamicResolutionQuality(quality: Scene3DParameters.QualityLevel) {
+        parameters = parameters.copy(dynamicResolutionQuality = quality)
+    }
+
+    fun updateMsaaEnabled(enabled: Boolean) {
+        parameters = parameters.copy(msaaEnabled = enabled)
+    }
+
+    fun updateFxaaEnabled(enabled: Boolean) {
+        parameters = parameters.copy(fxaaEnabled = enabled)
+    }
+
+    fun updateTemporalAntiAliasingEnabled(enabled: Boolean) {
+        parameters = parameters.copy(temporalAntiAliasingEnabled = enabled)
+    }
+
+    fun updateAmbientOcclusionEnabled(enabled: Boolean) {
+        parameters = parameters.copy(ambientOcclusionEnabled = enabled)
+    }
+
+    fun updateBloomEnabled(enabled: Boolean) {
+        parameters = parameters.copy(bloomEnabled = enabled)
     }
 
     fun resetToDefaults() {
