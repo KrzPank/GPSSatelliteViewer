@@ -181,26 +181,7 @@ class Scene3D(
         earthManager.updateParameters(newParameters)
         locationMarkerManager.updateParameters(newParameters)
 
-        // If any render-quality parameter changed, re-apply visual effects to the View
-        if (qualityParametersChanged(oldParameters, newParameters)) {
-            Log.d("Scene3D", "Render quality changed — applying visual effects")
-            applyVisualEffects(view, parameters)
-        }
-    }
-
-    private fun qualityParametersChanged(
-        oldParams: Scene3DParameters,
-        newParams: Scene3DParameters
-    ): Boolean {
-        return oldParams.hdrColorBufferQuality != newParams.hdrColorBufferQuality
-                || oldParams.dynamicResolutionEnabled != newParams.dynamicResolutionEnabled
-                || oldParams.dynamicResolutionQuality != newParams.dynamicResolutionQuality
-                || oldParams.msaaEnabled != newParams.msaaEnabled
-                || oldParams.fxaaEnabled != newParams.fxaaEnabled
-                || oldParams.temporalAntiAliasingEnabled != newParams.temporalAntiAliasingEnabled
-                || oldParams.ambientOcclusionEnabled != newParams.ambientOcclusionEnabled
-                || oldParams.bloomEnabled != newParams.bloomEnabled
-                || oldParams.screenSpaceReflectionsEnabled != newParams.screenSpaceReflectionsEnabled
+        updateVisualEffects(view, oldParameters, newParameters)
     }
 
     fun updateUserLocation(userLocation: Float3?) { parameters.userLocation = userLocation }
@@ -217,6 +198,83 @@ class Scene3D(
     }
 }
 
+private fun updateVisualEffects(
+    view: View,
+    oldParams: Scene3DParameters,
+    newParams: Scene3DParameters
+) {
+    //Log.d("Scene3D", "applyVisualEffects: checking differences")
+
+    // HDR Color Buffer Quality
+    if (oldParams.hdrColorBufferQuality != newParams.hdrColorBufferQuality) {
+        view.renderQuality = view.renderQuality.apply {
+            hdrColorBuffer = when (newParams.hdrColorBufferQuality) {
+                Scene3DParameters.QualityLevel.LOW -> View.QualityLevel.LOW
+                Scene3DParameters.QualityLevel.MEDIUM -> View.QualityLevel.MEDIUM
+                Scene3DParameters.QualityLevel.HIGH -> View.QualityLevel.HIGH
+                Scene3DParameters.QualityLevel.ULTRA -> View.QualityLevel.ULTRA
+            }
+        }
+    }
+
+    // Dynamic Resolution enabled/quality
+    if (oldParams.dynamicResolutionEnabled != newParams.dynamicResolutionEnabled ||
+        oldParams.dynamicResolutionQuality != newParams.dynamicResolutionQuality
+    ) {
+        view.dynamicResolutionOptions = view.dynamicResolutionOptions.apply {
+            if (newParams.dynamicResolutionEnabled) {
+                quality = when (newParams.dynamicResolutionQuality) {
+                    Scene3DParameters.QualityLevel.LOW -> View.QualityLevel.LOW
+                    Scene3DParameters.QualityLevel.MEDIUM -> View.QualityLevel.MEDIUM
+                    Scene3DParameters.QualityLevel.HIGH -> View.QualityLevel.HIGH
+                    Scene3DParameters.QualityLevel.ULTRA -> View.QualityLevel.ULTRA
+                }
+            }
+        }
+    }
+
+    // MSAA
+    if (oldParams.msaaEnabled != newParams.msaaEnabled) {
+        view.multiSampleAntiAliasingOptions = view.multiSampleAntiAliasingOptions.apply {
+            enabled = newParams.msaaEnabled
+        }
+    }
+
+    // FXAA
+    if (oldParams.fxaaEnabled != newParams.fxaaEnabled) {
+        view.antiAliasing =
+            if (newParams.fxaaEnabled) View.AntiAliasing.FXAA
+            else View.AntiAliasing.NONE
+    }
+
+    // TAA
+    if (oldParams.temporalAntiAliasingEnabled != newParams.temporalAntiAliasingEnabled) {
+        view.temporalAntiAliasingOptions = view.temporalAntiAliasingOptions.apply {
+            enabled = newParams.temporalAntiAliasingEnabled
+        }
+    }
+
+    // Ambient Occlusion
+    if (oldParams.ambientOcclusionEnabled != newParams.ambientOcclusionEnabled) {
+        view.ambientOcclusionOptions = view.ambientOcclusionOptions.apply {
+            enabled = newParams.ambientOcclusionEnabled
+        }
+    }
+
+    // Bloom
+    if (oldParams.bloomEnabled != newParams.bloomEnabled) {
+        view.bloomOptions = view.bloomOptions.apply {
+            enabled = newParams.bloomEnabled
+        }
+    }
+
+    // SSR
+    if (oldParams.screenSpaceReflectionsEnabled != newParams.screenSpaceReflectionsEnabled) {
+        view.screenSpaceReflectionsOptions = view.screenSpaceReflectionsOptions.apply {
+            enabled = newParams.screenSpaceReflectionsEnabled
+        }
+    }
+}
 
 private fun applyVisualEffects(view: View, sceneParameters: Scene3DParameters) {
     // HDR Color Buffer Quality
@@ -272,6 +330,4 @@ private fun applyVisualEffects(view: View, sceneParameters: Scene3DParameters) {
     view.screenSpaceReflectionsOptions = view.screenSpaceReflectionsOptions.apply {
         enabled = sceneParameters.screenSpaceReflectionsEnabled
     }
-
 }
-
