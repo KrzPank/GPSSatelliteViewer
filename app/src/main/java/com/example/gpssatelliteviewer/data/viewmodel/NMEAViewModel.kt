@@ -66,7 +66,7 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
                 // Determine consistent key for both raw and parsed messages
                 val key = parsedMessage?.let { parsed ->
                     when (parsed) {
-                        is NMEAMessage.GSV -> parsed.talker  // Use talker for GSV messages
+                        is NMEAMessage.GSV -> parsed.talker  // talker for GSV messages
                         else -> parsed.messageType
                     }
                 } ?: messageType

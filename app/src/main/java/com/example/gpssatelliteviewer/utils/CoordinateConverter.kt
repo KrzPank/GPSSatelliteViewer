@@ -30,7 +30,6 @@ object CoordinateConverter {
         return Float3(x.toFloat(), y.toFloat(), z.toFloat())
     }
 
-    // Scale & remap ECEF → SceneView
     fun ecefToScenePos(
         ecef: Float3,
         yawDeg: Float = 0f,            // debug texture offset
@@ -46,7 +45,6 @@ object CoordinateConverter {
             v = Float3(v.x * c - v.z * si, v.y, v.x * si + v.z * c)
         }
 
-        //Log.e("SceneView", "Model location x:${v.x}, y:${v.y}, z:${v.z}")
         return v
     }
 
