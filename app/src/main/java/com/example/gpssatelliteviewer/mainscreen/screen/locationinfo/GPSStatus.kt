@@ -53,12 +53,12 @@ import com.example.gpssatelliteviewer.app.theme.SNROrangeColor
 import com.example.gpssatelliteviewer.app.theme.SNRRedColor
 import com.example.gpssatelliteviewer.app.theme.SNRYellowColor
 import com.example.gpssatelliteviewer.app.theme.TextPrimaryColor
-import com.example.gpssatelliteviewer.data.EXCELLENT_SNR
-import com.example.gpssatelliteviewer.data.FAIR_SNR
+import com.example.gpssatelliteviewer.data.EXCELLENT_CNO
+import com.example.gpssatelliteviewer.data.FAIR_CNO
 import com.example.gpssatelliteviewer.data.GNSSStatusData
-import com.example.gpssatelliteviewer.data.GOOD_SNR
-import com.example.gpssatelliteviewer.data.NO_SNR
-import com.example.gpssatelliteviewer.data.POOR_SNR
+import com.example.gpssatelliteviewer.data.GOOD_CNO
+import com.example.gpssatelliteviewer.data.NO_CNO
+import com.example.gpssatelliteviewer.data.POOR_CNO
 
 class GPSStatus(
     private val satellites: List<GNSSStatusData>,
@@ -92,19 +92,19 @@ class GPSStatus(
         val satellitesUsedInFix = satellites.count { it.usedInFix }
 
         return when {
-            satellitesUsedInFix >= 20 && averageSNRInFix >= EXCELLENT_SNR -> {
+            satellitesUsedInFix >= 20 && averageSNRInFix >= EXCELLENT_CNO -> {
                 GPSStatusState.Excellent
             }
-            satellitesUsedInFix >= 10 && averageSNRInFix >= GOOD_SNR -> {
+            satellitesUsedInFix >= 10 && averageSNRInFix >= GOOD_CNO -> {
                 GPSStatusState.Good
             }
-            satellitesUsedInFix >= 4 && averageSNRInFix >= FAIR_SNR -> {
+            satellitesUsedInFix >= 4 && averageSNRInFix >= FAIR_CNO -> {
                 GPSStatusState.Fair
             }
-            satellitesUsedInFix >= 1 && averageSNRInFix >= POOR_SNR -> {
+            satellitesUsedInFix >= 1 && averageSNRInFix >= POOR_CNO -> {
                 GPSStatusState.Poor
             }
-            satellitesUsedInFix == 0 && averageSNRInFix == NO_SNR -> {
+            satellitesUsedInFix == 0 && averageSNRInFix == NO_CNO -> {
                 GPSStatusState.Searching
             }
             else -> GPSStatusState.NoFix

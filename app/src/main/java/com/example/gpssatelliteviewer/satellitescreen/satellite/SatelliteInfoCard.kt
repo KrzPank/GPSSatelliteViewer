@@ -84,7 +84,7 @@ fun SatelliteInfoCard(
             InfoRow("C/N0", "%.1f dBHz ".format(satellite.cn0DbHz))
 
             satellite.snrInDb?.let {
-                InfoRow("SNR (dB) ", "%.1f dB".format(it))
+                InfoRow("SNR ", "%.1f dB".format(it))
             }
 
             InfoRow("Used in Fix ", satellite.usedInFix.toString())
@@ -119,7 +119,7 @@ fun SatelliteInfoCard(
                 val key = snrHistory.keys.first()
                 Spacer(Modifier.Companion.height(8.dp))
                 Text(
-                    text = "SNR in time",
+                    text = "C/N0 dBHz in time",
                     style = MaterialTheme.typography.titleMedium,
                     color = TextLabelColor
                 )

@@ -55,7 +55,7 @@ fun GPSStatusCard(
             InfoRow(label = "In view", value = gpsStatus.getSatelliteCount().toString())
             InfoRow(label = "Used in fix", value = gpsStatus.getFixCount().toString())
             InfoRow(
-                label = "Avg. fix SNR",
+                label = "Avg. fix C/N0",
                 value = "${"%.1f".format(gpsStatus.averageSNRInFix)} dBHz"
             )
 
@@ -64,7 +64,7 @@ fun GPSStatusCard(
 
             Spacer(Modifier.height(8.dp))
             Text(
-                text = "SNR Summary per Constellation",
+                text = "C/N0 Summary per Constellation",
                 style = MaterialTheme.typography.titleMedium,
                 color = TextLabelColor
             )
@@ -72,7 +72,7 @@ fun GPSStatusCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Fix SNR dBHz / sats  |  All dBHz / sats SNR!=0 / all",
+                    text = "Fix C/N0 dBHz / sats  |  All dBHz / sats C/N0!=0 / all",
                     style = MaterialTheme.typography.labelMedium,
                     color = TextLabelColor,
                     textAlign = TextAlign.End,

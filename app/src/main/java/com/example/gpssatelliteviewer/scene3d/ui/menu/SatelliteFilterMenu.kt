@@ -84,7 +84,7 @@ fun SatelliteFilterMenu(
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = DarkSurfaceColor)
                     ) {
-                        Text("Main screen", color = TextLabelColor, fontSize = 12.sp)
+                        Text("Location Info", color = TextLabelColor, fontSize = 12.sp)
                     }
                 }
                 Text(
@@ -93,7 +93,7 @@ fun SatelliteFilterMenu(
                     fontSize = 14.sp
                 )
                 Text(
-                    text = "Click on satellite to show info and approximate orbit",
+                    text = "Click on satellite to show info and approximated orbit if possible",
                     color = TextSecondaryColor,
                     fontSize = 14.sp
                 )

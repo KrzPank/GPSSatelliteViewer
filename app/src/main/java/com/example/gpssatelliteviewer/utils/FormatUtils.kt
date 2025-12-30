@@ -1,5 +1,7 @@
 package com.example.gpssatelliteviewer.utils
 
+import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +24,7 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,12 +33,15 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.gpssatelliteviewer.app.theme.CardBackgroundColor
 import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.app.theme.ValueTextColor
 import com.example.gpssatelliteviewer.app.theme.GreenPrimaryColor
@@ -59,6 +65,7 @@ fun ValueText(
     )
 }
 
+@SuppressLint("ModifierParameter")
 @Composable
 fun InfoRow(
     label: String,
@@ -119,9 +126,11 @@ fun NavigationTopAppBar(
 
                 DropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = { expandedMap[menuKey] = false }
+                    onDismissRequest = { expandedMap[menuKey] = false },
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
                 ) {
-                    menuItems.forEach { item ->
+                    menuItems.forEachIndexed { index, item ->
                         DropdownMenuItem(
                             text = { Text(item.first) },
                             onClick = {
@@ -129,6 +138,7 @@ fun NavigationTopAppBar(
                                 item.second()
                             }
                         )
+                        if (index != menuItems.lastIndex) HorizontalDivider()
                     }
                 }
             }
