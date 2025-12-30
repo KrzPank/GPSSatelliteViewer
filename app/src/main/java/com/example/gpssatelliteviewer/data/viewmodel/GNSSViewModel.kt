@@ -27,6 +27,8 @@ import java.util.concurrent.Executors
 
 class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
+    private val gnssStatusExecutor = Executors.newSingleThreadExecutor()
+    private val gnssMeasurementsexecutor = Executors.newSingleThreadExecutor()
 
     private val gnssCallbackScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
@@ -164,9 +166,8 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
     fun startGNSSInfo() {
         try {
-            val executor = Executors.newSingleThreadExecutor()
-            locationManager.registerGnssStatusCallback(executor, gnssCallback)
-            locationManager.registerGnssMeasurementsCallback(executor, gnssMeasurementCallback)
+            locationManager.registerGnssStatusCallback(gnssStatusExecutor, gnssCallback)
+            locationManager.registerGnssMeasurementsCallback(gnssMeasurementsexecutor, gnssMeasurementCallback)
         } catch (e: SecurityException) {
             e.printStackTrace()
         }
@@ -234,5 +235,8 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
             locationManager.unregisterGnssMeasurementsCallback(gnssMeasurementCallback)
         } catch (_: Exception) { }
         gnssCallbackScope.cancel()
+
+        gnssStatusExecutor.shutdown()
+        gnssMeasurementsexecutor.shutdown()
     }
 }

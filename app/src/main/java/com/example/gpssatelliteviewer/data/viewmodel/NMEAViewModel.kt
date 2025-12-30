@@ -20,6 +20,7 @@ import kotlinx.coroutines.*
 
 class NMEAViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
+    private val executor = Executors.newSingleThreadExecutor()
     
     // Background parsing scope with IO dispatcher
     private val parsingScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -93,7 +94,6 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
 
     fun startNMEAInfo() {
         try {
-            val executor = Executors.newSingleThreadExecutor()
             locationManager.addNmeaListener(executor, nmeaListener)
 
         } catch (e: SecurityException) {
@@ -105,5 +105,6 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
         super.onCleared()
         locationManager.removeNmeaListener(nmeaListener)
         parsingScope.cancel()
+        executor.shutdown()
     }
 }
