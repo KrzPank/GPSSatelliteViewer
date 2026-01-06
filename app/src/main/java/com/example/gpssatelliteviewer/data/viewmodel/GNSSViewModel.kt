@@ -160,7 +160,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         override fun onStatusChanged(status: Int) {
-            Log.d("GNSS_Measurements", "Status changed: $status")
+            //Log.d("GNSS_Measurements", "Status changed: $status")
         }
     }
 

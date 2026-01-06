@@ -2,6 +2,7 @@ package com.example.gpssatelliteviewer.mainscreen.screen.chipsetinfo
 
 import android.location.GnssCapabilities
 import android.os.Build
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -54,9 +55,10 @@ fun GNSSChipsetInfoCard(
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 InfoRow("SOC Manufacturer", Build.SOC_MANUFACTURER)
                 InfoRow("SOC Model", Build.SOC_MODEL)
+                InfoRow("SOC Hardware", Build.HARDWARE)
             } else {
                 InfoRow("SOC Manufacturer", tryToGetSOCManufacturer(info.modelName))
-                InfoRow("SOC Model", Build.HARDWARE.ifBlank { "Unknown" })
+                InfoRow("SOC Hardware", Build.HARDWARE)
             }
 
             InfoRow("Hardware Year", info.hardwareYear?.toString() ?: "Unknown")
@@ -68,9 +70,7 @@ fun GNSSChipsetInfoCard(
             )
 
             val modelName = info.modelName.toString().replace(",", ", ")
-            ValueText(
-                value = modelName
-            )
+            ValueText(value = modelName)
         }
     }
 }
@@ -186,7 +186,7 @@ fun GNSSChipsetCapabilitiesCard(
 private fun tryToGetSOCManufacturer(
     rawName: String?,
 ): String {
-    if (rawName.isNullOrBlank()) return "Unknown SOC Manufacturer"
+    if (rawName.isNullOrBlank()) return "Unknown"
 
     val vendor = when {
         rawName.contains("mediatek", true) || rawName.contains("mtk", true) -> "MediaTek"
@@ -195,7 +195,7 @@ private fun tryToGetSOCManufacturer(
         rawName.contains("u-blox", true) || rawName.contains("ublox", true) -> "u-blox"
         rawName.contains("samsung", true) || rawName.contains("exynos", true) -> "Samsung"
         rawName.contains("hisilicon", true) || rawName.contains("kirin", true) -> "HiSilicon"
-        else -> "Unknown SOC Manufacturer"
+        else -> "Unknown"
     }
 
     return vendor
