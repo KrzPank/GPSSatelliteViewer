@@ -80,7 +80,8 @@ fun LocationDenyScreen(
                     val features = listOf(
                         "Display your current location on the 3D map",
                         "Show satellite positions relative to you",
-                        "Provide GNSS data and statistics"
+                        "Provide GNSS data and statistics",
+                        "Display parsed NMEA sentences"
                     )
 
                     features.forEach { feature ->
