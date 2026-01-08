@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -24,11 +24,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import android.Manifest
+import android.app.Activity
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
 
 @Composable
 fun LocationDenyScreen(
     onRequestPermission: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val activity = context as? Activity
+
+    val isPermanentlyDenied = if (activity != null) {
+        !ActivityCompat.shouldShowRequestPermissionRationale(
+            activity,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    } else false
+
     Surface(
         modifier = Modifier.Companion.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -41,7 +55,7 @@ fun LocationDenyScreen(
             horizontalAlignment = Alignment.Companion.CenterHorizontally
         ) {
             Icon(
-                imageVector = Icons.Filled.LocationOn,
+                imageVector = Icons.Filled.LocationOff,
                 contentDescription = "Location",
                 modifier = Modifier.Companion.size(80.dp),
                 tint = MaterialTheme.colorScheme.primary
@@ -107,9 +121,9 @@ fun LocationDenyScreen(
                 )
             ) {
                 Text(
-                    text = "Grant Location Permission",
+                    text = if (isPermanentlyDenied) "Open Settings" else "Grant Location Permission",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Companion.SemiBold
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 

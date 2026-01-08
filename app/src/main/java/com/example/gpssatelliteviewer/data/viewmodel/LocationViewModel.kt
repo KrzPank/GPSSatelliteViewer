@@ -5,6 +5,7 @@ import android.icu.text.SimpleDateFormat
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -21,10 +22,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.Executors
 
 class LocationViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
     private val handler = Handler(Looper.getMainLooper())
+    private val locationExecutor = Executors.newSingleThreadExecutor()
     private val listenerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     data class ListenerData(
@@ -63,10 +66,10 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
+            handler.removeCallbacks(noAndroidApiLocationTimeout)
+            handler.postDelayed(noAndroidApiLocationTimeout, LOCATION_TIMEOUT_PERIOD)
             listenerScope.launch {
                 _hasLocationAndroidApi.value = true
-                handler.removeCallbacks(noAndroidApiLocationTimeout)
-                handler.postDelayed(noAndroidApiLocationTimeout, LOCATION_TIMEOUT_PERIOD)
 
                 val listenerData = ListenerData(
                     time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(location.time)),
@@ -98,12 +101,25 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     fun startLocationListenerInfo() {
         try {
-            locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER,
-                1000L, // 1000 ms = 1sec
-                1.0f,
-                locationListener
-            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
+                locationManager.requestLocationUpdates(
+                    LocationManager.FUSED_PROVIDER,
+                    1000L,
+                    1.0f,
+                    locationExecutor,
+                    locationListener
+                )
+            } else {
+                locationManager.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER,
+                    1000L, // 1000 ms = 1sec
+                    1.0f,
+                    locationExecutor,
+                    locationListener
+                )
+            }
+
+
         } catch (e: SecurityException) {
             e.printStackTrace()
         }
@@ -113,5 +129,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
         super.onCleared()
         locationManager.removeUpdates(locationListener)
         listenerScope.cancel()
+        handler.removeCallbacks(noAndroidApiLocationTimeout)
+        locationExecutor.shutdown()
     }
 }

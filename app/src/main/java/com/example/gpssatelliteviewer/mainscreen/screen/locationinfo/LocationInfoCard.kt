@@ -102,7 +102,7 @@ fun NMEALocationCard(
             )
             InfoRow(
                 label = "Accuracy (2D)",
-                value = CoordinateConverter.getAccuracyEstimate(nmea).let { "%.1f m".format(it) }
+                value = CoordinateConverter.getAccuracyEstimate(nmea).takeIf { it != 0.0f }?.toString() ?: "N/A"
             )
             InfoRow(
                 label = "H / V / PDOP",
@@ -204,7 +204,7 @@ fun AndroidApiLocationCard(
             )
             InfoRow(
                 label = "Accuracy (2D)", value =
-                    if (locationData.accuracy == 0f) "Do data"
+                    if (locationData.accuracy == 0f) "N/A"
                     else "%.1f m".format(locationData.accuracy)
             )
             InfoRow(

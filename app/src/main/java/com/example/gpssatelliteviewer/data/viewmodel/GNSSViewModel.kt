@@ -11,7 +11,6 @@ import com.example.gpssatelliteviewer.data.GNSSMeasurementData
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import android.os.Build
-import android.util.Log
 import com.example.gpssatelliteviewer.data.AzElHistory
 import com.example.gpssatelliteviewer.data.CHART_UPDATE_WINDOW
 import com.example.gpssatelliteviewer.data.EPS
@@ -28,8 +27,7 @@ import java.util.concurrent.Executors
 class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val locationManager = application.getSystemService(Application.LOCATION_SERVICE) as LocationManager
     private val gnssStatusExecutor = Executors.newSingleThreadExecutor()
-    private val gnssMeasurementsexecutor = Executors.newSingleThreadExecutor()
-
+    private val gnssMeasurementsExecutor = Executors.newSingleThreadExecutor()
     private val gnssCallbackScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val _satelliteList = MutableStateFlow<List<GNSSStatusData>>(listOf())
@@ -113,7 +111,6 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                 val updatedConstellation = updateConstellationSNRHistory(list)
                 val updatedSatellite = updateSatelliteSNRHistory(list)
 
-                // Update UI state on main thread
                 withContext(Dispatchers.Main) {
                     _satelliteList.value = list
                     _constellationSNRHistory.value = updatedConstellation
@@ -152,7 +149,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                         timeOffsetNanos = m.timeOffsetNanos
                     )
                 }
-
+                // Aktualizacja stanu w głównym wątku
                 withContext(Dispatchers.Main) {
                     _gnssMeasurements.value = measurements
                 }
@@ -167,7 +164,7 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     fun startGNSSInfo() {
         try {
             locationManager.registerGnssStatusCallback(gnssStatusExecutor, gnssCallback)
-            locationManager.registerGnssMeasurementsCallback(gnssMeasurementsexecutor, gnssMeasurementCallback)
+            locationManager.registerGnssMeasurementsCallback(gnssMeasurementsExecutor, gnssMeasurementCallback)
         } catch (e: SecurityException) {
             e.printStackTrace()
         }
@@ -228,15 +225,12 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
-        try {
-            locationManager.unregisterGnssStatusCallback(gnssCallback)
-        } catch (_: Exception) { }
-        try {
-            locationManager.unregisterGnssMeasurementsCallback(gnssMeasurementCallback)
-        } catch (_: Exception) { }
+        locationManager.unregisterGnssStatusCallback(gnssCallback)
+        locationManager.unregisterGnssMeasurementsCallback(gnssMeasurementCallback)
+
         gnssCallbackScope.cancel()
 
         gnssStatusExecutor.shutdown()
-        gnssMeasurementsexecutor.shutdown()
+        gnssMeasurementsExecutor.shutdown()
     }
 }

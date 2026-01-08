@@ -151,11 +151,11 @@ class Scene3D(
                     true
                 },
                 onDoubleTap = { _, _ ->
-                    Log.d("CameraDebug", "Went in onDoubleTap")
+                    //Log.d("CameraDebug", "Went in onDoubleTap")
                     onSceneDoubleTap()
                 },
                 onSingleTapConfirmed = { event, node ->
-                    Log.d("CameraDebug", "Went in onSingleTapConfirmed")
+                    //Log.d("CameraDebug", "Went in onSingleTapConfirmed")
                     onSceneSingleTapConfirmed(node)
                 },
             ),

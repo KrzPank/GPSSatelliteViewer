@@ -80,14 +80,14 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
                 withContext(Dispatchers.Main) {
                     _messageStatistics.value = currentStats
                     _nmeaMessageMap.value = _nmeaMessageMap.value + (key to message)
+                    _locationNMEA.value = NMEALocationData.combine(_latestMessages.value)
 
                     parsedMessage?.let { parsed ->
                         _latestMessages.value = _latestMessages.value + (key to parsed)
-                        _locationNMEA.value = NMEALocationData.combine(_latestMessages.value)
                     }
                 }
             } catch (e: Exception) {
-                Log.e("NMEAViewModel", "Failed to parse NMEA message: ${e.message}")
+                Log.e("NMEAViewModel", "Failed to parse NMEA message, why: ${e.message}")
             }
         }
     }
@@ -105,6 +105,7 @@ class NMEAViewModel(application: Application) : AndroidViewModel(application) {
         super.onCleared()
         locationManager.removeNmeaListener(nmeaListener)
         parsingScope.cancel()
+        handler.removeCallbacks(noNMEAMessageTimeout)
         executor.shutdown()
     }
 }
