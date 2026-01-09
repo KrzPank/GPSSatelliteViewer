@@ -33,6 +33,16 @@ import androidx.core.app.ActivityCompat
 fun LocationDenyScreen(
     onRequestPermission: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val activity = context as? Activity
+
+    val isPermanentlyDenied = if (activity != null) {
+        !ActivityCompat.shouldShowRequestPermissionRationale(
+            activity,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    } else false
+
     Surface(
         modifier = Modifier.Companion.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -111,7 +121,7 @@ fun LocationDenyScreen(
                 )
             ) {
                 Text(
-                    text = "Grant Location Permission",
+                    text = if (isPermanentlyDenied) "Open Settings" else "Grant Location Permission",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )
