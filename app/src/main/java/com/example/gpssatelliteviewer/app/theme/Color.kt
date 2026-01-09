@@ -30,11 +30,11 @@ val StatusWarningColor = Color(0xFFFF9800)
 val StatusErrorColor = Color(0xFFF44336)
 
 // GPS Status Colors
-val GPSExcellentColor = Color(0xFF4CAF50)    // Green
-val GPSGoodColor = Color(0xFF8BC34A)         // Light Green
-val GPSFairColor = Color(0xFFFF9800)         // Orange
-val GPSPoorColor = Color(0xFFFF5722)         // Red Orange
-val GPSNoFixColor = Color(0xFFF44336)        // Red
+val GPSExcellentColor = Color(0xFF35E515)    // Green
+val GPSGoodColor = Color(0xFF91D93F)         // Light Green
+val GPSFairColor = Color(0xFFF8F416)         // Orange
+val GPSPoorColor = Color(0xFFFA6620)         // Red Orange
+val GPSNoFixColor = Color(0xFFEF0909)        // Red
 val GPSSearchingColor = Color(0xFF2196F3)    // Blue
 val GPSDisabledColor = Color(0xFF9E9E9E)     // Gray
 

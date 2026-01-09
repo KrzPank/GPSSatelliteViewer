@@ -14,7 +14,7 @@ const val EPS = 1e-3f
 
 // C/N0 buckets
 const val NO_CNO = 0.0f
-const val POOR_CNO = 8.0f
-const val FAIR_CNO = 15.0f
-const val GOOD_CNO = 22.0f
-const val EXCELLENT_CNO = 30.0f
+const val POOR_CNO = 10.0f
+const val FAIR_CNO = 18.0f
+const val GOOD_CNO = 28.0f
+const val EXCELLENT_CNO = 35.0f

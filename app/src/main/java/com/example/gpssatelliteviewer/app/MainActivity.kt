@@ -1,6 +1,8 @@
 package com.example.gpssatelliteviewer.app
 
 import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -20,9 +22,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.gpssatelliteviewer.utils.SetupDarkSystemUI
+import android.net.Uri
+import android.provider.Settings
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,6 +41,7 @@ class MainActivity : ComponentActivity() {
             GPSSatelliteViewerTheme {
                 SetupDarkSystemUI()
                 val context = LocalContext.current
+                val activity = context as Activity
 
                 // null = not checked yet, true/false = actual state
                 var hasPermission by remember { mutableStateOf<Boolean?>(null) }
@@ -59,6 +65,22 @@ class MainActivity : ComponentActivity() {
                     keepSplashVisible = false
                 }
 
+                val onPermissionRequestClick = {
+                    val shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+                        activity,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    )
+
+                    if (shouldShowRationale) {
+                        launcher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                    } else {
+                        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
+                        }
+                        context.startActivity(intent)
+                    }
+                }
+
                 Surface(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -72,8 +94,11 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        true -> AppNavigation(hasPermission = true, permissionLauncher = launcher)
-                        false -> AppNavigation(hasPermission = false, permissionLauncher = launcher)
+                        true -> AppNavigation(hasPermission = true, onRequestClick = {})
+                        false -> AppNavigation(
+                            hasPermission = false,
+                            onRequestClick = onPermissionRequestClick // Pass our smart logic down
+                        )
                     }
                 }
             }

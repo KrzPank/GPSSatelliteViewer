@@ -92,16 +92,16 @@ class GPSStatus(
         val satellitesUsedInFix = satellites.count { it.usedInFix }
 
         return when {
-            satellitesUsedInFix >= 20 && averageSNRInFix >= EXCELLENT_CNO -> {
+            satellitesUsedInFix >= 25 && averageSNRInFix >= EXCELLENT_CNO -> {
                 GPSStatusState.Excellent
             }
-            satellitesUsedInFix >= 10 && averageSNRInFix >= GOOD_CNO -> {
+            satellitesUsedInFix >= 15 && averageSNRInFix >= GOOD_CNO -> {
                 GPSStatusState.Good
             }
-            satellitesUsedInFix >= 4 && averageSNRInFix >= FAIR_CNO -> {
+            satellitesUsedInFix >= 10 && averageSNRInFix >= FAIR_CNO -> {
                 GPSStatusState.Fair
             }
-            satellitesUsedInFix >= 1 && averageSNRInFix >= POOR_CNO -> {
+            satellitesUsedInFix >= 4 && averageSNRInFix >= POOR_CNO -> {
                 GPSStatusState.Poor
             }
             satellitesUsedInFix == 0 && averageSNRInFix == NO_CNO -> {

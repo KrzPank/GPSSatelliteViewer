@@ -154,38 +154,38 @@ fun Satellite3DScreen(
             .background(DarkBackgroundColor)
     ) {
         // Smooth transition not wanted but i don't know other way
-        var isSceneReady by remember { mutableStateOf(false) }
-        LaunchedEffect(scene) {
-            isSceneReady = true
-        }
+        //var isSceneReady by remember { mutableStateOf(false) }
+        //LaunchedEffect(scene) {
+        //    isSceneReady = true
+        //}
 
-        AnimatedVisibility(
-            visible = !isSceneReady,
-            enter = fadeIn(
-                animationSpec = tween(LOADING_SCREEN_ANIMATION_DURATION)
-            ),
-            exit = fadeOut(
-                animationSpec = tween(LOADING_SCREEN_ANIMATION_DURATION)
-            )
-        ) {
-            Scene3DLoadingScreen(
-                modifier = Modifier.Companion.fillMaxSize()
-            )
-        }
+        //AnimatedVisibility(
+        //    visible = !isSceneReady,
+        //    enter = fadeIn(
+        //        animationSpec = tween(LOADING_SCREEN_ANIMATION_DURATION)
+        //    ),
+        //    exit = fadeOut(
+        //        animationSpec = tween(LOADING_SCREEN_ANIMATION_DURATION)
+        //    )
+        //) {
+        //    Scene3DLoadingScreen(
+        //        modifier = Modifier.Companion.fillMaxSize()
+        //    )
+        //}
 
         // Handle location marker visibility changes
         var showLocationMarker by remember { mutableStateOf(scene.isLocationMarkerVisible()) }
         LaunchedEffect(showLocationMarker, userLocation) {
-            if (isSceneReady) {
+            //if (isSceneReady) {
                 scene.setLocationMarkerVisible(showLocationMarker)
                 scene.updateUserLocation(userLocation)
-            }
+            //}
         }
 
         LaunchedEffect(filteredSatellites) {
-            if (isSceneReady) {
+            //if (isSceneReady) {
                 scene.updateSatelliteList(filteredSatellites, azElHistory)
-            }
+            //}
         }
 
         // Handle satellite click
@@ -195,12 +195,12 @@ fun Satellite3DScreen(
             derivedStateOf { resolveClickedSatelliteByKey(clickedSatelliteKey, satelliteInfo) }
         }
 
-        AnimatedVisibility(
-            visible = isSceneReady,
-            enter = fadeIn(
-                animationSpec = tween(MENU_ANIMATION_DURATION)
-            )
-        ) {
+        //AnimatedVisibility(
+        //    visible = isSceneReady,
+        //    enter = fadeIn(
+        //        animationSpec = tween(MENU_ANIMATION_DURATION)
+        //    )
+        //) {
             // Animate horizontal offset
             val targetOffset = if (scene.isMenuVisible()) totalMenuWidth / 2 else 0.dp
             val animatedOffset by animateDpAsState(
@@ -252,9 +252,9 @@ fun Satellite3DScreen(
                     }
                 }
             }
-        }
+        //}
 
-        if (isSceneReady) {
+        //if (isSceneReady) {
             AnimatedVisibility(
                 visible = scene.isMenuVisible(),
                 enter = slideInHorizontally(
@@ -328,7 +328,7 @@ fun Satellite3DScreen(
                     }
                 }
             }
-        }
+        //}
 
         DisposableEffect(Unit) {
             onDispose {

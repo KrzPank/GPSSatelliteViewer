@@ -23,7 +23,7 @@ import com.example.gpssatelliteviewer.satellitescreen.SatelliteInfoMainScreen
 @Composable
 fun AppNavigation(
     hasPermission: Boolean,
-    permissionLauncher: ManagedActivityResultLauncher<String, Boolean>
+    onRequestClick: () -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -81,9 +81,7 @@ fun AppNavigation(
         ) {
             composable("LocationDenyScreen") {
                 LocationDenyScreen(
-                    onRequestPermission = {
-                        permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                    }
+                    onRequestPermission = onRequestClick
                 )
             }
         }

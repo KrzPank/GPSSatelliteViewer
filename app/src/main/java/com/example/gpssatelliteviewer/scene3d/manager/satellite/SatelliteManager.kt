@@ -2,6 +2,7 @@ package com.example.gpssatelliteviewer.scene3d.manager.satellite
 
 import android.util.Log
 import com.example.gpssatelliteviewer.data.AzElHistory
+import com.example.gpssatelliteviewer.data.EXCELLENT_CNO
 import com.example.gpssatelliteviewer.data.FAIR_CNO
 import com.example.gpssatelliteviewer.data.GNSSStatusData
 import com.example.gpssatelliteviewer.data.GOOD_CNO
@@ -353,10 +354,11 @@ class SatelliteManager(
     private fun getColorForSNR(snr: Float): Float4 {
         return when {
             snr == NO_CNO -> Float4(1.0f, 0.0f, 0.0f, 1f)
-            snr <= POOR_CNO -> Float4(0.89f, 0.18f, 0.14f, 1f) // red-ish (#E42E23)
-            snr <= FAIR_CNO -> Float4(1.0f, 0.65f, 0.0f, 1f)  // orange-ish (#F78C18)
-            snr <= GOOD_CNO -> Float4(0.97f, 0.97f, 0.0f, 1f) // yellow-ish (#FBE02A)
-            else -> Float4(0.0f, 1.0f, 0.4f, 1f)        // green-ish (#28BD55)
+            snr <= POOR_CNO -> Float4(0.94f, 0.04f, 0.04f, 1f) // red-ish (#E42E23)
+            snr <= FAIR_CNO -> Float4(1.0f, 0.3f, 0.08f, 1f)  // orange-ish (#F78C18)
+            snr <= GOOD_CNO -> Float4(0.97f, 0.96f, 0.08f, 1f) // yellow-ish (#FBE02A)
+            snr <= EXCELLENT_CNO -> Float4(0.3f, 1.0f, 0.15f, 1f)        // green-ish (#28BD55)
+            else -> Float4(0.0f, 1.0f, 0.0f, 1f)        // green (#28BD55)
         }
     }
 
