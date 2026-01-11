@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.example.gpssatelliteviewer.data.AzElHistory
@@ -40,13 +41,14 @@ class Scene3D(
 ) {
     private val centerNode = Node(engine)
 
-    // Management systems
     private val cameraManager: CameraManager = CameraManager(
         engine = engine,
         view = view,
         centerNode = centerNode,
         sceneParameters = parameters
     )
+    // Inicjacja pozostałych menedżerów
+    // ...
 
     private val earthManager: EarthManager = EarthManager(
         modelLoader = modelLoader,
@@ -125,7 +127,10 @@ class Scene3D(
     }
 
     @Composable
-    fun Render() {
+    fun Render(onSceneLoaded: () -> Unit = {}) {
+        var hasLoaded by remember { mutableStateOf(false) }
+
+
         applyVisualEffects(view, parameters)
         Scene(
             modifier = modifier,
@@ -144,6 +149,10 @@ class Scene3D(
                 locationMarkerManager.onFrame()
                 satelliteManager.onFrame()
                 mainLightManager.onFrame()
+                if (!hasLoaded) {
+                    hasLoaded = true
+                    onSceneLoaded()
+                }
             },
             mainLightNode = mainLightManager.getSunLightNode(),
             onGestureListener = rememberOnGestureListener(

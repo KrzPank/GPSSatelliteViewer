@@ -68,12 +68,15 @@ object CoordinateConverter {
     fun azElToECEF(
         azimuth: Float,
         elevation: Float,
-        userLocation: Float3, // lat, lon, alt
+        userLocationECEF: Float3, // now already in ECEF     // lat, lon, alt
+        lat: Float,
+        lon: Float,
         altitude: Float = 0.0f
     ): Float3 {
-        val (lat, lon, alt) = userLocation
+        //val (lat, lon, alt) = userLocation
+        //val (userX, userY, userZ) = geodeticToECEF(lat.toDouble(), lon.toDouble(), alt.toDouble())
 
-        val (userX, userY, userZ) = geodeticToECEF(lat.toDouble(), lon.toDouble(), alt.toDouble())
+        val (userX, userY, userZ) = userLocationECEF
 
         val azRad = Math.toRadians(azimuth.toDouble())
         val elRad = Math.toRadians(elevation.toDouble())

@@ -58,8 +58,6 @@ class CameraManager(
         return camera
     }
 
-    // change to different manipulator wrapper have some ideas going on
-    // move to transforms not camera.position
     private fun createCameraGestureDetector(): CameraGestureDetector {
         val baseManipulator = Manipulator.Builder()
             .orbitHomePosition(cameraNode.worldPosition.x, cameraNode.worldPosition.y, cameraNode.worldPosition.z)
@@ -105,8 +103,7 @@ class CameraManager(
     }
 
     private fun calculateCameraStartingPosition(): Float3? {
-        val userLocation = if (sceneParameters.userLocation != null) sceneParameters.userLocation!!
-        else return null
+        val userLocation = sceneParameters.userLocation ?: return null
 
         val ecef = CoordinateConverter.geodeticToECEF(
             userLocation.x.toDouble(),

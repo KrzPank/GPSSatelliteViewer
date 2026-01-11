@@ -38,9 +38,9 @@ class SatelliteManager(
     private val constellationAltitudes = mapOf(
         "GLONASS" to 19100000f,
         "Galileo" to 23222000f,
-        "QZSS" to 35800000f, // average height (elliptical orbit 32,600–39,000 km)
+        "QZSS" to 35800000f, // Średnia wysokość orbity (orbita eliptyczna 32,600–39,000 km)
         "IRNSS" to 36000000f,
-        "SBAS" to 35786000f, // Usually GEO
+        "SBAS" to 35786000f, // Zazwyczaj orbita GEO
         "BeiDou" to 21500000f,
         "GPS" to 20180000f,
         "Unknown" to 0f,
@@ -67,6 +67,8 @@ class SatelliteManager(
 
     private var clickedSatelliteKey: String? = null
 
+    private var userLocationECEF = Float3()
+
     private fun satelliteKey(constellation: String, prn: Int) = "$constellation:$prn"
     fun satelliteKey(sat: GNSSStatusData) = satelliteKey(sat.constellation, sat.prn)
 
@@ -82,6 +84,12 @@ class SatelliteManager(
         //Log.d("SatelliteManager", "azELhistory for GPS:25=${azElHistory["GPS:16"]}")
         satelliteList = newList
         azElHistory = azElH
+
+        userLocationECEF = CoordinateConverter.geodeticToECEF(
+            parameters.userLocation!!.x.toDouble(),
+            parameters.userLocation!!.y.toDouble(),
+            parameters.userLocation!!.z.toDouble()
+        )
 
         if (parameters.userLocation == null) return
         val currentSatelliteKeys = satelliteList.map { satelliteKey(it) }.toSet()
@@ -114,13 +122,11 @@ class SatelliteManager(
                 val elChanged = abs(cache.currentEl - satAzEl.lastEl) > ELEVATION_THRESHOLD_DEG
                 val usedChanged = sat.usedInFix != cache.usedInFix
 
-                val shouldUpdate = azChanged || elChanged || usedChanged
-
                 val prevSNR = cache.currentSNR
                 val bucketChanged = snrBucket(prevSNR) != snrBucket(sat.cn0DbHz)
                 val shouldUpdateColor = usedChanged || bucketChanged
 
-                if (shouldUpdate) {
+                if (azChanged || elChanged || usedChanged) {
                     val newAltitude = calculateSatelliteAltitude(sat)
                     updateSatellitePosition(existingNode, sat)
 
@@ -160,7 +166,9 @@ class SatelliteManager(
                     CoordinateConverter.azElToECEF(
                         azEl.firstAz,
                         azEl.firstEl,
-                        parameters.userLocation!!,
+                        userLocationECEF,
+                        parameters.userLocation!!.x,
+                        parameters.userLocation!!.y,
                         altitude
                     )
                 )
@@ -287,7 +295,6 @@ class SatelliteManager(
         node.position = Float3(0f, 0f, 0f)
         node.onSingleTapUp = null
         node.name = ""
-
         satelliteNodePool.add(node)
     }
 
@@ -313,7 +320,9 @@ class SatelliteManager(
             CoordinateConverter.azElToECEF(
                 azEl.lastAz,
                 azEl.lastEl,
-                parameters.userLocation!!,
+                userLocationECEF,
+                parameters.userLocation!!.x,
+                parameters.userLocation!!.y,
                 altitude
             )
         )

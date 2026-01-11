@@ -30,7 +30,7 @@ import kotlinx.coroutines.delay
 import java.sql.Date
 import java.util.Locale
 
-const val IS_LOCATION_ENABLED_TIMER = 2000L  // 1 sec wait
+const val IS_LOCATION_ENABLED_TIMER = 3000L  // 1 sec wait
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

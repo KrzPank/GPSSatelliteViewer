@@ -14,7 +14,7 @@ import dev.romainguy.kotlin.math.cross
 import io.github.sceneview.node.LightNode
 import io.github.sceneview.node.Node
 
-private const val minRecreationInterval = 16L // Minimum 16ms between recreations /60Hz
+private const val minRecreationInterval = 13L // Minimum 13ms between recreations /~77Hz
 
 class LightHandler(
     private val engine: Engine,

@@ -7,7 +7,7 @@ const val CHART_UPDATE_WINDOW = 100
 const val LOCATION_TIMEOUT_PERIOD = 15000L
 
 // how many frames should pass before onFrame() for each manager is applied for scene updates
-const val frameCountUpdateInterval = 2
+const val frameCountUpdateInterval = 1
 
 // general minimal value for stuff
 const val EPS = 1e-3f
@@ -15,6 +15,6 @@ const val EPS = 1e-3f
 // C/N0 buckets
 const val NO_CNO = 0.0f
 const val POOR_CNO = 10.0f
-const val FAIR_CNO = 18.0f
-const val GOOD_CNO = 28.0f
+const val FAIR_CNO = 15.0f
+const val GOOD_CNO = 25.0f
 const val EXCELLENT_CNO = 35.0f
