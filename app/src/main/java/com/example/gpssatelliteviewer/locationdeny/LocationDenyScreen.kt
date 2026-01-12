@@ -33,16 +33,6 @@ import androidx.core.app.ActivityCompat
 fun LocationDenyScreen(
     onRequestPermission: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val activity = context as? Activity
-
-    val isPermanentlyDenied = if (activity != null) {
-        !ActivityCompat.shouldShowRequestPermissionRationale(
-            activity,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
-    } else false
-
     Surface(
         modifier = Modifier.Companion.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -83,7 +73,7 @@ fun LocationDenyScreen(
                     modifier = Modifier.Companion.padding(20.dp)
                 ) {
                     Text(
-                        text = "GNSS Monitor needs location access to:",
+                        text = "GNSS Satellite Viewer needs location access to:",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Companion.SemiBold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -121,7 +111,7 @@ fun LocationDenyScreen(
                 )
             ) {
                 Text(
-                    text = if (isPermanentlyDenied) "Open Settings" else "Grant Location Permission",
+                    text = "Grant Location Permission",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold
                 )

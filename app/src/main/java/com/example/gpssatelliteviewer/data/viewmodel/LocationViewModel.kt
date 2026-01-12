@@ -101,25 +101,13 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
     fun startLocationListenerInfo() {
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
-                locationManager.requestLocationUpdates(
-                    LocationManager.FUSED_PROVIDER,
-                    1000L,
-                    1.0f,
-                    locationExecutor,
-                    locationListener
-                )
-            } else {
-                locationManager.requestLocationUpdates(
-                    LocationManager.GPS_PROVIDER,
-                    1000L, // 1000 ms = 1sec
-                    1.0f,
-                    locationExecutor,
-                    locationListener
-                )
-            }
-
-
+            locationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER,
+                1000L, // 1000 ms = 1sec
+                1.0f,
+                locationExecutor,
+                locationListener
+            )
         } catch (e: SecurityException) {
             e.printStackTrace()
         }

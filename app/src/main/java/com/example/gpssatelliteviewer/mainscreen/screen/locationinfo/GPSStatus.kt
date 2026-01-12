@@ -188,9 +188,9 @@ class GPSStatus(
             is GPSStatusState.Good -> "Good Signal"
             is GPSStatusState.Fair -> "Fair Signal"
             is GPSStatusState.Poor -> "Poor Signal"
-            is GPSStatusState.NoFix -> "No GPS Fix"
+            is GPSStatusState.NoFix -> "No Fix"
             is GPSStatusState.Searching -> "Searching..."
-            is GPSStatusState.Disabled -> "GPS Disabled"
+            is GPSStatusState.Disabled -> "Location Disabled"
         }
     }
 
@@ -272,6 +272,7 @@ class GPSStatus(
                 Modifier
                     .fillMaxWidth()
                     .height(17.dp)
+                    .padding(end = 10.dp)
             ) {
                 val barWidth = constraints.maxWidth.toFloat()
                 val percent = clamped / 99f
@@ -303,7 +304,7 @@ class GPSStatus(
             BoxWithConstraints(
                 Modifier
                     .fillMaxWidth()
-                    .padding(top = 2.dp)
+                    .padding(top = 2.dp, end = 10.dp)
             ) {
                 val barWidth = constraints.maxWidth.toFloat()
                 thresholds.forEach { t ->

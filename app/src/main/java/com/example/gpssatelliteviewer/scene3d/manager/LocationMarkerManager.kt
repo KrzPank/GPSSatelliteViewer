@@ -1,7 +1,7 @@
 package com.example.gpssatelliteviewer.scene3d.manager
 
 import android.util.Log
-import com.example.gpssatelliteviewer.data.frameCountUpdateInterval
+import com.example.gpssatelliteviewer.data.minRecreationInterval
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
@@ -27,7 +27,7 @@ class LocationMarkerManager(
     private var locationMarkerNode: ModelNode
     private var isVisible: Boolean = true
 
-    private var frameCount = 0
+    private var lastRecreationTime = 0L
 
     private var lastLocationMarkerUpdateTime = 0L
     private var firstLocationMarkerUpdate = true
@@ -75,9 +75,9 @@ class LocationMarkerManager(
 
     private fun updateLocationMarker() {
         if (!shouldUpdateLocationMarker()) return
-
-        frameCount++
-        val now = System.currentTimeMillis()
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastRecreationTime < minRecreationInterval) return
+        lastRecreationTime = currentTime
 
         // small helpers to avoid duplication
         val updatePosition: () -> Unit = {
@@ -95,28 +95,26 @@ class LocationMarkerManager(
             val dist = distance(camPos, locationMarkerNode.position)
             updateScale(dist)
             updatePosition()
-            lastLocationMarkerUpdateTime = now
+            lastLocationMarkerUpdateTime = currentTime
             firstLocationMarkerUpdate = false
             //Log.d("LocationMarkerPos", "firstLocationMarkerUpdate")
             return
         }
 
-        if (now - lastLocationMarkerUpdateTime >= locationMarkerUpdateInterval) {
+        if (currentTime - lastLocationMarkerUpdateTime >= locationMarkerUpdateInterval) {
             updatePosition()
-            lastLocationMarkerUpdateTime = now
+            lastLocationMarkerUpdateTime = currentTime
         }
 
-        val frameIntervalMet = frameCount >= frameCountUpdateInterval
         val cameraMovement = cameraManager.getCameraMovedUnits()
-        val shouldUpdateScale = frameIntervalMet && cameraMovement > cameraManager.getDynamicUpdateThreshold()
+        val shouldUpdateScale = cameraMovement > cameraManager.getDynamicUpdateThreshold()
 
         if (shouldUpdateScale) {
-            frameCount = 0
             val camPos = cameraManager.getCameraPosition()
             val dist = distance(camPos, locationMarkerNode.position)
             updateScale(dist)
             updatePosition()
-            lastLocationMarkerUpdateTime = System.currentTimeMillis()
+            lastLocationMarkerUpdateTime = currentTime
             //Log.d("locationMarkerScale", " locationMarkerScale=$locationMarkerScale distToMarker=$dist")
         }
     }

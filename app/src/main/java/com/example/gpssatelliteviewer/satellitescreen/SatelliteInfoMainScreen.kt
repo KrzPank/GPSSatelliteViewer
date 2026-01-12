@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.example.gpssatelliteviewer.data.viewmodel.GNSSViewModel
 import com.example.gpssatelliteviewer.satellitescreen.satellite.SatelliteInfoScreen
-import com.example.gpssatelliteviewer.satellitescreen.constellation.ConstellationSNRStatisticsScreen
+import com.example.gpssatelliteviewer.satellitescreen.constellation.ConstellationSNRScreen
 import com.example.gpssatelliteviewer.utils.NavigationTopAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -26,7 +26,7 @@ fun SatelliteInfoMainScreen(
 
     val topAppBarLabel = when (pagerState.currentPage) {
         0 -> "Satellite Info"
-        1 -> "Constellation"
+        1 -> "Constellation Info"
         else -> ""
     }
 
@@ -51,7 +51,7 @@ fun SatelliteInfoMainScreen(
         ) { page ->
             when (page) {
                 0 -> SatelliteInfoScreen(gnssViewModel = gnssViewModel)
-                1 -> ConstellationSNRStatisticsScreen(gnssViewModel = gnssViewModel)
+                1 -> ConstellationSNRScreen(gnssViewModel = gnssViewModel)
             }
         }
     }

@@ -1,13 +1,13 @@
 package com.example.gpssatelliteviewer.data
 
-// last N updates (N sec moving window)
-const val CHART_UPDATE_WINDOW = 100
+// last N-1 updates (N-1 sec moving window)
+// ALWAYS ADD 1 FOR CHART TO DISPLAY FIRST VALUE (N-1) % 10 = 0
+const val CHART_UPDATE_WINDOW = 121
 
 // 15 sec
 const val LOCATION_TIMEOUT_PERIOD = 15000L
 
-// how many frames should pass before onFrame() for each manager is applied for scene updates
-const val frameCountUpdateInterval = 1
+const val minRecreationInterval = 16L  // Minimum 16ms between recreations /~60Hz
 
 // general minimal value for stuff
 const val EPS = 1e-3f

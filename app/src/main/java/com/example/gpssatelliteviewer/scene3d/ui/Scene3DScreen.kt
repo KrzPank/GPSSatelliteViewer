@@ -1,7 +1,5 @@
 package com.example.gpssatelliteviewer.scene3d.ui
 
-import android.view.Display
-import android.view.Surface
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
@@ -56,7 +54,6 @@ import com.example.gpssatelliteviewer.app.theme.TextLabelColor
 import com.example.gpssatelliteviewer.data.GNSSCombinedData
 import com.example.gpssatelliteviewer.data.mergeLists
 import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
-import com.example.gpssatelliteviewer.mainscreen.screen.locationinfo.IS_LOCATION_ENABLED_TIMER
 import com.example.gpssatelliteviewer.scene3d.ui.infobox.EarthInfoBox
 import com.example.gpssatelliteviewer.scene3d.ui.infobox.SatelliteInfoBox
 import com.example.gpssatelliteviewer.utils.CoordinateConverter

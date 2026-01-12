@@ -1,7 +1,6 @@
 package com.example.gpssatelliteviewer.scene3d.manager
 
 import android.util.Log
-import com.example.gpssatelliteviewer.data.frameCountUpdateInterval
 import com.example.gpssatelliteviewer.scene3d.LightParameters
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
@@ -14,7 +13,7 @@ import dev.romainguy.kotlin.math.cross
 import io.github.sceneview.node.LightNode
 import io.github.sceneview.node.Node
 
-private const val minRecreationInterval = 13L // Minimum 13ms between recreations /~77Hz
+private const val minRecreationInterval = 16L
 
 class LightHandler(
     private val engine: Engine,
@@ -30,7 +29,6 @@ class LightHandler(
 
     // Light recreation throttling
     private var lastRecreationTime = 0L
-    private var frameCount = 0
 
     /**
      * Create a sun light from behind the camera
@@ -84,17 +82,17 @@ class LightHandler(
      * Update sun light direction to follow camera
      */
     private fun updateSunLight() {
-        frameCount++
-
         // Early exit if light is being recreated
         if (isLightBeingRecreated) return
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastRecreationTime < minRecreationInterval) return
+        lastRecreationTime = currentTime
 
-        val frameIntervalMet = frameCount >= frameCountUpdateInterval
         val cameraMovement = cameraManager.getCameraMovedUnits()
-        val shouldUpdate = frameIntervalMet && cameraMovement > cameraManager.getDynamicUpdateThreshold()
+        val shouldUpdate = cameraMovement > cameraManager.getDynamicUpdateThreshold()
 
         if (shouldUpdate) {
-            frameCount = 0
+            //lastRecreationTime = currentTime
             recreateSunLight()
             //Log.d("CameraDetection", " updateSunLight shouldUpdate triggered")
         }
@@ -141,8 +139,8 @@ class LightHandler(
 
         val lightDirection = (
                 cameraForward * 0.75f +
-                cameraRight * -0.55f +
-                cameraUp * -0.25f
+                cameraRight * -0.65f +
+                cameraUp * -0.15f
         ).normalized()
         return lightDirection
     }

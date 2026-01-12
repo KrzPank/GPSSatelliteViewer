@@ -55,7 +55,7 @@ fun Scene3DLoadingScreen(
         ) {
             // App Title with pulsing animation
             Text(
-                text = "GNSS Monitor",
+                text = "GNSS Satellite Viewer",
                 color = Color.Companion.White,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Companion.Bold

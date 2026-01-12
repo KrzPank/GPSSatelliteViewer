@@ -62,6 +62,7 @@ fun SetupDarkSystemUI() {
     }
 }
 
+// TODO aby muc zmienic z jednego landscape na drugi
 @Composable
 fun LockOrientationLandscape() {
     val context = LocalActivity.current

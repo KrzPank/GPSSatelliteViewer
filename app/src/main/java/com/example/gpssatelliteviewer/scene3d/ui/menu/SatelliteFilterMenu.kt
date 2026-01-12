@@ -1,5 +1,6 @@
 package com.example.gpssatelliteviewer.scene3d.ui.menu
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,6 +40,11 @@ import com.example.gpssatelliteviewer.app.theme.TextSecondaryColor
 import com.example.gpssatelliteviewer.app.theme.SelectAllButtonColor
 import com.example.gpssatelliteviewer.data.AzElHistory
 import com.example.gpssatelliteviewer.utils.Description
+import com.example.gpssatelliteviewer.utils.length
+import com.example.gpssatelliteviewer.utils.sub
+import dev.romainguy.kotlin.math.Float3
+import kotlin.math.cos
+import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,9 +93,23 @@ fun SatelliteFilterMenu(
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = DarkSurfaceColor)
                     ) {
-                        Text("Location Info", color = TextLabelColor, fontSize = 12.sp)
+                        Text("Location Info", color = TextLabelColor, fontSize = 14.sp)
                     }
                 }
+
+                Row(
+                    modifier = Modifier.Companion.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = { navController.navigate("SatelliteInfoMainScreen") },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkSurfaceColor)
+                    ) {
+                        Text("Satellite data", color = TextLabelColor, fontSize = 14.sp)
+                    }
+                }
+
                 Text(
                     text = "Double tap on scene to open/close menu",
                     color = TextSecondaryColor,
@@ -177,8 +200,15 @@ fun SatelliteFilterMenu(
             }
             val usedInFix = satelliteList.count { it.usedInFix }
 
-            val orbitEntries: Map<String, AzElHistory> = azElHistory.filterValues { hist ->
-                (hist.firstAz != hist.lastAz) || (hist.firstEl != hist.lastEl)
+            //val orbitEntries: Map<String, AzElHistory> = azElHistory.filterValues { hist ->
+            //    (hist.firstAz != hist.lastAz) || (hist.firstEl != hist.lastEl)
+            //}
+            val orbitEntries by remember(azElHistory) {
+                derivedStateOf {
+                    azElHistory.filterValues { hist ->
+                        azElDiffLen(hist.firstAz, hist.firstEl, hist.lastAz, hist.lastEl) > 0.032f
+                    }
+                }
             }
 
             InfoRow("Total Satellites", "$totalSatellites")
@@ -194,4 +224,22 @@ fun SatelliteFilterMenu(
             Description("Note: orbit calculation is ONLY an approximation derived only from first and last known azimuth and elevation for a satellite.")
         }
     }
+}
+
+
+private fun azElDiffLen(firstAz: Float, firstEl: Float, lastAz: Float, lastEl: Float): Float {
+    fun toVec3(az: Float, el: Float): Float3 {
+        val azRad = Math.toRadians(az.toDouble())
+        val elRad = Math.toRadians(el.toDouble())
+        val x = cos(elRad) * sin(azRad)
+        val y = sin(elRad)
+        val z = cos(elRad) * cos(azRad)
+        return Float3(x.toFloat(), y.toFloat(), z.toFloat())
+    }
+
+    val firstPos = toVec3(firstAz, firstEl)
+    val lastPos = toVec3(lastAz, lastEl)
+    val diffLen = sub(firstPos, lastPos).length()
+    Log.d("SatelliteManager", "check azElDiffLen ${diffLen}")
+    return diffLen
 }

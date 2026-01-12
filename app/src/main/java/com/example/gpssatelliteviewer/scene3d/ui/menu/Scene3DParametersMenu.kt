@@ -114,30 +114,29 @@ fun Scene3DParametersMenu(
             )
         }
 
-        ParameterSection("Earth Model") {
-            ModelSelector(
-                label = "Earth Model",
-                options = Scene3DParameters.Companion.EARTH_MODEL_OPTIONS,
-                currentPath = params.earthModelPath,
-                onModelChanged = {
-                    parametersState.updateEarthModel(it)
-                    onParametersChanged(parametersState.parameters)
-                }
-            )
-        }
-
-
-        ParameterSection("Satellites") {
-            ModelSelector(
-                label = "Satellite Model",
-                options = Scene3DParameters.Companion.SATELLITE_MODEL_OPTIONS,
-                currentPath = params.satelliteModelPath,
-                onModelChanged = {
-                    parametersState.updateSatelliteModel(it)
-                    onParametersChanged(parametersState.parameters)
-                }
-            )
-        }
+        // DEBUG
+        //ParameterSection("Earth Model") {
+        //    ModelSelector(
+        //        label = "Earth Model",
+        //        options = Scene3DParameters.Companion.EARTH_MODEL_OPTIONS,
+        //        currentPath = params.earthModelPath,
+        //        onModelChanged = {
+        //            parametersState.updateEarthModel(it)
+        //            onParametersChanged(parametersState.parameters)
+        //        }
+        //    )
+        //}
+        //ParameterSection("Satellites") {
+        //    ModelSelector(
+        //        label = "Satellite Model",
+        //        options = Scene3DParameters.Companion.SATELLITE_MODEL_OPTIONS,
+        //        currentPath = params.satelliteModelPath,
+        //        onModelChanged = {
+        //            parametersState.updateSatelliteModel(it)
+        //            onParametersChanged(parametersState.parameters)
+        //        }
+        //    )
+        //}
 
         ParameterSection("Rendering Quality") {
             QualitySelector(

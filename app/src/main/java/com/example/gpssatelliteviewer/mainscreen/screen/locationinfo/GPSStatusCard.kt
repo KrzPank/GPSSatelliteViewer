@@ -40,7 +40,7 @@ fun GPSStatusCard(
     ) {
         Column(modifier = Modifier.Companion.padding(16.dp)) {
             Text(
-                "GPS Status",
+                "GNSS Status",
                 style = MaterialTheme.typography.headlineMedium,
                 fontSize = 20.sp
             )

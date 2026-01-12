@@ -20,6 +20,8 @@ import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+private const val MINIMAL_POINT_DIFFERENCE = 0.05f
+
 class OrbitManager(
     private val modelLoader: ModelLoader,
     private val centerNode: Node,
@@ -48,9 +50,9 @@ class OrbitManager(
         }
 
         val diffLen = sub(firstPos, lastPos).length()
-        if (diffLen < EPS) {
+        if (diffLen < MINIMAL_POINT_DIFFERENCE) {
             clearOrbit()
-            Log.d("SatelliteManager", "firstPos == lastPos for $key firstPos $firstPos lastPos ${lastPos}.")
+            //Log.d("SatelliteManager", "firstPos == lastPos for $key firstPos $firstPos lastPos ${lastPos} | difflen = ${diffLen}")
             return
         }
 
@@ -75,6 +77,7 @@ class OrbitManager(
             orbitNode = ringNode
             currentOrbitKey = key
 
+            Log.d("SatelliteManager", "asdfsdfasdfasdfasdfsadf sadf sad fasdf for $key difflen = ${diffLen}")
             updateOrbitForCache(cache)
         } catch (e: Exception) {
             Log.e("SatelliteManager", "Failed to load orbit model ${parameters.orbitModelPath}: ${e.message}")

@@ -9,7 +9,7 @@ import com.example.gpssatelliteviewer.data.GOOD_CNO
 import com.example.gpssatelliteviewer.data.NO_CNO
 import com.example.gpssatelliteviewer.data.POOR_CNO
 import com.example.gpssatelliteviewer.data.SatelliteCache
-import com.example.gpssatelliteviewer.data.frameCountUpdateInterval
+import com.example.gpssatelliteviewer.data.minRecreationInterval
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
 import com.example.gpssatelliteviewer.utils.CoordinateConverter
@@ -62,7 +62,8 @@ class SatelliteManager(
 
     private val satelliteCache = mutableMapOf<String, SatelliteCache>()
 
-    private var frameCount = 0
+    //  throttling
+    private var lastRecreationTime = 0L
     private var firstLookAt = true
 
     private var clickedSatelliteKey: String? = null
@@ -85,13 +86,14 @@ class SatelliteManager(
         satelliteList = newList
         azElHistory = azElH
 
+        if (parameters.userLocation == null) return
+
         userLocationECEF = CoordinateConverter.geodeticToECEF(
             parameters.userLocation!!.x.toDouble(),
             parameters.userLocation!!.y.toDouble(),
             parameters.userLocation!!.z.toDouble()
         )
 
-        if (parameters.userLocation == null) return
         val currentSatelliteKeys = satelliteList.map { satelliteKey(it) }.toSet()
         val activeKeys = activeSatelliteNodes.keys.toSet()
 
@@ -239,19 +241,20 @@ class SatelliteManager(
      * Update satellite look-at behavior to always face camera
      */
     private fun shouldUpdateSatelliteLookAt() {
-        frameCount++
 
         if (firstLookAt) {
             firstLookAt = false
             updateLookAt()
         }
 
-        val frameIntervalMet = frameCount >= frameCountUpdateInterval
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastRecreationTime < minRecreationInterval) return
+        lastRecreationTime = currentTime
+
         val cameraMovement = cameraManager.getCameraMovedUnits()
-        val shouldUpdate = frameIntervalMet && cameraMovement > cameraManager.getDynamicUpdateThreshold()
+        val shouldUpdate = cameraMovement > cameraManager.getDynamicUpdateThreshold()
 
         if (shouldUpdate) {
-            frameCount = 0
             updateLookAt()
         }
     }
@@ -276,10 +279,10 @@ class SatelliteManager(
     private fun getOrCreateSatelliteNode(): ModelNode {
         return if (satelliteNodePool.isNotEmpty()) {
             // Reuse node from pool
-            Log.d("SatelliteManager", "Reused satellite")
+            //Log.d("SatelliteManager", "Reused satellite")
             satelliteNodePool.removeAt(satelliteNodePool.size - 1)
         } else {
-            Log.d("SatelliteManager", "Created sat node")
+            //Log.d("SatelliteManager", "Created sat node")
             val instance = modelLoader.createModelInstance(parameters.satelliteModelPath)
             ModelNode(
                 modelInstance = instance,
@@ -328,7 +331,7 @@ class SatelliteManager(
         )
 
         if (altitude == 0f) {
-            Log.e("SatPos", "Constellation:${sat.constellation} PRN:${sat.prn} position: x:${pos.x}, y:${pos.y}, z:${pos.z}")
+            //Log.e("SatelliteManager", "Constellation:${sat.constellation} PRN:${sat.prn} position: x:${pos.x}, y:${pos.y}, z:${pos.z}")
         }
 
         node.position = pos
@@ -398,7 +401,7 @@ class SatelliteManager(
             satelliteCache.clear()
 
         } catch (e: Exception) {
-            Log.e("SatelliteManager", "Failed to update satellite models: ${e.message}")
+            //Log.e("SatelliteManager", "Failed to update satellite models: ${e.message}")
         }
     }
 

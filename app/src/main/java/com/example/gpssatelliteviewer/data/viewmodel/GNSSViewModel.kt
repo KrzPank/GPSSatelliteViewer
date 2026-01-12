@@ -50,6 +50,9 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
     private val _satelliteSNRHistory = MutableStateFlow<Map<String, MutableList<TimestampedSNR>>>(emptyMap())
     val satelliteSNRHistory: StateFlow<Map<String, List<TimestampedSNR>>> = _satelliteSNRHistory
 
+    private val _satelliteCountHistory = MutableStateFlow<Map<String, MutableList<TimestampedSNR>>>(emptyMap())
+    val satelliteCountHistory: StateFlow<Map<String, List<TimestampedSNR>>> = _satelliteCountHistory
+
     private val gnssCallback = object : GnssStatus.Callback() {
         override fun onSatelliteStatusChanged(status: GnssStatus) {
             gnssCallbackScope.launch {
@@ -109,11 +112,13 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                     )
                 }
                 val updatedConstellation = updateConstellationSNRHistory(list)
+                val updatedSatCount = updateConstellationFixCountHistory(list)
                 val updatedSatellite = updateSatelliteSNRHistory(list)
 
                 withContext(Dispatchers.Main) {
                     _satelliteList.value = list
                     _constellationSNRHistory.value = updatedConstellation
+                    _satelliteCountHistory.value = updatedSatCount
                     _satelliteSNRHistory.value = updatedSatellite
                     _azElHistory.value = newAzElMap.toMap()
                 }
@@ -222,6 +227,25 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
 
         return updated
     }
+
+    private fun updateConstellationFixCountHistory(gnssStatusList: List<GNSSStatusData>): MutableMap<String, MutableList<TimestampedSNR>> {
+
+        val allConstellations = (satelliteCountHistory.value.keys + gnssStatusList.map { it.constellation }).toSet()
+        val updated = mutableMapOf<String, MutableList<TimestampedSNR>>()
+        val now = System.currentTimeMillis()
+
+        allConstellations.forEach { constellation ->
+            val oldHistory = satelliteCountHistory.value[constellation] ?: emptyList()
+
+            val fixCount = gnssStatusList.count { it.constellation == constellation && it.usedInFix }
+
+            val newEntry = TimestampedSNR(now, fixCount.toFloat())
+            val newHistory = (oldHistory.takeLast(CHART_UPDATE_WINDOW - 1) + newEntry).toMutableList()
+            updated[constellation] = newHistory
+        }
+        return updated
+    }
+
 
     override fun onCleared() {
         super.onCleared()
