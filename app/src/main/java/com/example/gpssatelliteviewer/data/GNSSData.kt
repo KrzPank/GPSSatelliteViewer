@@ -8,9 +8,12 @@ data class GNSSStatusData(
     val constellation: String,
     val prn: Int,
     val cn0DbHz: Float,
+    val carrierFrequencyRangeHz: Float,
     val usedInFix: Boolean,
     val azimuth: Float,
-    val elevation: Float
+    val elevation: Float,
+    val hasEphemeris: Boolean,
+    val hasAlmanac: Boolean
 )
 
 data class GNSSHardwareInfo(
@@ -68,7 +71,9 @@ data class GNSSCombinedData(
     val accumulatedDeltaRangeUncertaintyMeters: Double?,
     val pseudorangeRateMetersPerSecond: Double?,
     val pseudorangeRateUncertaintyMetersPerSecond: Double?,
-    val timeOffsetNanos: Double?
+    val timeOffsetNanos: Double?,
+    val hasEphemeris: Boolean,
+    val hasAlmanac: Boolean
 ) {
     companion object {
         fun from(status: GNSSStatusData, measurement: GNSSMeasurementData?): GNSSCombinedData {
@@ -81,12 +86,14 @@ data class GNSSCombinedData(
                 usedInFix = status.usedInFix,
                 azimuth = status.azimuth,
                 elevation = status.elevation,
-                carrierFrequencyRangeHz = measurement?.carrierFrequencyRangeHz,
+                carrierFrequencyRangeHz = measurement?.carrierFrequencyRangeHz ?: status.carrierFrequencyRangeHz,
                 accumulatedDeltaRangeMeters = measurement?.accumulatedDeltaRangeMeters,
                 accumulatedDeltaRangeUncertaintyMeters = measurement?.accumulatedDeltaRangeUncertaintyMeters,
                 pseudorangeRateMetersPerSecond = measurement?.pseudorangeRateMetersPerSecond,
                 pseudorangeRateUncertaintyMetersPerSecond = measurement?.pseudorangeRateUncertaintyMetersPerSecond,
-                timeOffsetNanos = measurement?.timeOffsetNanos
+                timeOffsetNanos = measurement?.timeOffsetNanos,
+                hasEphemeris = status.hasEphemeris,
+                hasAlmanac = status.hasAlmanac,
             )
         }
     }

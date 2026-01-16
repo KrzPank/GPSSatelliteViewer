@@ -12,7 +12,7 @@ import com.example.gpssatelliteviewer.data.SatelliteCache
 import com.example.gpssatelliteviewer.data.minRecreationInterval
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
-import com.example.gpssatelliteviewer.utils.CoordinateConverter
+import com.example.gpssatelliteviewer.data.parser.CoordinateConverter
 import dev.romainguy.kotlin.math.Float3
 import dev.romainguy.kotlin.math.Float4
 import io.github.sceneview.loaders.ModelLoader

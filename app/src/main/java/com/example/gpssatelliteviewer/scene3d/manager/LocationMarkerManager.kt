@@ -1,10 +1,9 @@
 package com.example.gpssatelliteviewer.scene3d.manager
 
-import android.util.Log
 import com.example.gpssatelliteviewer.data.minRecreationInterval
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
 import com.example.gpssatelliteviewer.scene3d.manager.camera.CameraManager
-import com.example.gpssatelliteviewer.utils.CoordinateConverter
+import com.example.gpssatelliteviewer.data.parser.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.distance
 import com.example.gpssatelliteviewer.utils.normalized
 import dev.romainguy.kotlin.math.Float3

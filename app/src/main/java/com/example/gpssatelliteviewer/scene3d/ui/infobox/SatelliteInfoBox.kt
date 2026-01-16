@@ -67,6 +67,16 @@ fun SatelliteInfoBox(
                     val valueStyle = MaterialTheme.typography.bodyMedium
 
                     InfoRow("SVID/PRN ", "${satellite.svid ?: "N/A"} / ${satellite.prn}", labelStyle = labelStyle, valueStyle = valueStyle)
+                    InfoRow(
+                        label = "Has Ephemeris",
+                        value = satellite.hasEphemeris.toString(),
+                        labelStyle = labelStyle, valueStyle = valueStyle
+                    )
+                    InfoRow(
+                        label = "Has Almanac",
+                        value = satellite.hasAlmanac.toString(),
+                        labelStyle = labelStyle, valueStyle = valueStyle
+                    )
                     InfoRow("C/N0 ", "%.1f dBHz".format(satellite.cn0DbHz), labelStyle = labelStyle, valueStyle = valueStyle)
 
                     satellite.snrInDb?.let {

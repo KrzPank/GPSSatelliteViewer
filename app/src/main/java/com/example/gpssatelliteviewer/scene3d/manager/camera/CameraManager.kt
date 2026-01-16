@@ -1,8 +1,7 @@
 package com.example.gpssatelliteviewer.scene3d.manager.camera
 
-import android.util.Log
 import com.example.gpssatelliteviewer.scene3d.Scene3DParameters
-import com.example.gpssatelliteviewer.utils.CoordinateConverter
+import com.example.gpssatelliteviewer.data.parser.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.length
 import com.example.gpssatelliteviewer.utils.normalized
 import com.google.android.filament.Engine
@@ -16,7 +15,7 @@ import io.github.sceneview.node.Node
 private const val UPDATE_THRESHOLD = 0.005f
 private const val STARTING_LOCATION_DISTANCE_FACTOR = 5f
 private const val MIN_CAMERA_DISTANCE = 0.62f
-private const val MAX_CAMERA_DISTANCE = 9f
+private const val MAX_CAMERA_DISTANCE = 15f
 private const val MAX_PITCH_DEG = 85f
 
 private const val ORBIT_SPEED = 0.0042f

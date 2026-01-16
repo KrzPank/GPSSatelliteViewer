@@ -18,7 +18,7 @@ data class LightParameters(
 
 data class Scene3DParameters(
     // Light Parameters
-    var lightIntensity: Float = 250_000.0f,
+    var lightIntensity: Float = 220_000.0f,
     var lightColor: Float3 = Float3(1.0f, 1.0f, 1.0f), // RGB white
     var lightFalloff: Float = 1000.0f,
     val lightType: LightManager.Type = LightManager.Type.DIRECTIONAL,
@@ -38,7 +38,7 @@ data class Scene3DParameters(
     var userLocation: Float3? = null,
 
     // Environment Parameters
-    var environmentPath: String = "envs/NightSkyHDRI002_2K.hdr", //"envs/hiptyc_2020_4k_gal.hdr", //
+    var environmentPath: String = "envs/rect.hdr", //"envs/NightSkyHDRI002_2K.hdr", //"envs/hiptyc_2020_4k_gal.hdr", //
     var environmentIntensity: Float = 1.0f,
 
     // Camera Parameters - positioned for better Earth view

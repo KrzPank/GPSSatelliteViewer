@@ -105,9 +105,12 @@ class GNSSViewModel(application: Application) : AndroidViewModel(application) {
                             constellation = constellation,
                             prn = status.getSvid(i),
                             cn0DbHz = status.getCn0DbHz(i),
+                            carrierFrequencyRangeHz = status.getCarrierFrequencyHz(i),
                             usedInFix = status.usedInFix(i),
                             azimuth = status.getAzimuthDegrees(i),
-                            elevation = status.getElevationDegrees(i)
+                            elevation = status.getElevationDegrees(i),
+                            hasEphemeris = status.hasEphemerisData(i),
+                            hasAlmanac = status.hasAlmanacData(i)
                         )
                     )
                 }

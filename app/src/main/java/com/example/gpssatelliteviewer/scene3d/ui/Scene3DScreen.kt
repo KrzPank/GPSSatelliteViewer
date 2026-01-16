@@ -56,7 +56,7 @@ import com.example.gpssatelliteviewer.data.mergeLists
 import com.example.gpssatelliteviewer.data.viewmodel.LocationViewModel
 import com.example.gpssatelliteviewer.scene3d.ui.infobox.EarthInfoBox
 import com.example.gpssatelliteviewer.scene3d.ui.infobox.SatelliteInfoBox
-import com.example.gpssatelliteviewer.utils.CoordinateConverter
+import com.example.gpssatelliteviewer.data.parser.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.HideSystemUI
 import com.example.gpssatelliteviewer.utils.LockOrientationLandscape
 import dev.romainguy.kotlin.math.Float3

@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.app.theme.CardBackgroundColor
 import com.example.gpssatelliteviewer.app.theme.TextPrimaryColor
 import com.example.gpssatelliteviewer.data.NMEALocationData
-import com.example.gpssatelliteviewer.utils.CoordinateConverter
+import com.example.gpssatelliteviewer.data.parser.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.mapFixQuality
 import com.example.gpssatelliteviewer.utils.mapFixType

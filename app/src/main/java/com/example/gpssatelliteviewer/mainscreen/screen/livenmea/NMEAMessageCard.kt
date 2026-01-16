@@ -15,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.gpssatelliteviewer.data.NMEAMessage
 import com.example.gpssatelliteviewer.data.parser.NMEAParser
-import com.example.gpssatelliteviewer.utils.CoordinateConverter
+import com.example.gpssatelliteviewer.data.parser.CoordinateConverter
 import com.example.gpssatelliteviewer.utils.InfoRow
 import com.example.gpssatelliteviewer.utils.ValueText
 import com.example.gpssatelliteviewer.utils.mapFixQuality
