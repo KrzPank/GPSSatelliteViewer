@@ -2,10 +2,9 @@
 <resources>
 
     <style name="Theme.GPSSatelliteViewer" parent="android:Theme.Material.Light.NoActionBar" />
-
     <style name="Theme.GPSSatelliteViewer.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/DarkBackground</item>
-        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/gnss_my_icon</item>
         <item name="postSplashScreenTheme">@style/Theme.GPSSatelliteViewer</item>
     </style>
 

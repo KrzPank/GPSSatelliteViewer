@@ -37,10 +37,6 @@ data class Scene3DParameters(
     var locationMarkerScale: Float = 0.05f,
     var userLocation: Float3? = null,
 
-    // Environment Parameters
-    var environmentPath: String = "envs/rect.hdr", //"envs/NightSkyHDRI002_2K.hdr", //"envs/hiptyc_2020_4k_gal.hdr", //
-    var environmentIntensity: Float = 1.0f,
-
     // Camera Parameters - positioned for better Earth view
     var startingCameraLocation: Float3 = Float3(3.0f, 1.0f, 3.0f),
 

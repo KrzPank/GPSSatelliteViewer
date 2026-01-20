@@ -155,9 +155,9 @@ class Scene3D(
                 val context = this.context
 
                 val cubeMapPaths = listOf(
-                    "envs/pxnx.png", "envs/pxnx.png",
-                    "envs/pyny.png", "envs/pyny.png",
-                    "envs/pznz.png", "envs/pznz.png"
+                    "envs/px.png", "envs/nx.png",
+                    "envs/py.png", "envs/ny.png",
+                    "envs/pz.png", "envs/nz.png"
                 )
 
                 val bitmaps = cubeMapPaths.map { path ->
