@@ -105,7 +105,7 @@ fun SatelliteFilterMenu(
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = DarkSurfaceColor)
                     ) {
-                        Text("Satellite data", color = TextLabelColor, fontSize = 14.sp)
+                        Text("Satellite Info", color = TextLabelColor, fontSize = 14.sp)
                     }
                 }
 

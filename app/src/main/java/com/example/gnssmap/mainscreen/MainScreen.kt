@@ -49,7 +49,7 @@ fun MainScreen(
                 menuKey = "mainMenu",
                 menuItems = listOf(
                     "Satellite 3D View" to { navController.navigate("Satellite3DScreen") },
-                    "Satellite data" to { navController.navigate("SatelliteInfoMainScreen") }
+                    "Satellite Info" to { navController.navigate("SatelliteInfoMainScreen") }
                 )
             )
         }
