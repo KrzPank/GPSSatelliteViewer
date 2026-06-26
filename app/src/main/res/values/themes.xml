@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.GPSSatelliteViewer" parent="android:Theme.Material.Light.NoActionBar" />
-    <style name="Theme.GPSSatelliteViewer.Starting" parent="Theme.SplashScreen">
+    <style name="Theme.GNSSMap" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.GNSSMap.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/DarkBackground</item>
         <item name="windowSplashScreenAnimatedIcon">@mipmap/gnss_my_icon</item>
-        <item name="postSplashScreenTheme">@style/Theme.GPSSatelliteViewer</item>
+        <item name="postSplashScreenTheme">@style/Theme.GNSSMap</item>
     </style>
 
 </resources>

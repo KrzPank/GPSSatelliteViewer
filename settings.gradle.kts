@@ -20,6 +20,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "GPS Satellite Viewer"
+rootProject.name = "GNSSMap"
 include(":app")
  

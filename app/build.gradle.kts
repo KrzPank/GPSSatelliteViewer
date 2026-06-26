@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.gpssatelliteviewer"
+    namespace = "com.example.gnssmap"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.gpssatelliteviewer"
+        applicationId = "com.example.gnssmap"
         minSdk = 30
         targetSdk = 35
         versionCode = 1
